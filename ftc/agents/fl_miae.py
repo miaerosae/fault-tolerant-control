@@ -18,11 +18,13 @@ class FLController(BaseEnv):
 
         self.trim_forces = np.vstack([self.m * self.g, 0, 0, 0])
 
-        self.k1 = np.diag([1, 1, 1]) * 625
-        self.k2 = np.diag([1, 1, 1]) * 500
-        self.k3 = np.diag([1, 1, 1]) * 150
-        self.k4 = np.diag([1, 1, 1]) * 20
-        self.k_psi = np.diag([1, 2])
+        self.k1 = np.array([[1, 1, 1]])*0.3*10
+        self.k2 = np.array([[1, 1, 1]])*0.7*10
+        self.k3 = np.array([[1, 1, 1]])*0.7*10
+        self.k4 = np.array([[1, 1, 1]])*0.3*10
+        self.k_psi = np.array([[1, 3, 0, 0]])
+        K = np.hstack([self.k1.T, self.k2.T, self.k3.T, self.k4.T])
+        self.K = np.vstack([K, self.k_psi])
 
     def get_alpbet(self, plant, reF):
         m, J = self.m, self.J
@@ -38,18 +40,19 @@ class FLController(BaseEnv):
 
         # bet(x)
         bet = np.zeros((4, 4))
-        bet[0, 0] = -(sin(theta)*cos(phi)**2 + sin(phi)*sin(psi))/m
-        bet[0, 1] = (-cos(phi)*sin(psi) + 2*cos(phi)*sin(phi)*sin(theta))*u1/J[0, 0]/m
-        bet[0, 2] = -cos(phi)**2*cos(theta)*u1/J[1, 1]/m
-        bet[0, 3] = -cos(psi)*sin(phi)*u1/J[2, 2]/m
+        bet[0, 0] = - (sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta))/m
+        bet[0, 1] = (-cos(phi)*sin(psi) + cos(psi)*sin(phi)*sin(theta))*u1/J[0, 0]/m
+        bet[0, 2] = -cos(phi)*cos(psi)*cos(theta)*u1/J[1, 1]/m
+        bet[0, 3] = (-cos(psi)*sin(phi) + cos(phi)*sin(psi)*sin(theta))*u1/J[2, 2]/m
         bet[1, 0] = (cos(psi)*sin(phi) - cos(phi)*sin(psi)*sin(theta))/m
-        bet[1, 1] = (-cos(phi)*cos(psi) - sin(phi)*sin(psi)*sin(theta))*u1/J[0, 0]/m
-        bet[1, 2] = cos(phi)*cos(theta)*sin(psi)*u1/J[1, 1]/m
-        bet[1, 3] = (sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta))*u1/J[2, 2]/m
-        bet[2, 0] = -cos(phi)*cos(theta)/m
+        bet[1, 1] = (cos(phi)*cos(psi) + sin(phi)*sin(psi)*sin(theta))*u1/J[0, 0]/m
+        bet[1, 2] = - cos(phi)*cos(theta)*sin(psi)*u1/J[1, 1]/m
+        bet[1, 3] = - (sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta))*u1/J[2, 2]/m
+        bet[2, 0] = - cos(phi)*cos(theta)/m
         bet[2, 1] = cos(theta)*sin(phi)*u1/J[0, 0]/m
         bet[2, 2] = cos(phi)*sin(theta)*u1/J[1, 1]/m
         bet[3, 3] = 1/J[2, 2]
+        # print(repr(np.linalg.matrix_rank(bet)))
 
         # alp(x)
         alp = np.zeros((4, 1))
@@ -69,7 +72,7 @@ class FLController(BaseEnv):
                       - cos(psi)*sin(phi)*sin(theta)*dphi
                       - cos(phi)*sin(psi)*sin(theta)*dpsi
                       + cos(phi)*cos(psi)*cos(theta)*dtheta))/m
-        alp[0, 1] = -(2*du1*(sin(phi)*sin(psi)*dpsi - cos(phi)*cos(psi)*dphi
+        alp[1, 0] = -(2*du1*(sin(phi)*sin(psi)*dpsi - cos(phi)*cos(psi)*dphi
                              + cos(phi)*cos(psi)*sin(theta)*dpsi
                              + cos(phi)*cos(theta)*sin(psi)*dtheta
                              - sin(phi)*sin(psi)*sin(theta)*dphi))/m \
@@ -85,14 +88,14 @@ class FLController(BaseEnv):
                    + 2*cos(phi)*cos(psi)*cos(theta)*dpsi*dtheta
                    - 2*cos(psi)*sin(phi)*sin(theta)*dphi*dpsi
                    - 2*cos(theta)*sin(phi)*sin(psi)*dphi*dtheta))/m
-        alp[0, 2] = (2*cos(theta)*sin(phi)*dphi*du1)/m \
+        alp[2, 0] = (2*cos(theta)*sin(phi)*dphi*du1)/m \
             + (2*cos(phi)*sin(theta)*dtheta*du1)/m \
             + (cos(phi)*cos(theta)*u1*dphi**2)/m \
             + (cos(phi)*cos(theta)*u1*dtheta**2)/m \
             + (cos(theta)*sin(phi)*u1*ddphi)/m \
             + (cos(phi)*sin(theta)*u1*ddtheta)/m \
             - (2*sin(phi)*sin(theta)*u1*dphi*dtheta)/m
-        alp[0, 3] = ddpsi
+        alp[3, 0] = ddpsi
 
         return alp, bet
 
@@ -139,13 +142,16 @@ class FLController(BaseEnv):
         alp, bet = self.get_alpbet(plant, ref)
 
         # define new control input vector v
-        # v, disturbance = obs_u, np.zeros((4, 1))  # if we use control input obtained by obs, which is obs_u = sat()
+        k1 = np.diag(self.k1[0, :])
+        k2 = np.diag(self.k2[0, :])
+        k3 = np.diag(self.k3[0, :])
+        k4 = np.diag(self.k4[0, :])
         v = np.zeros((4, 1))
-        v[0:3, 1] = (- self.kp1.dot(pos-posd)
-                     - self.kp2.dot(vel-veld)
-                     - self.kp3.dot(dvel-dveld)
-                     - self.kp4.dot(ddvel-ddveld))
-        v[3, 1] = self.k_psi.dot(np.vstack([psi-psid, dpsi-dpsid]))
+        v[0:3, :] = (- k1.dot(pos-posd)
+                     - k2.dot(vel-veld)
+                     - k3.dot(dvel-dveld)
+                     - k4.dot(ddvel-ddveld))
+        v[3, :] = -self.k_psi[:, 0:2].dot(np.vstack([psi-psid, dpsi-dpsid]))
 
         fm = np.linalg.inv(bet).dot(-alp + v + disturbance)
         d2u1, u2, u3, u4 = fm.ravel()
@@ -156,8 +162,15 @@ class FLController(BaseEnv):
         return np.vstack((self.u1.state, ctrl[1]))
 
     def set_dot(self, ctrl):
+        J = self.J
+        dangle = self.dangle.state
         self.angle.dot = self.dangle.state
-        self.dangle.dot = self.Jinv.dot(ctrl[1])
+        self.dangle.dot = self.Jinv.dot(ctrl[1]) \
+            + np.vstack([
+                (J[1, 1]-J[2, 2])/J[0, 0]*dangle[1]*dangle[2],
+                (J[2, 2]-J[0, 0])/J[1, 1]*dangle[0]*dangle[2],
+                (J[0, 0]-J[1, 1])/J[2, 2]*dangle[0]*dangle[1]
+            ])
 
         self.u1.dot = self.du1.state
         self.du1.dot = ctrl[0]
