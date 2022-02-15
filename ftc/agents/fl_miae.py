@@ -18,13 +18,13 @@ class FLController(BaseEnv):
 
         self.trim_forces = np.vstack([self.m * self.g, 0, 0, 0])
 
-        self.k1 = np.array([[1, 1, 1]])*0.3*10
-        self.k2 = np.array([[1, 1, 1]])*0.7*10
-        self.k3 = np.array([[1, 1, 1]])*0.7*10
-        self.k4 = np.array([[1, 1, 1]])*0.3*10
-        self.k_psi = np.array([[1, 3, 0, 0]])
-        K = np.hstack([self.k1.T, self.k2.T, self.k3.T, self.k4.T])
-        self.K = np.vstack([K, self.k_psi])
+        self.F1 = - np.array([[1, 1, 1]])*23.95
+        self.F2 = - np.array([[1, 1, 1]])*48.11
+        self.F3 = - np.array([[1, 1, 1]])*32.95
+        self.F4 = - np.array([[1, 1, 1]])*9.79
+        self.F_psi = - np.array([[4, 5, 0, 0]])
+        F = np.hstack([self.F1.T, self.F2.T, self.F3.T, self.F4.T])
+        self.F = np.vstack([F, self.F_psi])
 
     def get_alpbet(self, plant, reF):
         m, J = self.m, self.J
@@ -142,18 +142,19 @@ class FLController(BaseEnv):
         alp, bet = self.get_alpbet(plant, ref)
 
         # define new control input vector v
-        k1 = np.diag(self.k1[0, :])
-        k2 = np.diag(self.k2[0, :])
-        k3 = np.diag(self.k3[0, :])
-        k4 = np.diag(self.k4[0, :])
+        k1 = np.diag(self.F1[0, :])
+        k2 = np.diag(self.F2[0, :])
+        k3 = np.diag(self.F3[0, :])
+        k4 = np.diag(self.F4[0, :])
         v = np.zeros((4, 1))
-        v[0:3, :] = (- k1.dot(pos-posd)
-                     - k2.dot(vel-veld)
-                     - k3.dot(dvel-dveld)
-                     - k4.dot(ddvel-ddveld))
-        v[3, :] = -self.k_psi[:, 0:2].dot(np.vstack([psi-psid, dpsi-dpsid]))
+        v[0:3, :] = (k1.dot(pos-posd)
+                     + k2.dot(vel-veld)
+                     + k3.dot(dvel-dveld)
+                     + k4.dot(ddvel-ddveld))
+        v[3, :] = self.F_psi[:, 0:2].dot(np.vstack([psi-psid, dpsi-dpsid]))
 
-        fm = np.linalg.inv(bet).dot(-alp + v + disturbance)
+        # fm = np.linalg.inv(bet).dot(-alp + v - disturbance) + obs_u
+        fm = obs_u
         d2u1, u2, u3, u4 = fm.ravel()
 
         return d2u1, np.array([u2, u3, u4])[:, None]
