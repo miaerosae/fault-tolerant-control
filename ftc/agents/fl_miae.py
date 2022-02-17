@@ -153,11 +153,11 @@ class FLController(BaseEnv):
                      + k4.dot(ddvel-ddveld))
         v[3, :] = self.F_psi[:, 0:2].dot(np.vstack([psi-psid, dpsi-dpsid]))
 
-        # fm = np.linalg.inv(bet).dot(-alp + v - disturbance) + obs_u
-        fm = obs_u
+        fm = np.linalg.inv(bet).dot(- alp + v - disturbance)
+        # fm = obs_u
         d2u1, u2, u3, u4 = fm.ravel()
 
-        return d2u1, np.array([u2, u3, u4])[:, None]
+        return d2u1, np.array([u2, u3, u4])[:, None], v - disturbance
 
     def get_FM(self, ctrl):
         return np.vstack((self.u1.state, ctrl[1]))
