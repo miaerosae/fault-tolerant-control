@@ -99,8 +99,8 @@ class Env(BaseEnv):
         virtual_ctrl = self.controller.get_virtual(t,
                                                    self.plant,
                                                    self.ref,
-                                                   # disturbance=dist,
-                                                   obs_u=obs_ctrl
+                                                   disturbance=dist,
+                                                   # obs_u=obs_ctrl
                                                    )
 
         forces = self.controller.get_FM(virtual_ctrl)

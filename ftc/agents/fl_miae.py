@@ -101,6 +101,20 @@ class FLController(BaseEnv):
 
     def get_virtual(self, t, plant, ref,
                     disturbance=np.zeros((4, 1)), obs_u=np.zeros((4, 1))):
+
+        alp, bet = self.get_alpbet(plant, ref)
+
+        vbar = self.get_vbar(plant, ref, disturbance)
+        fm = np.linalg.inv(bet).dot(- alp + vbar)
+        # fm = obs_u
+        d2u1, u2, u3, u4 = fm.ravel()
+
+        return d2u1, np.array([u2, u3, u4])[:, None]
+
+    def get_vbar(self, plant, ref, disturbance):
+        '''
+        get vbar = v - disturbance
+        '''
         m, g = self.m, self.g
 
         # desired value
@@ -139,8 +153,6 @@ class FLController(BaseEnv):
             - (cos(phi)*cos(theta)*du1)/m + (cos(phi)*sin(theta)*u1*dtheta)/m
         ])[:, None]
 
-        alp, bet = self.get_alpbet(plant, ref)
-
         # define new control input vector v
         k1 = np.diag(self.F1[0, :])
         k2 = np.diag(self.F2[0, :])
@@ -153,11 +165,30 @@ class FLController(BaseEnv):
                      + k4.dot(ddvel-ddveld))
         v[3, :] = self.F_psi[:, 0:2].dot(np.vstack([psi-psid, dpsi-dpsid]))
 
-        fm = np.linalg.inv(bet).dot(- alp + v - disturbance)
-        # fm = obs_u
-        d2u1, u2, u3, u4 = fm.ravel()
+        return v - disturbance
 
-        return d2u1, np.array([u2, u3, u4])[:, None], v - disturbance
+    def get_obs_input(self, plant):
+        m = plant.m
+        quat = plant.quat.state
+        phi, theta, psi = quat2angle(quat)[::-1]
+        dphi, dtheta, dpsi = self.dangle.state.ravel()
+        u1 = self.u1.state[0]
+        du1 = self.du1.state[0]
+        ddvel = np.array([
+            - (u1*(cos(phi)*sin(psi)*dphi + cos(psi)*sin(phi)*dpsi
+                   - cos(psi)*sin(phi)*sin(theta)*dphi
+                   - cos(phi)*sin(psi)*sin(theta)*dpsi
+                   + cos(phi)*cos(psi)*cos(theta)*dtheta))/m
+            - ((sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta))*du1)/m,
+            ((cos(psi)*sin(phi) - cos(phi)*sin(psi)*sin(theta))*du1)/m
+            - (u1*(sin(phi)*sin(psi)*dpsi - cos(phi)*cos(psi)*dphi
+                   + cos(phi)*cos(psi)*sin(theta)*dpsi
+                   + cos(phi)*cos(theta)*sin(psi)*dtheta
+                   - sin(phi)*sin(psi)*sin(theta)*dphi))/m,
+            (cos(theta)*sin(phi)*u1*dphi)/m
+            - (cos(phi)*cos(theta)*du1)/m + (cos(phi)*sin(theta)*u1*dtheta)/m
+        ])[:, None]
+        return np.vstack([ddvel, dpsi])
 
     def get_FM(self, ctrl):
         return np.vstack((self.u1.state, ctrl[1]))

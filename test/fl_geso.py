@@ -33,7 +33,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=0, index=0, level=0.99),  # scenario a
+            # LoE(time=0, index=0, level=0.99),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -45,18 +45,22 @@ class Env(BaseEnv):
         self.controller = fl.FLController(self.plant.m,
                                           self.plant.g,
                                           self.plant.J)
-        L = np.array([37, 568.25, 4639.5, 21249.8, 51792.5, 52500])[:, None]
-        Lpsi = np.array([26, 251, 1066, 1680])[:, None]
+        # L = np.array([37, 568.25, 4639.5, 21249.8, 51792.5, 52500])[:, None]
+        # Lpsi = np.array([26, 251, 1066, 1680])[:, None]
         # L = np.array([120, 6000, 160000, 2400000, 19200000, 64000000])[:, None]
         # Lpsi = np.array([80, 2400, 32000, 160000])[:, None]
+
+        # L = np.array([30, 300, 1000])[:, None]
+        Lp = np.array([60, 1200, 8000])[:, None]
+        L = np.array([100, 4000, 80000, 800000, 3200000])[:, None]
         self.geso_x = geso.GESO_pos(L)
         self.geso_y = geso.GESO_pos(L)
         self.geso_z = geso.GESO_pos(L)
-        self.geso_psi = geso.GESO_psi(Lpsi)
+        self.geso_psi = geso.GESO_psi(Lp)
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
         # Set references
-        pos_des = np.vstack([-0, 0, 0])
+        pos_des = np.vstack([-1, 1, 2])
         vel_des = np.vstack([0, 0, 0])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
@@ -69,29 +73,6 @@ class Env(BaseEnv):
     def get_ref(self, t):
         return self.ref
 
-    def get_obs_input(self):
-        m = self.plant.m
-        quat = self.plant.quat.state
-        phi, theta, psi = quat2angle(quat)[::-1]
-        dphi, dtheta, dpsi = self.controller.dangle.state.ravel()
-        u1 = self.controller.u1.state[0]
-        du1 = self.controller.du1.state[0]
-        ddvel = np.array([
-            - (u1*(cos(phi)*sin(psi)*dphi + cos(psi)*sin(phi)*dpsi
-                   - cos(psi)*sin(phi)*sin(theta)*dphi
-                   - cos(phi)*sin(psi)*sin(theta)*dpsi
-                   + cos(phi)*cos(psi)*cos(theta)*dtheta))/m
-            - ((sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta))*du1)/m,
-            ((cos(psi)*sin(phi) - cos(phi)*sin(psi)*sin(theta))*du1)/m
-            - (u1*(sin(phi)*sin(psi)*dpsi - cos(phi)*cos(psi)*dphi
-                   + cos(phi)*cos(psi)*sin(theta)*dpsi
-                   + cos(phi)*cos(theta)*sin(psi)*dtheta
-                   - sin(phi)*sin(psi)*sin(theta)*dphi))/m,
-            (cos(theta)*sin(phi)*u1*dphi)/m
-            - (cos(phi)*cos(theta)*du1)/m + (cos(phi)*sin(theta)*u1*dtheta)/m
-        ])[:, None]
-        return np.vstack([ddvel, dpsi])
-
     def set_dot(self, t):
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
@@ -100,11 +81,10 @@ class Env(BaseEnv):
         # Observer
         dist = np.zeros((4, 1))
         observation = np.zeros((4, 1))
-        dist[0], observation[0] = self.geso_x.get_dist_obs(self.plant.pos.state[0])
-        dist[1], observation[1] = self.geso_y.get_dist_obs(self.plant.pos.state[1])
-        dist[2], observation[2] = self.geso_z.get_dist_obs(self.plant.pos.state[2])
-        c_psi = quat2angle(self.plant.quat.state)[::-1][2]  # current psi
-        dist[3], observation[3] = self.geso_psi.get_dist_obs(c_psi)
+        dist[0], observation[0] = self.geso_x.get_dist_obs()
+        dist[1], observation[1] = self.geso_y.get_dist_obs()
+        dist[2], observation[2] = self.geso_z.get_dist_obs()
+        dist[3], observation[3] = self.geso_psi.get_dist_obs()
 
         # Controller
         virtual_ctrl = self.controller.get_virtual(t,
@@ -113,7 +93,7 @@ class Env(BaseEnv):
                                                    disturbance=dist
                                                    )
 
-        forces = self.controller.get_FM(virtual_ctrl[0:2])
+        forces = self.controller.get_FM(virtual_ctrl)
         # rotors_cmd = self.CA.get(What).dot(forces)
         rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
 
@@ -125,12 +105,12 @@ class Env(BaseEnv):
 
         self.plant.set_dot(t, rotors)
         self.controller.set_dot(virtual_ctrl)
-        # v_eso = self.get_obs_input()
-        v = virtual_ctrl[2]
-        self.geso_x.set_dot(t, self.plant.pos.state[0], v[0][0])
-        self.geso_y.set_dot(t, self.plant.pos.state[1], v[1][0])
-        self.geso_z.set_dot(t, self.plant.pos.state[2], v[2][0])
-        self.geso_psi.set_dot(t, c_psi, v[3][0])
+        v = self.controller.get_vbar(self.plant, ref, dist)
+        obs_input = self.controller.get_obs_input(self.plant)
+        self.geso_x.set_dot(t, obs_input[0], v[0][0])
+        self.geso_y.set_dot(t, obs_input[1], v[1][0])
+        self.geso_z.set_dot(t, obs_input[2], v[2][0])
+        self.geso_psi.set_dot(t, obs_input[3], v[3][0])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
