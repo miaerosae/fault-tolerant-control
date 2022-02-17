@@ -50,17 +50,15 @@ class lowPowerESO(BaseEnv):
             S[i+2, 2*(i+1)+1] = 1
         self.S = S
 
-        self.F = F
         self.b0 = b0
+        self.F = F
         self.L = L
 
     def deriv(self, xi, sig, y):
         n = self.n
         A, N, D, B, C = self.A, self.N, self.D, self.B, self.C
-        K, S, F, b0 = self.K, self.S, self.F, self.b0
+        K, S, F, b0, L = self.K, self.S, self.F, self.b0, self.L
         # observer
-        b0 = self.b0
-        L = self.L
         xidot = np.zeros((n-1, 2, 1))
         for i in range(n-2):
             if i == 0:
@@ -74,7 +72,8 @@ class lowPowerESO(BaseEnv):
         xidot[n-2, :, :] = A.dot(xi[n-2, :, :]) + N.dot(sig) \
             + B.dot(b0*sat(L, fun_psi(S.dot(xi_stack), B.T.dot(sig), b0, F))) \
             + D.dot(K[n-2, :, :].dot(B.T.dot(xi[n-3, :, :])-C.dot(xi[n-2, :, :])))
-        sigdot = A.dot(sig) + C.T.dot(b0*sat(L, fun_psi(S.dot(xi_stack), B.T.dot(sig), b0, F))) \
+        sigdot = A.dot(sig) \
+            + C.T.dot(b0*sat(L, fun_psi(S.dot(xi_stack), B.T.dot(sig), b0, F))) \
             + D.dot(K[n-1, :, :].dot(B.T.dot(xi[n-2, :, :])-C.dot(sig)))
 
         ctrl = sat(L, fun_psi(S.dot(xi_stack), B.T.dot(sig), b0, F))
@@ -89,7 +88,7 @@ class lowPowerESO(BaseEnv):
     def get_dist_obs(self, t, y):
         states = self.observe_list()
         *_, y1 = self.deriv(*states, y)
-        disturbance = y - y1
+        disturbance = self.sig.state[1]
         observation = y1
         return disturbance, observation
 

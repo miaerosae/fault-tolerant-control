@@ -21,7 +21,8 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.1, max_t=10)
+        super().__init__(dt=0.05, max_t=20)
+        # super().__init__(solver="odeint", max_t=20, dt=10, ode_step_len=100)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         n = self.plant.mixer.B.shape[1]
@@ -32,8 +33,8 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.),  # scenario a
-            # LoE(time=6, index=2, level=0.),  # scenario b
+            LoE(time=5, index=0, level=0.1),  # scenario a
+            # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
         # Define FDI
@@ -46,6 +47,8 @@ class Env(BaseEnv):
                                           self.plant.J)
         L = np.array([37, 568.25, 4639.5, 21249.8, 51792.5, 52500])[:, None]
         Lpsi = np.array([26, 251, 1066, 1680])[:, None]
+        # L = np.array([120, 6000, 160000, 2400000, 19200000, 64000000])[:, None]
+        # Lpsi = np.array([80, 2400, 32000, 160000])[:, None]
         self.geso_x = geso.GESO_pos(L)
         self.geso_y = geso.GESO_pos(L)
         self.geso_z = geso.GESO_pos(L)
@@ -53,15 +56,11 @@ class Env(BaseEnv):
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
         # Set references
-        pos_des = np.vstack([-1, 1, 2])
+        pos_des = np.vstack([-5, 4, 5])
         vel_des = np.vstack([0, 0, 0])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         self.ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
-
-        # Set disturbance
-        self.dist = np.zeros((4, 1))
-        self.ddist = np.zeros((4, 1))
 
     def step(self):
         *_, done = self.update()
@@ -78,21 +77,22 @@ class Env(BaseEnv):
         # Observer
         dist = np.zeros((4, 1))
         observation = np.zeros((4, 1))
-        dist[0], observation[0] = self.geso_x.get_dist_obs(self.plant.observe_list()[0][0])
-        dist[1], observation[1] = self.geso_y.get_dist_obs(self.plant.observe_list()[0][1])
-        dist[2], observation[2] = self.geso_z.get_dist_obs(self.plant.observe_list()[0][2])
-        c_psi = quat2angle(self.plant.observe_list()[2])[::-1][2]  # current psi
+        dist[0], observation[0] = self.geso_x.get_dist_obs(self.plant.pos.state[0])
+        dist[1], observation[1] = self.geso_y.get_dist_obs(self.plant.pos.state[1])
+        dist[2], observation[2] = self.geso_z.get_dist_obs(self.plant.pos.state[2])
+        c_psi = quat2angle(self.plant.quat.state)[::-1][2]  # current psi
         dist[3], observation[3] = self.geso_psi.get_dist_obs(c_psi)
 
         # Controller
         virtual_ctrl = self.controller.get_virtual(t,
                                                    self.plant,
                                                    ref,
-                                                   disturbance=dist
+                                                   # disturbance=dist
                                                    )
 
         forces = self.controller.get_FM(virtual_ctrl)
         rotors_cmd = self.CA.get(What).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
@@ -103,9 +103,9 @@ class Env(BaseEnv):
         self.plant.set_dot(t, rotors)
         self.controller.set_dot(virtual_ctrl)
         v_eso = np.vstack([virtual_ctrl[0], virtual_ctrl[1]])
-        self.geso_x.set_dot(t, self.plant.observe_list()[0][0], v_eso[0][0])
-        self.geso_y.set_dot(t, self.plant.observe_list()[0][1], v_eso[1][0])
-        self.geso_z.set_dot(t, self.plant.observe_list()[0][2], v_eso[2][0])
+        self.geso_x.set_dot(t, self.plant.pos.state[0], v_eso[0][0])
+        self.geso_y.set_dot(t, self.plant.pos.state[1], v_eso[1][0])
+        self.geso_z.set_dot(t, self.plant.pos.state[2], v_eso[2][0])
         self.geso_psi.set_dot(t, c_psi, v_eso[3][0])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,

@@ -34,9 +34,8 @@ class GESO_pos(BaseEnv):
         return xidot
 
     def get_dist_obs(self, y):
-        y1 = self.C.dot(self.xi.state)
-        disturbance = y - y1
-        observation = y1
+        disturbance = self.xi.state[4]
+        observation = self.C.dot(self.xi.state)
         return disturbance, observation
 
     def set_dot(self, t, y, v):
@@ -45,8 +44,7 @@ class GESO_pos(BaseEnv):
         v: input made from controller
         '''
         states = self.observe_list()
-        dots = self.deriv(*states, y, v)
-        self.xi.dot = dots
+        self.xi.dot = self.deriv(*states, y, v)
 
 
 class GESO_psi(BaseEnv):
@@ -73,9 +71,8 @@ class GESO_psi(BaseEnv):
         return xidot
 
     def get_dist_obs(self, y):
-        y1 = self.C.dot(self.xi.state)
-        disturbance = y - y1
-        observation = y1
+        disturbance = self.xi.state[2]
+        observation = self.C.dot(self.xi.state)
         return disturbance, observation
 
     def set_dot(self, t, y, v):
@@ -84,8 +81,7 @@ class GESO_psi(BaseEnv):
         v: input made from controller
         '''
         states = self.observe_list()
-        dots = self.deriv(*states, y, v)
-        self.xi.dot = dots
+        self.xi.dot = self.deriv(*states, y, v)
 
 
 if __name__ == "__main__":
