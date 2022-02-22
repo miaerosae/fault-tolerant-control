@@ -119,7 +119,7 @@ class Multicopter(BaseEnv):
         self.D_drag = np.diag([dx, dy, dz])
         self.mixer = Mixer(d=self.d, c=self.c, b=self.b)
 
-    def deriv(self, pos, vel, quat, omega, rotors):
+    def deriv(self, t, pos, vel, quat, omega, rotors):
         F, M1, M2, M3 = self.mixer.inverse(rotors)
 
         M = np.vstack((M1, M2, M3))
@@ -153,8 +153,13 @@ class Multicopter(BaseEnv):
 
     def set_dot(self, t, rotors):
         states = self.observe_list()
-        dots = self.deriv(*states, rotors)
+        dots = self.deriv(t, *states, rotors)
         self.pos.dot, self.vel.dot, self.quat.dot, self.omega.dot = dots
+
+    def get_d(self, W, rotors):
+        rotor_n = rotors.shape[0]
+        fault = W - np.eye(rotor_n)
+        return self.mixer.B.dot(fault.dot(rotors))
 
     def get_Omega(self, f):
         f = np.clip(f, 0, self.rotor_max)

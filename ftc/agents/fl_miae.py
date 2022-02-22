@@ -103,10 +103,10 @@ class FLController(BaseEnv):
                     disturbance=np.zeros((4, 1)), obs_u=np.zeros((4, 1))):
 
         alp, bet = self.get_alpbet(plant, ref)
-
         vbar = self.get_vbar(plant, ref, disturbance)
-        fm = np.linalg.inv(bet).dot(- alp + vbar)
-        # fm = obs_u
+
+        obs_u[3] = np.linalg.inv(bet).dot(- alp + vbar)[3]
+        fm = obs_u
         d2u1, u2, u3, u4 = fm.ravel()
 
         return d2u1, np.array([u2, u3, u4])[:, None]
@@ -169,11 +169,17 @@ class FLController(BaseEnv):
 
     def get_obs_input(self, plant):
         m = plant.m
+        g = plant.g
         quat = plant.quat.state
         phi, theta, psi = quat2angle(quat)[::-1]
         dphi, dtheta, dpsi = self.dangle.state.ravel()
         u1 = self.u1.state[0]
         du1 = self.du1.state[0]
+        dvel = np.array([
+            -(u1*(sin(phi)*sin(psi) + cos(phi)*cos(psi)*sin(theta)))/m,
+            (u1*(cos(psi)*sin(phi) - cos(phi)*sin(psi)*sin(theta)))/m,
+            g - (cos(phi)*cos(theta)*u1)/m
+        ])[:, None]
         ddvel = np.array([
             - (u1*(cos(phi)*sin(psi)*dphi + cos(psi)*sin(phi)*dpsi
                    - cos(psi)*sin(phi)*sin(theta)*dphi
@@ -188,7 +194,7 @@ class FLController(BaseEnv):
             (cos(theta)*sin(phi)*u1*dphi)/m
             - (cos(phi)*cos(theta)*du1)/m + (cos(phi)*sin(theta)*u1*dtheta)/m
         ])[:, None]
-        return np.vstack([ddvel, dpsi])
+        return np.vstack([dvel, psi]), np.vstack([ddvel, dpsi])
 
     def get_FM(self, ctrl):
         return np.vstack((self.u1.state, ctrl[1]))
