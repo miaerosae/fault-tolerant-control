@@ -13,12 +13,18 @@ from ftc.plotting import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
+
+plt.rc("text", usetex=False)
+plt.rc("lines", linewidth=1)
+plt.rc("axes", grid=True)
+plt.rc("grid", linestyle="--", alpha=0.8)
+
 cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.1, max_t=20)
+        super().__init__(dt=0.05, max_t=40)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         n = self.plant.mixer.B.shape[1]
@@ -29,8 +35,8 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.),  # scenario a
-            # LoE(time=6, index=2, level=0.),  # scenario b
+            LoE(time=3, index=0, level=0.5),  # scenario a
+            LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
         # Define FDI
@@ -45,7 +51,7 @@ class Env(BaseEnv):
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
         # Set references
-        pos_des = np.vstack([-1, 1, 2])
+        pos_des = np.vstack([-2, 5, 4])
         vel_des = np.vstack([0, 0, 0])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
@@ -69,6 +75,7 @@ class Env(BaseEnv):
                                                    ref)
         forces = self.controller.get_FM(virtual_ctrl)
         rotors_cmd = self.CA.get(What).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
@@ -80,7 +87,9 @@ class Env(BaseEnv):
         self.controller.set_dot(virtual_ctrl)
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
-                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref)
+                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
+                    virtual_u=forces, obs=np.zeros((4, 1)),
+                    obs_u=np.zeros((4, 1)))
 
 
 def run(loggerpath):

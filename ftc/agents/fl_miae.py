@@ -99,13 +99,11 @@ class FLController(BaseEnv):
 
         return alp, bet
 
-    def get_virtual(self, t, plant, ref,
-                    disturbance=np.zeros((4, 1)), obs_u=np.zeros((4, 1))):
+    def get_virtual(self, t, plant, ref, disturbance=np.zeros((4, 1))):
 
         alp, bet = self.get_alpbet(plant, ref)
-        # vbar = self.get_vbar(plant, ref, disturbance)
-        # obs_u[3] = np.linalg.inv(bet).dot(- alp + vbar)[3]
-        fm = obs_u
+        vbar = self.get_vbar(plant, ref, disturbance)
+        fm = np.linalg.inv(bet).dot(- alp + vbar)
         d2u1, u2, u3, u4 = fm.ravel()
 
         return d2u1, np.array([u2, u3, u4])[:, None]
