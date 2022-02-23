@@ -85,10 +85,9 @@ class lowPowerESO(BaseEnv):
         ctrl = sat(L, fun_psi(S.dot(xi_stack)-ref, B.T.dot(sig), b0, F))
         return ctrl
 
-    def get_dist_obs(self, t, y):
+    def get_obs(self):
         observation = self.xi.state[0][0][0]
-        disturbance = y - observation
-        return disturbance, observation
+        return observation
 
     def set_dot(self, t, y, ref):
         '''
@@ -131,7 +130,34 @@ class highGainESO(BaseEnv):
         self.x.dot, self.sig.dot = dots
 
     def get_obs(self):
-        return self.x.state[0], self.x.state[1]
+        return self.x.state[0]
+
+
+class Controller(BaseEnv):
+    def __init__(self, m, g):
+        super().__init__()
+        self.m, self.g = m, g
+        self.u1 = BaseSystem(np.array((m*g)))
+        self.du1 = BaseSystem(np.zeros((1)))
+
+        self.F1 = - np.array([[1, 1, 1]])*23.95
+        self.F2 = - np.array([[1, 1, 1]])*48.11
+        self.F3 = - np.array([[1, 1, 1]])*32.95
+        self.F4 = - np.array([[1, 1, 1]])*9.79
+        self.F_psi = - np.array([[4, 5, 0, 0]])
+        F = np.hstack([self.F1.T, self.F2.T, self.F3.T, self.F4.T])
+        self.F = np.vstack([F, self.F_psi])
+
+    def get_virtual(self, t, obs_u):
+        d2u1, u2, u3, u4 = obs_u.ravel()
+        return d2u1, np.array([u2, u3, u4])[:, None]
+
+    def get_FM(self, ctrl):
+        return np.vstack((self.u1.state, ctrl[1]))
+
+    def set_dot(self, ctrl):
+        self.u1.dot = self.du1.state
+        self.du1.dot = ctrl[0]
 
 
 if __name__ == "__main__":

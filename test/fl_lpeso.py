@@ -9,8 +9,6 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
-import ftc.agents.fl_miae as fl
-import ftc.agents.geso as geso
 import ftc.agents.lpeso as lpeso
 from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
@@ -57,9 +55,8 @@ class Env(BaseEnv):
 
         # Define agents
         self.CA = CA(self.plant.mixer.B)
-        self.controller = fl.FLController(self.plant.m,
-                                          self.plant.g,
-                                          self.plant.J)
+        self.controller = lpeso.Controller(self.plant.m,
+                                           self.plant.g)
         b0 = get_b0(self.plant.m, self.plant.g, self.plant.J)
         self.b0 = b0
         K = np.array([[23, 484],
@@ -114,20 +111,14 @@ class Env(BaseEnv):
         obs_ctrl[0] = self.lpeso_z.get_virtual(t, obs_ref[2, :, :])
         obs_ctrl[3] = self.hgeso_psi.get_virtual(obs_ref[3, 0:2, :])
 
-        # dist = np.zeros((4, 1))
         observation = np.zeros((4, 1))
-        # dist[2], observation[0] = self.lpeso_x.get_dist_obs(t, y[0])
-        # dist[1], observation[1] = self.lpeso_y.get_dist_obs(t, y[1])
-        # dist[0], observation[2] = self.lpeso_z.get_dist_obs(t, y[2])
-        observation[2], observation[3] = self.hgeso_psi.get_obs()
-        # dist[3], observation[3] = self.geso_psi.get_dist_obs()
+        observation[0] = self.lpeso_x.get_obs()
+        observation[1] = self.lpeso_y.get_obs()
+        observation[2] = self.lpeso_z.get_obs()
+        observation[3] = self.hgeso_psi.get_obs()
 
         # Controller
-        virtual_ctrl = self.controller.get_virtual(t,
-                                                   self.plant,
-                                                   self.ref,
-                                                   obs_u=obs_ctrl
-                                                   )
+        virtual_ctrl = self.controller.get_virtual(t, obs_ctrl)
 
         forces = self.controller.get_FM(virtual_ctrl)
         rotors_cmd = self.CA.get(What).dot(forces)
