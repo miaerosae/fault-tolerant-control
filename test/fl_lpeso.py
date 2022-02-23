@@ -30,12 +30,12 @@ class Env(BaseEnv):
     def __init__(self):
         super().__init__(dt=0.05, max_t=40)
         init_pos = np.vstack((0, 0, 0))
-        init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
-        init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
+        # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
+        # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
         self.plant = Multicopter(
             pos=init_pos,
             vel=np.zeros((3, 1)),
-            quat=init_quat,
+            quat=np.vstack([1, 0, 0, 0]),
             omega=np.zeros((3, 1)),
         )
         # init = cfg.models.multicopter.init
@@ -66,21 +66,13 @@ class Env(BaseEnv):
                       [23, 183.1653],
                       [23, 80.3686],
                       [23, 30.0826]])
-        # K = np.array([[17.4492, 269.5029],
-        #               [17.4829, 101.1404],
-        #               [17.5172, 44.9873],
-        #               [17.5507, 16.8828]])
-        # Kpsi = np.array([[23.0000, 242.0000],
-        #                  [23.0000, 60.1653]])
-        Lx, Ly, Lz = 1., 1., 55.
-        # Lpsi = 1.
+        Lx, Ly, Lz, Lpsi = 1., 1., 55., 1.
         self.lpeso_x = lpeso.lowPowerESO(4, 2, K, b0[0], self.controller.F[0, :], Lx)
         self.lpeso_y = lpeso.lowPowerESO(4, 2, K, b0[1], self.controller.F[1, :], Ly)
         self.lpeso_z = lpeso.lowPowerESO(4, 2, K, b0[2], self.controller.F[2, :], Lz)
-        # self.lpeso_psi = lpeso.lowPowerESO(2, 2, Kpsi, b0[3], self.controller.F[3, 0:2], Lpsi)
-
-        Lp = np.array([40, 400])[:, None]
-        self.geso_psi = geso.GESO_psi(Lp)
+        H = np.array([[3, 3, 1]])
+        # H = np.array([[30, 291, 910]])
+        self.hgeso_psi = lpeso.highGainESO(0.5, H, b0[3], self.controller.F[3, 0:2], Lpsi)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
@@ -120,22 +112,20 @@ class Env(BaseEnv):
         obs_ctrl[2] = self.lpeso_x.get_virtual(t, obs_ref[0, :, :])
         obs_ctrl[1] = self.lpeso_y.get_virtual(t, obs_ref[1, :, :])
         obs_ctrl[0] = self.lpeso_z.get_virtual(t, obs_ref[2, :, :])
-        # obs_ctrl[3] = self.lpeso_psi.get_virtual(t, obs_ref[3, 0:2, :])
+        obs_ctrl[3] = self.hgeso_psi.get_virtual(obs_ref[3, 0:2, :])
 
-        dist = np.zeros((4, 1))
+        # dist = np.zeros((4, 1))
         observation = np.zeros((4, 1))
-        y = np.vstack([self.plant.pos.state, quat2angle(self.plant.quat.state)[::-1][2]])
         # dist[2], observation[0] = self.lpeso_x.get_dist_obs(t, y[0])
         # dist[1], observation[1] = self.lpeso_y.get_dist_obs(t, y[1])
         # dist[0], observation[2] = self.lpeso_z.get_dist_obs(t, y[2])
-        # dist[3], observation[3] = self.lpeso_psi.get_dist_obs(t, y[3])
-        dist[3], observation[3] = self.geso_psi.get_dist_obs()
+        observation[2], observation[3] = self.hgeso_psi.get_obs()
+        # dist[3], observation[3] = self.geso_psi.get_dist_obs()
 
         # Controller
         virtual_ctrl = self.controller.get_virtual(t,
                                                    self.plant,
                                                    self.ref,
-                                                   disturbance=dist,
                                                    obs_u=obs_ctrl
                                                    )
 
@@ -146,26 +136,21 @@ class Env(BaseEnv):
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
-        # disturbances by faults
-        d = self.plant.get_d(W, rotors)
-
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
 
         self.plant.set_dot(t, rotors)
         self.controller.set_dot(virtual_ctrl)
+
+        y = np.vstack([self.plant.pos.state, quat2angle(self.plant.quat.state)[::-1][2]])
         self.lpeso_x.set_dot(t, y[0], obs_ref[0, :, :])
         self.lpeso_y.set_dot(t, y[1], obs_ref[1, :, :])
         self.lpeso_z.set_dot(t, y[2], obs_ref[2, :, :])
-        # self.lpeso_psi.set_dot(t, y[3], obs_ref[3, 0:2, :])
-        v = self.controller.get_vbar(self.plant, self.ref, dist)
-        dot2, obs_input = self.controller.get_obs_input(self.plant)
-        self.geso_psi.set_dot(t, obs_input[3]*self.plant.J[2, 2], v[3][0])
+        self.hgeso_psi.set_dot(t, y[3], obs_ref[3, 0:2, :])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=self.ref,
-                    obs_u=obs_ctrl, virtual_u=forces, observation=observation,
-                    dist=dist, d=d)
+                    obs_u=obs_ctrl, virtual_u=forces, obs=observation)
 
 
 def run(loggerpath):

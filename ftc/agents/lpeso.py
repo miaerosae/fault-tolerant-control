@@ -100,36 +100,38 @@ class lowPowerESO(BaseEnv):
 
 
 class highGainESO(BaseEnv):
-    def __init__(self, eps, b0, H, L):
+    def __init__(self, eps, H, b0, F, L):
         super().__init__()
         self.x = BaseSystem(np.zeros((2, 1)))
         self.sig = BaseSystem(np.zeros((1, 1)))
 
-        self.b0, self.eps, self.L = b0, eps, L
-        self.H, self.alp = H[0:2] / np.array([[1/eps, 1/eps**2]]), H[2]
+        self.b0, self.eps, self.F, self.L, self.alp = b0, eps, F, L, H[0, 2]
+        self.H = (H[0, 0:2] / np.array([eps, eps**2]))[:, None]
         self.A = np.eye(2, 2, 1)
-        self.B = np.array([1, 0])[:, None]
+        self.B = np.array([0, 1])[:, None]
         self.C = np.array([[1, 0]])
 
-    def deriv(self, x, sig, y, v):
-        b0, eps, L, H, alp = self.b0, self.eps, self.L, self.H, self.alp
+    def deriv(self, x, sig, y, ref):
+        b0, eps, H, alp = self.b0, self.eps, self.H, self.alp
         A, B, C = self.A, self.B, self.C
 
-        psi = 1 / b0 * (- self.sig.state + v)
-        u = L * sat(1, psi/L)
-        xdot = A.dot(x) + B.dot(self.sig.state + b0*u) + H.dot(y - C.dot(x))
+        u = self.get_virtual(ref)
+        xdot = A.dot(x) + B*(sig + b0*u) + H*(y - C.dot(x))
         sigdot = (alp / eps**3) * (y - C.dot(x))
         return xdot, sigdot
 
-    def get_virtual(self, t, v):
-        psi = 1 / self.b0 * (- self.sig.state + v)
+    def get_virtual(self, ref):
+        psi = fun_psi(self.x.state-ref, self.sig.state, self.b0, self.F)
         u = self.L * sat(1, psi/self.L)
         return u
 
-    def set_dot(self, y, v):
+    def set_dot(self, t, y, ref):
         states = self.observe_list()
-        dots = self.deriv(*states, y, v)
+        dots = self.deriv(*states, y, ref)
         self.x.dot, self.sig.dot = dots
+
+    def get_obs(self):
+        return self.x.state[0], self.x.state[1]
 
 
 if __name__ == "__main__":

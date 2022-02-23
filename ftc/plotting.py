@@ -41,6 +41,7 @@ def exp_plot(loggerpath):
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor thrust")
     plt.tight_layout()
+    # plt.savefig("Figure_4.png")
 
     # Position
     plt.figure()
@@ -48,6 +49,7 @@ def exp_plot(loggerpath):
 
     for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
         plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k"+_ls, label=_label)
+        # plt.plot(data["t"], data["observation"][:, i, 0], "b"+_ls, label="observation")
         plt.plot(data["t"], data["ref"][:, i, 0], "r"+_ls, label=_label+" (cmd)")
     # plt.axvspan(3, detection_time[0], alpha=0.2, color="b")
     # plt.axvline(detection_time[0], alpha=0.8, color="b", linewidth=0.5)
@@ -61,6 +63,7 @@ def exp_plot(loggerpath):
     plt.gcf().supylabel("Position, m")
     plt.tight_layout()
     plt.legend()
+    # plt.savefig("Figure_1.png")
 
     # velocity
     plt.figure()
@@ -80,10 +83,12 @@ def exp_plot(loggerpath):
     angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
     for i, (_label, _ls) in enumerate(zip(["yaw", "pitch", "roll"], ["-.", "--", "-"])):
         plt.plot(data["t"], np.rad2deg(angles[:, i]), "k"+_ls, label=_label)
+    plt.plot(data["t"], np.rad2deg(data["obs"][:, 2, 0]), "b")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Euler angles, deg")
     plt.tight_layout()
     plt.legend()
+    # plt.savefig("Figure_2.png")
 
     # angular rates
     plt.figure()
@@ -91,9 +96,72 @@ def exp_plot(loggerpath):
 
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
         plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)
+    plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Angular rates, deg/s")
     plt.tight_layout()
     plt.legend()
+    # plt.savefig("Figure_3.png")
+
+    # observation
+    # plt.figure()
+
+    # ax = plt.subplot(411)
+    # for i in range(data["observation"].shape[1]):
+    #     if i != 0:
+    #         plt.subplot(411+i, sharex=ax)
+    #     # plt.xlim([0, 5])
+    #     # plt.ylim([0, 10])
+    #     plt.plot(data["t"], data["observation"][:, i, 0], "r--", label="observation")
+    #     if i == 0:
+    #         plt.legend()
+    # plt.gcf().supylabel("observation")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+
+    # virtual control
+    plt.figure()
+
+    ax = plt.subplot(411)
+    for i in range(data["virtual_u"].shape[1]):
+        if i != 0:
+            plt.subplot(411+i, sharex=ax)
+        plt.plot(data["t"], data["virtual_u"][:, i, 0], "r--", label="virtual control input")
+        if i == 0:
+            plt.legend()
+    plt.gcf().supylabel("virtual control input")
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
+    # plt.savefig("Figure_5.png")
+
+    # disturbance
+    # plt.figure()
+
+    # ax = plt.subplot(411)
+    # for i in range(data["dist"].shape[1]):
+    #     if i != 0:
+    #         plt.subplot(411+i, sharex=ax)
+    #     plt.plot(data["t"], data["dist"][:, i, 0], "r--", label="distarbance")
+    #     plt.plot(data["t"], data["d"][:, i, 0], "k", label=" realdistarbance")
+    #     if i == 0:
+    #         plt.legend()
+    # plt.gcf().supylabel("dist")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+
+    # obs control
+    plt.figure()
+
+    ax = plt.subplot(411)
+    for i in range(data["obs_u"].shape[1]):
+        if i != 0:
+            plt.subplot(411+i, sharex=ax)
+        plt.plot(data["t"], data["obs_u"][:, i, 0], "r--", label="observer control input")
+        if i == 0:
+            plt.legend()
+    plt.gcf().supylabel("observer control input")
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
+    # plt.savefig("Figure_6.png")
 
     plt.show()
