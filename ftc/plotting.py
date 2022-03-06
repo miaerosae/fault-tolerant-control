@@ -41,16 +41,20 @@ def exp_plot(loggerpath):
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor thrust")
     plt.tight_layout()
-    # plt.savefig("Figure_4.png")
+    # plt.savefig("lpeso_rotor_input.png")
 
     # Position
     plt.figure()
     # plt.ylim([-5, 5])
 
+    ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
-        plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k"+_ls, label=_label)
-        plt.plot(data["t"], data["obs"][:, i, 0], "b"+_ls, label="observation")
-        plt.plot(data["t"], data["ref"][:, i, 0], "r"+_ls, label=_label+" (cmd)")
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
+        plt.plot(data["t"], data["obs"][:, i, 0], "b", label=_label+" (observation)")
+        plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label=_label)
+        plt.plot(data["t"], data["ref"][:, i, 0], "r--", label=_label+" (cmd)")
+        plt.legend(loc="upper right")
     # plt.axvspan(3, detection_time[0], alpha=0.2, color="b")
     # plt.axvline(detection_time[0], alpha=0.8, color="b", linewidth=0.5)
     # plt.annotate("Rotor 0 fails", xy=(3, 0), xytext=(3.5, 0.5),
@@ -63,13 +67,16 @@ def exp_plot(loggerpath):
     plt.gcf().supylabel("Position, m")
     plt.tight_layout()
     plt.legend()
-    # plt.savefig("Figure_1.png")
+    plt.savefig("lpeso_pos.png", dpi=300)
 
     # velocity
     plt.figure()
     plt.ylim([-5, 5])
 
+    ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip(["Vx", "Vy", "Vz"], ["-", "--", "-."])):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], data["x"]["vel"][:, i, 0], "k"+_ls, label=_label)
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Velocity, m/s")
@@ -80,15 +87,21 @@ def exp_plot(loggerpath):
     plt.figure()
     plt.ylim([-40, 40])
 
+    ax = plt.subplot(311)
     angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
-    for i, (_label, _ls) in enumerate(zip(["yaw", "pitch", "roll"], ["-.", "--", "-"])):
-        plt.plot(data["t"], np.rad2deg(angles[:, i]), "k"+_ls, label=_label)
-    plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b")
+    ax = plt.subplot(311)
+    for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
+        if i == 2:
+            plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b", label=r"$\psi$"+" (observation)")
+        plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k"+_ls, label=_label)
+        plt.legend(loc="upper right")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Euler angles, deg")
     plt.tight_layout()
     plt.legend()
-    # plt.savefig("Figure_2.png")
+    plt.savefig("lpeso_angle.png", dpi=300)
 
     # angular rates
     plt.figure()
@@ -122,16 +135,15 @@ def exp_plot(loggerpath):
     plt.figure()
 
     ax = plt.subplot(411)
-    for i in range(data["virtual_u"].shape[1]):
+    for i, _label in enumerate([r"$F$", r"$M_{\phi}$", r"$M_{\theta}$", r"$M_{\psi}$"]):
         if i != 0:
             plt.subplot(411+i, sharex=ax)
-        plt.plot(data["t"], data["virtual_u"][:, i, 0], "r--", label="virtual control input")
-        if i == 0:
-            plt.legend()
-    plt.gcf().supylabel("virtual control input")
+        plt.plot(data["t"], data["virtual_u"][:, i], "k-", label=_label)
+        plt.legend(loc="upper right")
     plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel("Generalized forces")
     plt.tight_layout()
-    # plt.savefig("Figure_5.png")
+    plt.savefig("lpeso_forces.png", dpi=300)
 
     # disturbance
     # plt.figure()
