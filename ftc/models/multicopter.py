@@ -148,6 +148,7 @@ class Multicopter(BaseEnv):
             - self.A_drag.dot(dcm).dot(vel)
             - self.B_drag.dot(omega)
         )
+        # + 0.3 * np.sin(2*np.pi*t)  # 이거보다 크면 leso가 제어 불가능
 
         return dpos, dvel, dquat, domega
 
