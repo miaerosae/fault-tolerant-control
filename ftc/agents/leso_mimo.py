@@ -36,10 +36,11 @@ class lowPowerESO(BaseEnv):
         L: saturation function value
 
     '''
-    def __init__(self, n, l, K, B_hat, F, L):
+    def __init__(self, n, l, K, B_hat, F, L, F_psi, K_psi):
         super().__init__()
         nu = int(n[0])  # number of subdimension
         self.xi = BaseSystem(np.zeros((np.size(n), nu, 2, 1)))
+        self.psi = BaseSystem(np.zeros((2, 2, 1)))
 
         self.n, self.l = n, l
         self.A = np.array([[0, 1], [0, 0]])
@@ -48,8 +49,8 @@ class lowPowerESO(BaseEnv):
         self.B = np.array([[0], [1]])
         self.C = np.array([[1, 0]])
         self.K = np.reshape(K, (nu, 2, 1))  # K(i) = K[i,:,:]
-        S = np.zeros((np.size(n)*nu, 2*np.size(n)*nu))
-        for i in range(np.size(n)*nu):
+        S = np.zeros((np.size(n)*nu+2, 2*(np.size(n)*nu+2)))
+        for i in range(np.size(n)*nu+2):
             S[i, 2*i] = 1
         self.S = S
 
@@ -58,12 +59,16 @@ class lowPowerESO(BaseEnv):
         self.F = F
         self.L = L
 
+        self.F_psi = F_psi
+        self.K_psi = K_psi
+
         self.nu = nu
 
-    def deriv(self, xi, y, ref):
+    def deriv(self, xi, psi, y, ref):
         n, nu = self.n, self.nu
         A, N, D, B, C = self.A, self.N, self.D, self.B, self.C
         K, B_hat = self.K, self.B_hat
+        K_psi = self.K_psi
         # observer
         xidot = np.zeros((np.size(n), nu, 2, 1))
         u = self.get_virtual(ref)
@@ -71,7 +76,7 @@ class lowPowerESO(BaseEnv):
             for i in range(nu-2):
                 if i == 0:
                     xidot[j, i, :, :] = A.dot(xi[j, i, :, :]) + N.dot(xi[j, i+1, :, :]) \
-                        + D.dot(K[i, :, :])*(y-C.dot(xi[j, i, :, :]))
+                        + D.dot(K[i, :, :])*(y[j]-C.dot(xi[j, i, :, :]))
                 else:
                     xidot[j, i, :, :] = A.dot(xi[j, i, :, :]) + N.dot(xi[j, i+1, :, :]) \
                         + D.dot(K[i, :, :])*(B.T.dot(xi[j, i-1, :, :])-C.dot(xi[j, i, :, :]))
@@ -83,68 +88,47 @@ class lowPowerESO(BaseEnv):
                 + C.T*(B_hat[j, :].dot(u)) \
                 + D.dot(K[nu-1, :, :])*(B.T.dot(xi[j, nu-2, :, :])-C.dot(xi[j, nu-1, :, :]))
 
-        return xidot
+        psidot = np.zeros((2, 2, 1))
+        psidot[0, :, :] = A.dot(psi[0, :, :]) + N.dot(psi[1, :, :]) \
+            + B*(B_hat[3, :].dot(u)) \
+            + D.dot(K_psi[0, :][:, None])*(y[3]-C.dot(psi[0, :, :]))
+        psidot[1, :, :] = A.dot(psi[1, :, :]) + C.T*(B_hat[3, :].dot(u)) \
+            + D.dot(K_psi[1, :][:, None])*(B.T.dot(psi[0, :, :]) - C.dot(psi[1, :, :]))
+
+        return xidot, psidot
 
     def get_virtual(self, ref):
         n, nu = self.n, self.nu
         F, L, S, B_hat_inv = self.F, self.L, self.S, self.B_hat_inv
+        F_psi = self.F_psi
         sn = np.size(n)
         xi_stack = np.reshape(self.xi.state, [sn*nu*2, 1])
-        xi = S.dot(xi_stack)
-        F_blk = np.block([[F, np.zeros((1, 2*nu))],
-                          [np.zeros((1, nu)), F, np.zeros((1, nu))],
-                          [np.zeros((1, 2*nu)), F]])
-        sig = np.reshape(self.xi.state[:, nu-1, 1, :], [sn, 1])
-        u = - B_hat_inv.dot(sat(L, sig-F_blk.dot(xi-ref)))
+        psi_stack = np.reshape(self.psi.state, [4, 1])
+        stack = np.vstack([xi_stack, psi_stack])
+        xi = S.dot(stack)
+        F_blk = np.block([[F, np.zeros((1, 2*nu+2))],
+                          [np.zeros((1, nu)), F, np.zeros((1, nu+2))],
+                          [np.zeros((1, 2*nu)), F, np.zeros((1, 2))],
+                          [np.zeros((1, 3*nu)), F_psi]])
+        sig_xi = np.reshape(self.xi.state[:, nu-1, 1, :], [sn, 1])
+        sig_psi = self.psi.state[1, 1, :]
+        sig = np.vstack([sig_xi, sig_psi])
+        u = B_hat_inv.dot(sat(L, -sig+F_blk.dot(xi-ref)))
+        # u = (B_hat_inv.dot(-sig+F_blk.dot(xi-ref)))
         return u
 
     def get_obs(self):
-        ns = np.size(self.n)
-        observe_x1 = np.reshape(self.xi.state[:, 0, 0, :], [ns, 1])
-        observe_x2 = np.reshape(self.xi.state[:, 1, 0, :], [ns, 1])
-        return observe_x1, observe_x2
+        sn = np.size(self.n)
+        observe_xyz = np.reshape(self.xi.state[:, 0, 0, :], [sn, 1])
+        observe = np.vstack([observe_xyz, self.psi.state[0, 0, :]])
+        return observe
 
     def set_dot(self, t, y, ref):
         '''
         y: desired observer's real state
         '''
         states = self.observe_list()
-        self.xi.dot = self.deriv(*states, y, ref)
-
-
-class highGainESO(BaseEnv):
-    def __init__(self, eps, H, b0, F, L):
-        super().__init__()
-        self.x = BaseSystem(np.zeros((2, 1)))
-        self.sig = BaseSystem(np.zeros((1, 1)))
-
-        self.b0, self.eps, self.F, self.L, self.alp = b0, eps, F, L, H[0, 2]
-        self.H = (H[0, 0:2] / np.array([eps, eps**2]))[:, None]
-        self.A = np.eye(2, 2, 1)
-        self.B = np.array([0, 1])[:, None]
-        self.C = np.array([[1, 0]])
-
-    def deriv(self, x, sig, y, ref):
-        b0, eps, H, alp = self.b0, self.eps, self.H, self.alp
-        A, B, C = self.A, self.B, self.C
-
-        u = self.get_virtual(ref)
-        xdot = A.dot(x) + B*(sig + b0*u) + H*(y - C.dot(x))
-        sigdot = (alp / eps**3) * (y - C.dot(x))
-        return xdot, sigdot
-
-    def get_virtual(self, ref):
-        psi = fun_psi(self.x.state-ref, self.sig.state, self.b0, self.F)
-        u = self.L * sat(1, psi/self.L)
-        return u
-
-    def set_dot(self, t, y, ref):
-        states = self.observe_list()
-        dots = self.deriv(*states, y, ref)
-        self.x.dot, self.sig.dot = dots
-
-    def get_obs(self):
-        return self.x.state[0]
+        self.xi.dot, self.psi.dot = self.deriv(*states, y, ref)
 
 
 class Controller(BaseEnv):
@@ -154,7 +138,8 @@ class Controller(BaseEnv):
         self.u1 = BaseSystem(np.array((m*g)))
         self.du1 = BaseSystem(np.zeros((1)))
 
-        self.F = np.array([[23.95, 48.11, 32.95, 9.79]])
+        self.F = - np.array([[23.95, 48.11, 32.95, 9.79]])
+        self.F_psi = - np.array([[4, 5]])
 
     def get_virtual(self, t, obs_u):
         d2u1, u2, u3, u4 = obs_u.ravel()
