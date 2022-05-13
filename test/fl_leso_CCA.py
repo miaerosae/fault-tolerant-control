@@ -8,7 +8,7 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-from ftc.agents.CA import CA
+from ftc.agents.CA import CA, ConstrainedCA
 import ftc.agents.leso_fdi as leso
 from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
@@ -48,7 +48,8 @@ class Env(BaseEnv):
         self.fdi = self.fault_manager.fdi
 
         # Define agents
-        self.CA = CA(self.plant.mixer.B)
+        # self.CA = CA(self.plant.mixer.B)
+        self.CA = ConstrainedCA(self.plant.mixer.B)
         self.controller = leso.Controller(self.plant.m,
                                           self.plant.g)
         b0 = get_b0(self.plant.m, self.plant.g, self.plant.J)
@@ -66,9 +67,13 @@ class Env(BaseEnv):
         self.leso_z = leso.lowPowerESO(4, 2, K, b0[2], self.controller.F[2, :],
                                        Lz, alp_z)
         H = np.array([[3, 3, 1]])
+        # Fpsi = np.array([2, 1])
         self.hgeso_psi = leso.highGainESO(0.5, H, b0[3],
                                           self.controller.F[3, 0:2], Lpsi,
                                           alp_psi,
+                                          # switch=False,
+                                          # Fpsi=Fpsi, fault=fault_t,
+                                          # delay=self.fdi.delay
                                           )
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
@@ -139,8 +144,16 @@ class Env(BaseEnv):
         virtual_ctrl = self.controller.get_virtual(t, obs_ctrl, np.zeros((4, 1)))
 
         forces = self.controller.get_FM(virtual_ctrl)
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         # rotors_cmd = self.CA.get(W).dot(forces)
+        if t < 3.1:
+            rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        else:
+            fault_index = self.fdi.get_index(t)
+            rotors_cmd = self.CA.solve_miae(fault_index, forces,
+                                            What, 1e-4,
+                                            self.plant.rotor_min,
+                                            self.plant.rotor_max)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)

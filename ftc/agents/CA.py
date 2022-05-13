@@ -68,7 +68,7 @@ class ConstrainedCA():
     def solve_opt(self, fault_index, v, rotor_min, rotor_max):
         n = self.n_rotor - len(fault_index)
         self.u_prev = np.delete(self.u_prev, fault_index)
-        bnds = np.hstack((rotor_min*np.ones((n, 1)), rotor_max*np.ones((n, 1))))
+        bnds = np.hstack((rotor_min*np.zeros((n, 1)), rotor_max*np.ones((n, 1))))
         A_eq = self.get_faulted_B(fault_index)
         b_eq = v.reshape((len(v),))
         cost = (lambda u: np.linalg.norm(u, np.inf)
@@ -80,6 +80,30 @@ class ConstrainedCA():
         _u = sol.x
         for i in range(len(fault_index)):
             _u = np.insert(_u, fault_index[i], 0)
+        self.u_prev = _u
+        return np.vstack(_u)
+
+    def solve_miae(self, fault_index, v, Lambda, mu, rotor_min, rotor_max):
+        nr = self.n_rotor
+        bnds = np.hstack((np.zeros((nr, 1)), np.ones((nr, 1))))
+        b_eq = v.reshape((len(v),))  # virtual input
+        v_d_bar = b_eq - self.B.dot(Lambda.dot(rotor_min*np.ones((6, 1))))
+        B_p_bar = self.B.dot((rotor_max-rotor_min)*np.eye(6))
+        if len(fault_index) == 0:
+            weight = np.array([100, 100, 20, 1])[:, None]**(1/2)
+        else:
+            weight = np.array([200, 200, 20, 0])[:, None]**(1/2)
+
+        cost = (lambda u:
+                # np.linalg.norm(u-self.u_prev, np.inf)  # worse
+                + np.linalg.norm((v_d_bar - B_p_bar.dot(Lambda.dot(u))) * weight, 1)
+                )
+
+        opts = {"ftol": 1e-5, "maxiter": 1000}
+        sol = minimize(cost, self.u_prev, method="SLSQP",
+                       bounds=bnds, options=opts)
+
+        _u = (rotor_max-rotor_min)*sol.x + rotor_min
         self.u_prev = _u
         return np.vstack(_u)
 
