@@ -97,7 +97,7 @@ class ConstrainedCA():
         if len(fault_index) == 0:
             weight = np.array([100, 100, 20, 1])[:, None]**(1/2)
         else:
-            weight = np.array([200, 200, 20, 0])[:, None]**(1/2)
+            weight = np.array([200, 200, 20, 1])[:, None]**(1/2)
 
         cost = (lambda u:
                 # np.linalg.norm(u-self.u_prev, np.inf)  # worse

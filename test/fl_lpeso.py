@@ -8,7 +8,7 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-from ftc.agents.CA import CA
+from ftc.agents.CA import CA, ConstrainedCA
 import ftc.agents.lpeso as lpeso
 from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
@@ -26,7 +26,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.05, max_t=30)
+        super().__init__(dt=0.05, max_t=50)
         init_pos = np.vstack((0, 0, 0))
         # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
         # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
@@ -46,7 +46,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.),  # scenario a
+            LoE(time=3, index=0, level=0.),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -54,7 +54,8 @@ class Env(BaseEnv):
         self.fdi = self.fault_manager.fdi
 
         # Define agents
-        self.CA = CA(self.plant.mixer.B)
+        # self.CA = CA(self.plant.mixer.B)
+        self.CCA = ConstrainedCA(self.plant.mixer.B)
         self.controller = lpeso.Controller(self.plant.m,
                                            self.plant.g)
         b0 = get_b0(self.plant.m, self.plant.g, self.plant.J)
@@ -63,36 +64,44 @@ class Env(BaseEnv):
                       [23, 80.3686],
                       [23, 30.0826]])
         Lx, Ly, Lz, Lpsi = 1., 1., 55., 1.
-        Rpos = np.array([10, 5, 5])
+        Rxy = np.array([10, 10, 50])
+        Rz = np.array([10, 10, 50])
         self.lpeso_x = lpeso.lowPowerESO(4, 2, K, b0[0],
-                                         self.controller.F[0, :], Lx, Rpos)
+                                         self.controller.F[0, :], Lx, Rxy)
         self.lpeso_y = lpeso.lowPowerESO(4, 2, K, b0[1],
-                                         self.controller.F[1, :], Ly, Rpos)
+                                         self.controller.F[1, :], Ly, Rxy)
         self.lpeso_z = lpeso.lowPowerESO(4, 2, K, b0[2],
-                                         self.controller.F[2, :], Lz, Rpos)
+                                         self.controller.F[2, :], Lz, Rz)
         H = np.array([[3, 3, 1]])
         self.hgeso_psi = lpeso.highGainESO(0.5, H, b0[3],
                                            self.controller.F[3, 0:2], Lpsi)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
+    def get_ref(self, t):
         # Set references
-        pos_des = np.vstack([-4, 3, 4])
-        vel_des = np.vstack([0, 0, 0])
+        # if t < 20:
+        #     pos_des = np.vstack([-4, 3, 4])
+        # else:
+        #     pos_des = np.vstack([-6, 1, 7])
+        # vel_des = np.vstack([0, 0, 0])
+        pos_des = np.vstack([sin(t/2), cos(t/2), -t])
+        vel_des = np.vstack([cos(t/2)/2, -sin(t/2)/2, -1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
-        self.ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
+        return np.vstack([pos_des, vel_des, quat_des, omega_des])
 
     def step(self):
         *_, done = self.update()
         return done
 
-    def get_obs_ref(self):
-        posd = self.ref[0:3]
+    def get_obs_ref(self, t):
+        ref = self.get_ref(t)
+        posd = ref[0:3]
         veld = np.zeros((3, 1))
         dveld = np.zeros((3, 1))
         ddveld = np.zeros((3, 1))
-        psid = quat2angle(self.ref[6:10])[::-1][2]
+        psid = quat2angle(ref[6:10])[::-1][2]
         dpsid = 0
 
         obs_ref = np.zeros((4, 4, 1))
@@ -103,12 +112,13 @@ class Env(BaseEnv):
         return obs_ref
 
     def set_dot(self, t):
+        ref = self.get_ref(t)
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
 
         # Observer
         obs_ctrl = np.zeros((4, 1))
-        obs_ref = self.get_obs_ref()
+        obs_ref = self.get_obs_ref(t)
         obs_ctrl[2] = self.lpeso_x.get_virtual(t, obs_ref[0, :, :])
         obs_ctrl[1] = self.lpeso_y.get_virtual(t, obs_ref[1, :, :])
         obs_ctrl[0] = self.lpeso_z.get_virtual(t, obs_ref[2, :, :])
@@ -124,8 +134,16 @@ class Env(BaseEnv):
         virtual_ctrl = self.controller.get_virtual(t, obs_ctrl)
 
         forces = self.controller.get_FM(virtual_ctrl)
-        rotors_cmd = self.CA.get(What).dot(forces)
         # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = self.CA.get(What).dot(forces)
+        if t < self.detection_time[1]:
+            rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        else:
+            fault_index = self.fdi.get_index(t)
+            rotors_cmd = self.CCA.solve_miae(fault_index, forces,
+                                             What, 1e-4,
+                                             self.plant.rotor_min,
+                                             self.plant.rotor_max)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
@@ -143,7 +161,7 @@ class Env(BaseEnv):
         self.hgeso_psi.set_dot(t, y[3], obs_ref[3, 0:2, :])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
-                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=self.ref,
+                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     obs_u=obs_ctrl, virtual_u=forces, obs=observation)
 
 
