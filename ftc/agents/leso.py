@@ -29,6 +29,7 @@ class lowPowerESO(BaseEnv):
         K: design paramters, n by 2
         b0: dot(x_n) = f0 + b0u
         F: (A+BF) Hurwitz
+        L: saturation value
 
     '''
     def __init__(self, n, l, K, b0, F, L):
