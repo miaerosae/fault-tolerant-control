@@ -84,6 +84,11 @@ class ConstrainedCA():
         return np.vstack(_u)
 
     def solve_miae(self, fault_index, v, Lambda, mu, rotor_min, rotor_max):
+        '''
+        G. P. Falconi, J. Angelov, F. Holzapfel, "Adaptive Fault-Tolerant
+        Position Control of Hexacopter Subject to an Unknown Motor Failure,"
+        AMCS,Vol. 28, No. 2, pp.309-321, 2018
+        '''
         nr = self.n_rotor
         bnds = np.hstack((np.zeros((nr, 1)), np.ones((nr, 1))))
         b_eq = v.reshape((len(v),))  # virtual input
