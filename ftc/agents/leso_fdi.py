@@ -2,6 +2,12 @@ from fym.core import BaseEnv, BaseSystem
 
 import numpy as np
 
+'''
+Cannot use with ESO-based-controller:
+Intermediate observer uses accurate system, so we did not know what fault
+estimation value should estimated
+'''
+
 
 def sat(L, x):
     if x > L:
@@ -22,6 +28,7 @@ class lowPowerESO(BaseEnv):
     Wu, Yuanqing, Alberto Isidori, and Lorenzo Marconi. "Achieving Almost
     Feedback-Linearization via Low-Power Extended Observer." IEEE Control
     Systems Letters 4.4 (2020): 1030-1035.
+
     Nquyen et al., "Robust Fault Estimation Using the Intermediate Observer:
     Application to the Quadcopter", MDPI Sensors, 2020
 
@@ -36,7 +43,7 @@ class lowPowerESO(BaseEnv):
         bet: bet * u_psi, adjust gain for input psi
 
     '''
-    def __init__(self, n, l, K, b0, F, L, alp, bet=None):
+    def __init__(self, n, l, K, b0, F, L, alp):
         super().__init__()
         self.xi = BaseSystem(np.zeros((n-1, 2, 1)))
         self.sig = BaseSystem(np.zeros((2, 1)))
@@ -61,15 +68,13 @@ class lowPowerESO(BaseEnv):
         self.L = L
 
         self.alp = alp
-        if bet is not None:
-            self.bet = bet
         self.A_int = np.eye(4, 4, 1)
         self.B_int = b0 * np.array([0, 0, 0, 1])[:, None]
 
-    def deriv(self, xi, sig, tau, y, ref, hat_fa):
+    def deriv(self, xi, sig, tau, t, y, ref, hat_fa):
         n = self.n
         A, N, D, B, C = self.A, self.N, self.D, self.B, self.C
-        K, S, F, b0, L = self.K, self.S, self.F, self.b0, self.L
+        K, S, b0, F, L = self.K, self.S, self.b0, self.F, self.L
         # ESO
         xidot = np.zeros((n-1, 2, 1))
         for i in range(n-2):
@@ -129,7 +134,7 @@ class lowPowerESO(BaseEnv):
         '''
         states = self.observe_list()
         hat_fa = self.get_hat_fa()
-        dots = self.deriv(*states, y, ref, hat_fa)
+        dots = self.deriv(*states, t, y, ref, hat_fa)
         self.xi.dot, self.sig.dot = dots
         self.tau.dot = self.intermediateESO(*states, t, ref)
 
@@ -140,7 +145,8 @@ class highGainESO(BaseEnv):
     Feedback-Linearization-Based Designs", IEEE Transactions on automatic control,
     Vol. 53, No. 10, 2008
     '''
-    def __init__(self, eps, H, b0, F, L, alp, bet=None):
+    def __init__(self, eps, H, b0, F, L, alp, bet=None,
+                 switch=False, Fpsi=None, fault=None, delay=None):
         super().__init__()
         self.x = BaseSystem(np.zeros((2, 1)))
         self.sig = BaseSystem(np.zeros((1, 1)))
@@ -156,25 +162,39 @@ class highGainESO(BaseEnv):
         if bet is not None:
             self.bet = bet
 
-    def deriv(self, x, sig, tau, y, ref, hat_fa):
+        if Fpsi is not None:
+            self.Fpsi = Fpsi
+        if fault is not None:
+            self.fault = fault
+        if delay is not None:
+            self.delay = delay
+        self.switch = switch
+
+    def deriv(self, x, sig, tau, y, t, ref, hat_fa):
         b0, eps, H, alp = self.b0, self.eps, self.H, self.alp
         A, B, C = self.A, self.B, self.C
 
-        u = self.get_virtual(ref)
+        u = self.get_virtual(t, ref)
         # xdot = A.dot(x) + B*(sig + b0*u) + H*(y - C.dot(x))
         xdot = A.dot(x) + B*(sig + b0*(u+hat_fa)) + H*(y - C.dot(x))
         sigdot = (alp / eps**3) * (y - C.dot(x))
         return xdot, sigdot
 
-    def get_virtual(self, ref):
-        psi = fun_psi(self.x.state-ref, self.sig.state, self.b0, self.F)
+    def get_virtual(self, t, ref):
+        F = self.F
+        if self.switch is True:
+            if t < self.fault + self.delay:
+                F = self.F
+            else:
+                F = self.Fpsi
+        psi = fun_psi(self.x.state-ref, self.sig.state, self.b0, F)
         u = self.L * sat(1, psi/self.L)
         return u
 
     def set_dot(self, t, y, ref):
         states = self.observe_list()
         hat_fa = self.get_hat_fa()
-        dots = self.deriv(*states, y, ref, hat_fa)
+        dots = self.deriv(*states, y, t, ref, hat_fa)
         self.x.dot, self.sig.dot = dots
         self.tau.dot = self.intermediateESO(*states, t, ref)
 
@@ -183,7 +203,7 @@ class highGainESO(BaseEnv):
 
     def intermediateESO(self, x, sig, tau, t, ref):
         A, B, alp = self.A, self.B, self.alp
-        ctrl = self.get_virtual(ref)
+        ctrl = self.get_virtual(t, ref)
         taudot = - alp * B.T.dot(A.dot(x) + B*ctrl + B*tau + alp*B.dot(B.T.dot(x)))
         return taudot
 

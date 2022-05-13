@@ -30,11 +30,13 @@ class Env(BaseEnv):
         init_pos = np.vstack((0, 0, 0))
         # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
         # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
+        self.vel_base = np.random.randn(3, 1)
         self.plant = Multicopter(
             pos=init_pos,
             vel=np.zeros((3, 1)),
             quat=np.vstack([1, 0, 0, 0]),
             omega=np.zeros((3, 1)),
+            uncertainty=0.1,
         )
         # init = cfg.models.multicopter.init
         # self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
@@ -46,7 +48,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.8),  # scenario a
+            LoE(time=3, index=0, level=0.9),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -72,23 +74,28 @@ class Env(BaseEnv):
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
+    def get_ref(self, t):
         # Set references
-        pos_des = np.vstack([-2, 3, 4])
-        vel_des = np.vstack([0, 0, 0])
+        # pos_des = np.vstack([-4, 4, 3])
+        # vel_des = np.vstack([0, 0, 0])
+        pos_des = np.vstack([np.cos(t), np.sin(t), t])
+        vel_des = np.vstack([-np.sin(t), np.cos(t), 1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
-        self.ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
+        ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
+        return ref
 
     def step(self):
         *_, done = self.update()
         return done
 
-    def get_obs_ref(self):
-        posd = self.ref[0:3]
+    def get_obs_ref(self, t):
+        ref = self.get_ref(t)
+        posd = ref[0:3]
         veld = np.zeros((3, 1))
         dveld = np.zeros((3, 1))
         ddveld = np.zeros((3, 1))
-        psid = quat2angle(self.ref[6:10])[::-1][2]
+        psid = quat2angle(ref[6:10])[::-1][2]
         dpsid = 0
 
         obs_ref = np.zeros((4, 4, 1))
@@ -99,12 +106,14 @@ class Env(BaseEnv):
         return obs_ref
 
     def set_dot(self, t):
+        ref = self.get_ref(t)
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
+        windvel = self.get_windvel(t)
 
         # Observer
         obs_ctrl = np.zeros((4, 1))
-        obs_ref = self.get_obs_ref()
+        obs_ref = self.get_obs_ref(t)
         obs_ctrl[2] = self.leso_x.get_virtual(t, obs_ref[0, :, :])
         obs_ctrl[1] = self.leso_y.get_virtual(t, obs_ref[1, :, :])
         obs_ctrl[0] = self.leso_z.get_virtual(t, obs_ref[2, :, :])
@@ -129,7 +138,9 @@ class Env(BaseEnv):
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
 
-        self.plant.set_dot(t, rotors)
+        self.plant.set_dot(t, rotors,
+                           windvel
+                           )
         self.controller.set_dot(virtual_ctrl)
 
         y = np.vstack([self.plant.pos.state, quat2angle(self.plant.quat.state)[::-1][2]])
@@ -139,8 +150,16 @@ class Env(BaseEnv):
         self.hgeso_psi.set_dot(t, y[3], obs_ref[3, 0:2, :])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
-                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=self.ref,
+                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     obs_u=obs_ctrl, virtual_u=forces, obs=observation)
+
+    def get_windvel(self, t):
+        windvel = self.vel_base * (
+            np.sin(1.5*np.pi*t - 3)
+            + 1.5 * np.sin(np.pi*t + 7)
+            + 0.5 * np.sin(0.4*np.pi*t - 9.5)
+        )
+        return windvel
 
 
 def run(loggerpath):

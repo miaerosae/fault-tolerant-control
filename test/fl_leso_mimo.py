@@ -46,7 +46,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.8),  # scenario a
+            LoE(time=3, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -113,8 +113,8 @@ class Env(BaseEnv):
         virtual_ctrl = self.controller.get_virtual(t, obs_ctrl)
 
         forces = self.controller.get_FM(virtual_ctrl)
-        # rotors_cmd = self.CA.get(What).dot(forces)
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        rotors_cmd = self.CA.get(What).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
