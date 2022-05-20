@@ -100,7 +100,7 @@ class Multicopter(BaseEnv):
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
     def __init__(self, pos, vel, quat, omega,
-                 dx=0.0, dy=0.0, dz=0.0,):
+                 dx=0.0, dy=0.0, dz=0.0, uncertainty=0, blade=False):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -112,6 +112,8 @@ class Multicopter(BaseEnv):
         for k, v in fym.parser.decode(cfg.physProp).items():
             self.__setattr__(k, v)
 
+        self.J = (1 - uncertainty) * self.J
+
         self.Jinv = np.linalg.inv(self.J)
         self.M_gyroscopic = np.zeros((3, 1))
         self.A_drag = np.diag(np.zeros(3))  # currently ignored
@@ -119,18 +121,24 @@ class Multicopter(BaseEnv):
         self.D_drag = np.diag([dx, dy, dz])
         self.mixer = Mixer(d=self.d, c=self.c, b=self.b)
 
-    def deriv(self, t, pos, vel, quat, omega, rotors):
-        F, M1, M2, M3 = self.mixer.inverse(rotors)
+        self.blade = blade
 
-        M = np.vstack((M1, M2, M3))
+    def deriv(self, t, pos, vel, quat, omega, rotors, windvel):
+        if self.blade is False:
+            F, M1, M2, M3 = self.mixer.inverse(rotors)
+            M = np.vstack((M1, M2, M3))
+        else:
+            F, M = self.get_FM_wind(rotors, vel, omega, windvel)
 
         m, g, J = self.m, self.g, self.J
         e3 = np.vstack((0, 0, 1))
 
+        # wind: vel = vel - windvel
         dpos = vel
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel))
+        # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
         p, q, r = np.ravel(omega)
         # unit quaternion integration [4]
@@ -147,14 +155,14 @@ class Multicopter(BaseEnv):
             - self.M_gyroscopic
             - self.A_drag.dot(dcm).dot(vel)
             - self.B_drag.dot(omega)
+            + windvel
         )
-        # + 0.3 * np.sin(2*np.pi*t)  # 이거보다 크면 leso가 제어 불가능
 
         return dpos, dvel, dquat, domega
 
-    def set_dot(self, t, rotors):
+    def set_dot(self, t, rotors, windvel=np.zeros((3, 1))):
         states = self.observe_list()
-        dots = self.deriv(t, *states, rotors)
+        dots = self.deriv(t, *states, rotors, windvel)
         self.pos.dot, self.vel.dot, self.quat.dot, self.omega.dot = dots
 
     def get_d(self, W, rotors):
@@ -167,47 +175,47 @@ class Multicopter(BaseEnv):
         Omega = self.mixer.b_gyro.T.dot(np.sqrt(f / self.mixer.b))
         return Omega
 
-    # def get_FM_wind(self, f, vel, omega, windvel):
-    #     relvel = windvel - vel
+    def get_FM_wind(self, f, vel, omega, windvel):
+        relvel = windvel - vel
 
-    #     f = np.clip(f, 0, self.rotor_max)
+        f = np.clip(f, 0, self.rotor_max)
 
-    #     # Frame drag
-    #     F_drag = 1/2 * self.rho * self.CdA * np.linalg.norm(relvel) * relvel
+        # Frame drag
+        F_drag = 1/2 * self.rho * self.CdA * np.linalg.norm(relvel) * relvel
 
-    #     # Blade Flapping
-    #     F_blade = np.zeros((3, 1))
-    #     M_blade = np.zeros((3, 1))
-    #     for fi, di in zip(f, self.mixer.d_rotor):
-    #         di = di[:, None]
-    #         if fi != 0:
-    #             Omegai = np.sqrt(fi / self.mixer.b)
-    #             vr = relvel + np.cross(omega, di, axis=0)
-    #             mur = np.linalg.norm(vr[:2]) / (Omegai * self.R)
-    #             psir = np.arctan2(vr[1, 0], vr[0, 0])
-    #             lambdah = np.sqrt(self.CT / 2)
-    #             gamma = self.rho * self.a0 * self.ch * self.R**4 / self.Jr
-    #             v1s = 1 / (1 + mur**2 / 2) * 4 / 3 * (
-    #                 self.CT / self.sigma * 2 / 3 * mur * gamma / self.a0 + mur)
-    #             u1s = 1 / (1 - mur**2 / 2) * mur * (
-    #                 4 * self.thetat - 2 * lambdah**2)
-    #             alpha1s, beta1s = np.array([
-    #                 [np.cos(psir), -np.sin(psir)],
-    #                 [np.sin(psir), np.cos(psir)]
-    #             ]).dot(np.vstack((u1s, v1s)))
+        # Blade Flapping
+        F_blade = np.zeros((3, 1))
+        M_blade = np.zeros((3, 1))
+        for fi, di in zip(f, self.mixer.d_rotor):
+            di = di[:, None]
+            if fi != 0:
+                Omegai = np.sqrt(fi / self.mixer.b)
+                vr = relvel + np.cross(omega, di, axis=0)
+                mur = np.linalg.norm(vr[:2]) / (Omegai * self.R)
+                psir = np.arctan2(vr[1, 0], vr[0, 0])
+                lambdah = np.sqrt(self.CT / 2)
+                gamma = self.rho * self.a0 * self.ch * self.R**4 / self.Jr
+                v1s = 1 / (1 + mur**2 / 2) * 4 / 3 * (
+                    self.CT / self.sigma * 2 / 3 * mur * gamma / self.a0 + mur)
+                u1s = 1 / (1 - mur**2 / 2) * mur * (
+                    4 * self.thetat - 2 * lambdah**2)
+                alpha1s, beta1s = np.array([
+                    [np.cos(psir), -np.sin(psir)],
+                    [np.sin(psir), np.cos(psir)]
+                ]).dot(np.vstack((u1s, v1s)))
 
-    #             ab = np.vstack((
-    #                 -np.sin(alpha1s),
-    #                 -np.cos(alpha1s) * np.sin(beta1s),
-    #                 np.cos(alpha1s) * np.cos(beta1s) - 1))
+                ab = np.vstack((
+                    -np.sin(alpha1s),
+                    -np.cos(alpha1s) * np.sin(beta1s),
+                    np.cos(alpha1s) * np.cos(beta1s) - 1))
 
-    #             F_blade += self.mixer.b * Omegai**2 * ab
-    #             M_blade += np.cross(di, self.mixer.b * Omegai**2 * ab, axis=0)
+                F_blade += self.mixer.b * Omegai**2 * ab
+                M_blade += np.cross(di, self.mixer.b * Omegai**2 * ab, axis=0)
 
-    #     F_wind = F_blade + F_drag
-    #     M_wind = M_blade
+        F_wind = F_blade + F_drag
+        M_wind = M_blade
 
-    #     return F_wind, M_wind
+        return F_wind, M_wind
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.9),  # scenario a
+            LoE(time=3, index=0, level=0.8),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -76,10 +76,10 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # Set references
-        # pos_des = np.vstack([-4, 4, 3])
-        # vel_des = np.vstack([0, 0, 0])
-        pos_des = np.vstack([np.cos(t), np.sin(t), t])
-        vel_des = np.vstack([-np.sin(t), np.cos(t), 1])
+        pos_des = np.vstack([-4, 4, 3])
+        vel_des = np.vstack([0, 0, 0])
+        # pos_des = np.vstack([np.cos(t), np.sin(t), t])
+        # vel_des = np.vstack([-np.sin(t), np.cos(t), 1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
@@ -109,7 +109,7 @@ class Env(BaseEnv):
         ref = self.get_ref(t)
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
-        windvel = self.get_windvel(t)
+        # windvel = self.get_windvel(t)
 
         # Observer
         obs_ctrl = np.zeros((4, 1))
@@ -139,7 +139,7 @@ class Env(BaseEnv):
         rotors = self.fault_manager.get_faulty_input(t, rotors)
 
         self.plant.set_dot(t, rotors,
-                           windvel
+                           # windvel
                            )
         self.controller.set_dot(virtual_ctrl)
 

@@ -26,10 +26,10 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.05, max_t=40)
+        super().__init__(dt=0.05, max_t=100)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 # uncertainty=0.15
+                                 uncertainty=0.15
                                  )
         n = self.plant.mixer.B.shape[1]
 

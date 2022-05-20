@@ -67,7 +67,7 @@ def exp_plot(loggerpath):
     plt.gcf().supylabel("Position, m")
     plt.tight_layout()
     plt.legend()
-    plt.savefig("lpeso_pos.png", dpi=300)
+    # plt.savefig("lpeso_pos.png", dpi=300)
 
     # velocity
     plt.figure()
@@ -101,7 +101,7 @@ def exp_plot(loggerpath):
     plt.gcf().supylabel("Euler angles, deg")
     plt.tight_layout()
     plt.legend()
-    plt.savefig("lpeso_angle.png", dpi=300)
+    # plt.savefig("lpeso_angle.png", dpi=300)
 
     # angular rates
     plt.figure()
@@ -143,7 +143,7 @@ def exp_plot(loggerpath):
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Generalized forces")
     plt.tight_layout()
-    plt.savefig("lpeso_forces.png", dpi=300)
+    # plt.savefig("lpeso_forces.png", dpi=300)
 
     # disturbance
     # plt.figure()
@@ -174,5 +174,19 @@ def exp_plot(loggerpath):
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     # plt.savefig("Figure_6.png")
+
+    # fdi
+    # plt.figure()
+
+    # ax = plt.subplot(411)
+    # for i, _label in enumerate([r"$fa_{1}$", r"$fa_{2}$", r"$fa_{3}$", r"$fa_{4}$"]):
+    #     if i != 0:
+    #         plt.subplot(411+i, sharex=ax)
+    #     plt.plot(data["t"], data["tfa"][:, i], "r", label=_label)
+    #     plt.plot(data["t"], data["fa"][:, i], "k--", label=_label)
+    #     plt.legend(loc="upper right")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.gcf().supylabel("FDI information from Intermediate ESO")
+    # plt.tight_layout()
 
     plt.show()

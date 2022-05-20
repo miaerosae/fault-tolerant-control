@@ -10,7 +10,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.leso_mimo as leso
-from ftc.agents.param import get_B_hat
+from ftc.agents.param import get_b0, get_B_hat
 from ftc.plotting import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
@@ -46,7 +46,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.5),  # scenario a
+            # LoE(time=3, index=0, level=0.8),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -57,64 +57,72 @@ class Env(BaseEnv):
         self.CA = CA(self.plant.mixer.B)
         self.controller = leso.Controller(self.plant.m,
                                           self.plant.g)
+        b0 = get_b0(self.plant.m, self.plant.g, self.plant.J)
         B_hat = get_B_hat(self.plant.m, self.plant.g, self.plant.J)
         K = np.array([[23, 484],
                       [23, 183.1653],
                       [23, 80.3686],
                       [23, 30.0826]])
-        K_psi = np.array([[23, 484],
-                          [23, 183.1653]])  # TODO
-        L = 55.3844
+        L = np.array([55., 1., 1.])
+        # L = 18.68 * np.ones((3,))
+        Lpsi = 1.
         self.leso = leso.lowPowerESO(4*np.ones((3)), 2, K, B_hat,
-                                     self.controller.F, L,
-                                     self.controller.F_psi, K_psi)
+                                     self.controller.F, L)
+        H = np.array([[3, 3, 1]])
+        self.hgeso_psi = leso.highGainESO(0.5, H, b0[3],
+                                          self.controller.F_psi, Lpsi)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
+    def get_ref(self, t):
         # Set references
-        pos_des = np.vstack([-1, 1, 2])
+        pos_des = np.vstack([-4, 3, 4])
         vel_des = np.vstack([0, 0, 0])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
-        self.ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
+        return np.vstack([pos_des, vel_des, quat_des, omega_des])
 
     def step(self):
         *_, done = self.update()
         return done
 
-    def get_obs_ref(self):
-        posd = self.ref[0:3]
+    def get_obs_ref(self, t):
+        ref = self.get_ref(t)
+        posd = ref[0:3]
         veld = np.zeros((3, 1))
         dveld = np.zeros((3, 1))
         ddveld = np.zeros((3, 1))
-        psid = quat2angle(self.ref[6:10])[::-1][2]
+        psid = quat2angle(ref[6:10])[::-1][2]
         dpsid = 0
 
-        obs_ref = np.zeros((14, 1))
+        obs_ref = np.zeros((12, 1))
         for i in range(3):
             obs_ref[4*i:4*(i+1), :] = np.array([posd[i], veld[i],
                                                 dveld[i], ddveld[i]])
-        obs_ref[12:, :] = np.array([psid, dpsid])[:, None]
-        return obs_ref
+        obs_ref_psi = np.array([psid, dpsid])[:, None]
+        return obs_ref, obs_ref_psi
 
     def set_dot(self, t):
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
+        ref = self.get_ref(t)
 
         # Observer
         obs_ctrl = np.zeros((4, 1))
-        obs_ref = self.get_obs_ref()
-        obs_ctrl = self.leso.get_virtual(obs_ref)
+        obs_ref, obs_ref_psi = self.get_obs_ref(t)
+        obs_ctrl[0:3] = self.leso.get_virtual(obs_ref)
+        obs_ctrl[3] = self.hgeso_psi.get_virtual(obs_ref_psi)
 
         observation = np.zeros((4, 1))
-        observation = self.leso.get_obs()
+        observation[0:3] = self.leso.get_obs()
+        observation[3] = self.hgeso_psi.get_obs()
 
         # Controller
         virtual_ctrl = self.controller.get_virtual(t, obs_ctrl)
 
         forces = self.controller.get_FM(virtual_ctrl)
-        rotors_cmd = self.CA.get(What).dot(forces)
-        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = self.CA.get(What).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
@@ -126,10 +134,11 @@ class Env(BaseEnv):
         self.controller.set_dot(virtual_ctrl)
 
         y = np.vstack([self.plant.pos.state, quat2angle(self.plant.quat.state)[::-1][2]])
-        self.leso.set_dot(t, y, obs_ref)
+        self.leso.set_dot(t, y[0:3], obs_ref)
+        self.hgeso_psi.set_dot(t, y[3], obs_ref_psi)
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
-                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=self.ref,
+                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     obs_u=obs_ctrl, virtual_u=forces, obs=observation)
 
 

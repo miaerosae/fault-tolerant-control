@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.2,
+        "delay": 0.1,
         "threshold": 0.,
     },
 
@@ -80,6 +80,7 @@ default_settings = fym.parser.parse({
         },
 
         # Mixer
+        # "mixer.rtype": "quad",
         "mixer.rtype": "hexa-x",
 
         # Physical properties

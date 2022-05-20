@@ -26,7 +26,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.05, max_t=50)
+        super().__init__(dt=0.05, max_t=80)
         init_pos = np.vstack((0, 0, 0))
         # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
         # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
@@ -80,13 +80,13 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # Set references
-        # if t < 20:
-        #     pos_des = np.vstack([-4, 3, 4])
-        # else:
-        #     pos_des = np.vstack([-6, 1, 7])
-        # vel_des = np.vstack([0, 0, 0])
-        pos_des = np.vstack([sin(t/2), cos(t/2), -t])
-        vel_des = np.vstack([cos(t/2)/2, -sin(t/2)/2, -1])
+        if t < 20:
+            pos_des = np.vstack([-4, 3, 4])
+        else:
+            pos_des = np.vstack([-6, 1, 7])
+        vel_des = np.vstack([0, 0, 0])
+        # pos_des = np.vstack([sin(t/2), cos(t/2), -t])
+        # vel_des = np.vstack([cos(t/2)/2, -sin(t/2)/2, -1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         return np.vstack([pos_des, vel_des, quat_des, omega_des])
@@ -140,10 +140,13 @@ class Env(BaseEnv):
             rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         else:
             fault_index = self.fdi.get_index(t)
-            rotors_cmd = self.CCA.solve_miae(fault_index, forces,
-                                             What, 1e-4,
-                                             self.plant.rotor_min,
-                                             self.plant.rotor_max)
+            # rotors_cmd = self.CCA.solve_miae(fault_index, forces,
+            #                                  What, 1e-4,
+            #                                  self.plant.rotor_min,
+            #                                  self.plant.rotor_max)
+            rotors_cmd = self.CCA.solve_opt(fault_index, forces,
+                                            self.plant.rotor_min,
+                                            self.plant.rotor_max)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)

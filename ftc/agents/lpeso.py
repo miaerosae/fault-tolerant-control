@@ -150,6 +150,9 @@ class highGainESO(BaseEnv):
         u = self.L * sat(1, psi/self.L)
         return u
 
+    def get_dist(self):
+        return self.sig.state
+
     def set_dot(self, t, y, ref):
         states = self.observe_list()
         dots = self.deriv(*states, y, ref)
