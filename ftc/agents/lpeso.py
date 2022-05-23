@@ -43,18 +43,19 @@ class lowPowerESO(BaseEnv):
     Parameters:
         n: relative degree (dimension of subsystem)
         l: high-gain parameter
-        K: design paramters, n by 2
+        K: design paramters, n+1 by 2
             satisfy low-power strong stability requirement
         b0: dot(x_n) = f0 + b0u
         F: (A+BF) Hurwitz
         R: for saturation function 1 by n+1
-           (n-1, ) array of max|x^(i)|, i=1, 2, ..., n-1
+           (n, ) array of max|x^(i)|, i=1, 2, ..., n, including sig_3
 
     '''
     def __init__(self, n, l, K, b0, F, L, R):
         super().__init__()
         self.xi = BaseSystem(np.zeros((n-1, 2, 1)))
         self.sig = BaseSystem(np.zeros((2, 1)))
+        self.sig3 = BaseSystem(np.zeros((1, 1)))
 
         self.n, self.l = n, l
         self.A = np.array([[0, 1], [0, 0]])
@@ -62,23 +63,22 @@ class lowPowerESO(BaseEnv):
         self.D = np.diag([l, l**2])
         self.B = np.array([[0], [1]])
         self.C = np.array([[1, 0]])
-        self.K = np.reshape(K, (n, 2, 1))  # K(i) = K[i,:,:]
-        S = np.zeros((n, 2*n-2))
-        S[0, 0] = 1
-        S[1, 1] = 1
-        for i in range(n-2):
-            S[i+2, 2*(i+1)+1] = 1
-        self.S = S
+        self.K = np.reshape(K, (n+1, 2, 1))  # K(i) = K[i,:,:]
+        # S = np.zeros((n-1, 2*n-2))
+        # S[0, 0] = 1
+        # S[1, 1] = 1
+        # for i in range(n-2):
+        #     S[i+2, 2*(i+1)+1] = 1
 
         self.b0 = b0
         self.F = F
         self.L = L
         self.R = R
 
-    def deriv(self, xi, sig, y, ref):
+    def deriv(self, xi, sig, sig3, y, ref):
         n = self.n
         A, N, D, B, C = self.A, self.N, self.D, self.B, self.C
-        K, S, F, b0, L, R = self.K, self.S, self.F, self.b0, self.L, self.R
+        K, F, b0, L, R = self.K, self.F, self.b0, self.L, self.R
         # observer
         xidot = np.zeros((n-1, 2, 1))
         for i in range(n-2):
@@ -92,28 +92,38 @@ class lowPowerESO(BaseEnv):
                     + (D.dot(K[i, :, :])
                        * (satv(R[i-1], B.T.dot(xi[i-1, :, :]))-C.dot(xi[i, :, :])))
 
-        xi_stack = np.reshape(xi, (2*n-2, 1))
-        xidot[n-2, :, :] = A.dot(xi[n-2, :, :]) + N.dot(sig) \
-            + B*(b0*sat(L, fun_psi(S.dot(xi_stack)-ref, B.T.dot(sig), b0, F))) \
+        xi_stack = np.reshape(xi[:, 0, :], (n-1, 1))
+        xi_ = np.vstack([xi_stack, C.dot(sig)])
+        sigsat = sat(R[n-1], B.T.dot(sig))
+
+        xidot[n-2, :, :] = A.dot(xi[n-2, :, :]) + B*(sigsat) \
+            + B*(b0*sat(L, fun_psi(xi_-ref, B.T.dot(sig), b0, F))) \
             + (D.dot(K[n-2, :, :])
                * (satv(R[n-3], B.T.dot(xi[n-3, :, :]))-C.dot(xi[n-2, :, :])))
         sigdot = A.dot(sig) \
-            + C.T*(b0*sat(L, fun_psi(S.dot(xi_stack)-ref, B.T.dot(sig), b0, F))) \
+            + C.T*(b0*sat(L, fun_psi(xi_-ref, B.T.dot(sig), b0, F))) \
             + (D.dot(K[n-1, :, :])
                * (satv(R[n-2], B.T.dot(xi[n-2, :, :]))-C.dot(sig)))
 
-        return xidot, sigdot
+        sig3dot = self.l * K[n, 0, :] * (sigsat - sig3)
+
+        return xidot, sigdot, sig3dot
 
     def get_virtual(self, t, ref):
-        L, S, B, b0, F = self.L, self.S, self.B, self.b0, self.F
-        xi_stack = np.reshape(self.xi.state, (2*self.n-2, 1))
+        L, C, B, b0, F = self.L, self.C, self.B, self.b0, self.F
+        xi_stack = np.reshape(self.xi.state[:, 0, :], (self.n-1, 1))
+        xi_ = np.vstack([xi_stack, C.dot(self.sig.state)])
         sig = self.sig.state
-        ctrl = sat(L, fun_psi(S.dot(xi_stack)-ref, B.T.dot(sig), b0, F))
+        ctrl = sat(L, fun_psi(xi_-ref, B.T.dot(sig), b0, F))
+        # ctrl = sat(L, fun_psi(S.dot(xi_stack)-ref, self.sig3.state, b0, F))
         return ctrl
 
     def get_obs(self):
         observation = self.xi.state[0][0][0]
         return observation
+
+    def get_dist(self):
+        return self.sig3.state
 
     def set_dot(self, t, y, ref):
         '''
@@ -121,7 +131,10 @@ class lowPowerESO(BaseEnv):
         '''
         states = self.observe_list()
         dots = self.deriv(*states, y, ref)
-        self.xi.dot, self.sig.dot = dots
+        self.xi.dot, self.sig.dot, self.sig3.dot = dots
+
+    def comp(self):
+        return np.vstack([self.B.T.dot(self.sig.state), self.sig3.state])
 
 
 class highGainESO(BaseEnv):
