@@ -10,9 +10,10 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 setup(
     name="ftc",
     version="0.1.1",
-    url="https://github.com:fdcl-ftc/fault-tolerant-control.git",
-    author="SNU FDCL",
-    description="SNU FDCL FTC",
+git@github.com:miaerosae/fault-tolerant-control.git
+    url="https://github.com:miaerosae/fault-tolerant-control.git",
+    author="Miae Kim",
+    description="Miae Kim FTC",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="",
