@@ -8,9 +8,8 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="ftc",
+    name="mftc",
     version="0.1.1",
-git@github.com:miaerosae/fault-tolerant-control.git
     url="https://github.com:miaerosae/fault-tolerant-control.git",
     author="Miae Kim",
     description="Miae Kim FTC",
