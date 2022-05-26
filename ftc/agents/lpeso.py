@@ -179,8 +179,8 @@ class Controller(BaseEnv):
     def __init__(self, m, g):
         super().__init__()
         self.m, self.g = m, g
-        self.u1 = BaseSystem(np.array((m*g)))
-        self.du1 = BaseSystem(np.zeros((1)))
+        self.u1 = BaseSystem(np.array([m*g]))
+        self.du1 = BaseSystem(np.zeros([1]))
 
         self.F1 = - np.array([[1, 1, 1]])*23.95
         self.F2 = - np.array([[1, 1, 1]])*48.11
