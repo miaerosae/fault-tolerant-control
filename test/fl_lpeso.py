@@ -26,7 +26,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.05, max_t=30)
+        super().__init__(dt=0.01, max_t=30)
         init_pos = np.vstack((0, 0, 0))
         # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
         # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
@@ -46,7 +46,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.2),  # scenario a
+            LoE(time=3, index=0, level=0.1),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
