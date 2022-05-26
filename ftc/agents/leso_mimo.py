@@ -94,12 +94,12 @@ class lowPowerESO(BaseEnv):
         sn = np.size(n)
         xi_stack = np.reshape(self.xi.state, [sn*nu*2, 1])
         xi = S.dot(xi_stack)
-        F_blk = np.block([[np.zeros((1, 2*nu)), F],
+        F_blk = np.block([[F, np.zeros((1, 2*nu))],
                           [np.zeros((1, nu)), F, np.zeros((1, nu))],
-                          [F, np.zeros((1, 2*nu))]])
+                          [np.zeros((1, 2*nu)), F]])
         sig = np.reshape(self.xi.state[:, nu-1, 1, :], [sn, 1])
         # u = B_hat_inv.dot(satv(L, -sig+F_blk.dot(xi-ref)))
-        u = satv(L, B_hat_inv.dot(-sig+F_blk.dot(xi-ref)))[::-1]
+        u = satv(L, B_hat_inv.dot(-sig+F_blk.dot(xi-ref)))
         return u
 
     def get_obs(self):
