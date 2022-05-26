@@ -8,7 +8,7 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="mftc",
+    name="ftc",
     version="0.1.1",
     url="https://github.com:miaerosae/fault-tolerant-control.git",
     author="Miae Kim",
