@@ -11,7 +11,8 @@ from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.leso as leso
 from ftc.agents.param import get_b0
-from ftc.plotting import exp_plot
+# from ftc.plotting import exp_plot
+from ftc.plotting_comp import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -26,7 +27,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.05, max_t=30)
+        super().__init__(dt=0.01, max_t=30)
         init_pos = np.vstack((0, 0, 0))
         # init_ang = np.deg2rad([20, 30, 10])*(np.random.rand(3) - 0.5)
         # init_quat = (angle2quat(init_ang[2], init_ang[1], init_ang[0]))
@@ -36,7 +37,7 @@ class Env(BaseEnv):
             vel=np.zeros((3, 1)),
             quat=np.vstack([1, 0, 0, 0]),
             omega=np.zeros((3, 1)),
-            uncertainty=0.1,
+            # uncertainty=0.1,
         )
         # init = cfg.models.multicopter.init
         # self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
@@ -48,7 +49,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.8),  # scenario a
+            LoE(time=3, index=0, level=0.0),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -74,9 +75,12 @@ class Env(BaseEnv):
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
+        nu = np.array([self.plant.m*self.plant.g, 0, 0, 0])[:, None]
+        self.u = np.linalg.pinv(self.plant.mixer.B).dot(nu)
+
     def get_ref(self, t):
         # Set references
-        pos_des = np.vstack([-4, 4, 3])
+        pos_des = np.vstack([-4, 3, 4])
         vel_des = np.vstack([0, 0, 0])
         # pos_des = np.vstack([np.cos(t), np.sin(t), t])
         # vel_des = np.vstack([-np.sin(t), np.cos(t), 1])
@@ -97,13 +101,31 @@ class Env(BaseEnv):
         ddveld = np.zeros((3, 1))
         psid = quat2angle(ref[6:10])[::-1][2]
         dpsid = 0
+        psid2 = quat2angle(self.plant.quat.state)[::-1][2]
+        dpsid2 = self.plant.omega.state[2][0]
 
         obs_ref = np.zeros((4, 4, 1))
         for i in range(3):
             obs_ref[i, :, :] = np.array([posd[i], veld[i],
                                          dveld[i], ddveld[i]])
-        obs_ref[3, 0:2, :] = np.array([psid, dpsid])[:, None]
+        if t < self.detection_time[1]:
+            obs_ref[3, 0:2, :] = np.array([psid, dpsid])[:, None]
+        else:
+            obs_ref[3, 0:2, :] = np.array([psid2, dpsid2])[:, None]
         return obs_ref
+
+    def get_Bp(self, What):
+        # ind = np.nonzero(What < 1)[0][0]
+        eta = np.diag(What)
+        d = self.plant.d
+        B = np.array(
+            [[eta[0], eta[1], eta[2], eta[3], eta[4], eta[5]],
+             [-eta[0]*d, eta[1]*d, eta[2]*d/2, -eta[3]*d/2, -eta[4]*d/2,
+              eta[5]*d/2],
+             [0, 0, eta[2]*d*np.sqrt(3)/2, -eta[3]*d*np.sqrt(3)/2,
+              eta[4]*d*np.sqrt(3)/2, -eta[5]*d*np.sqrt(3)/2]]
+        )
+        return B
 
     def set_dot(self, t):
         ref = self.get_ref(t)
@@ -130,13 +152,27 @@ class Env(BaseEnv):
 
         forces = self.controller.get_FM(virtual_ctrl)
         # rotors_cmd = self.CA.get(What).dot(forces)
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        if t < self.detection_time[1]:
+            Bp = self.plant.mixer.B
+            fm = forces
+        else:
+            Bp = self.plant.mixer.B[0:3, :]
+            fm = forces[0:3, :]
+        W1, W2 = np.eye(6) - What, np.eye(6)
+        W = W1 + W2
+        H = Bp.dot(np.linalg.inv(W).dot(Bp.T))
+        G = Bp.T.dot(np.linalg.inv(H))
+        F_ = np.eye(6) - Bp.T.dot(np.linalg.inv(H).dot(Bp.dot(np.linalg.inv(W).dot(W2))))
+        F = np.linalg.inv(W).dot(F_)
+        rotors_cmd = F.dot(self.u) + G.dot(fm)
 
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
+        self.u = rotors
 
         self.plant.set_dot(t, rotors,
                            # windvel
@@ -190,6 +226,7 @@ def exp1(loggerpath):
 
 
 if __name__ == "__main__":
-    loggerpath = "data.h5"
-    exp1(loggerpath)
-    exp_plot(loggerpath)
+    # loggerpath = "data.h5"
+    # exp1(loggerpath)
+    # exp_plot(loggerpath)
+    exp_plot("leso_reduced.h5", "lpeso_reduced.h5")
