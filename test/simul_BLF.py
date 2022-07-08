@@ -37,7 +37,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.5),  # scenario a
+            LoE(time=3, index=0, level=0.8),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -48,7 +48,7 @@ class Env(BaseEnv):
         self.CA = CA(self.plant.mixer.B)
         alp = np.array([3, 3, 1])
         eps = 0.5
-        Kxy = np.array([1, 1])
+        Kxy = np.array([1, 1])/2
         Kz = np.array([3, 2])
         rho_0, rho_inf = 15, 1e-1
         k = 0.01
@@ -69,7 +69,7 @@ class Env(BaseEnv):
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
     def get_ref(self, t):
-        pos_des = np.vstack([-1, 0, 1])
+        pos_des = np.vstack([-2, 0, 0])
         vel_des = np.vstack([0, 0, 0])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
@@ -88,14 +88,9 @@ class Env(BaseEnv):
 
         # Outer-Loop: virtual input
         q = np.zeros((3, 1))
-        x, y, z = self.plant.pos.state.ravel()
-        dx, dy, dz = self.plant.vel.state.ravel()
-        ex = np.vstack([x-ref[0], dx-ref[3], 0])
-        ey = np.vstack([y-ref[1], dy-ref[4], 0])
-        ez = np.vstack([z-ref[2], dz-ref[5], 0])
-        q[0] = self.blf_x.get_virtual(t, ex)
-        q[1] = self.blf_y.get_virtual(t, ey)
-        q[2] = self.blf_z.get_virtual(t, ez)
+        q[0] = self.blf_x.get_virtual(t)
+        q[1] = self.blf_y.get_virtual(t)
+        q[2] = self.blf_z.get_virtual(t)
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -104,19 +99,19 @@ class Env(BaseEnv):
         psid = 0
         eulerd = np.vstack([phid, thetad, psid])
 
-        # Inner-Loop
+        # caculate f
         J = np.diag(self.plant.J)
-        euler = quat2angle(self.plant.quat.state)[::-1]
-        p, q, r = self.plant.omega.state.ravel()
-        f = np.array([(J[1]-J[2])/J[0]*q*r,
-                      (J[2]-J[0])/J[1]*p*r,
-                      (J[0]-J[1])/J[2]*p*q])
-        ephi = np.vstack([euler[0], p, 0])
-        etheta = np.vstack([euler[1], q, 0])
-        epsi = np.vstack([euler[2], r, 0])
-        u2 = self.blf_phi.get_u(phid, f[0], ephi)
-        u3 = self.blf_theta.get_u(thetad, f[1], etheta)
-        u4 = self.blf_psi.get_u(psid, f[2], epsi)
+        obs_p = self.blf_phi.get_obsdot()
+        obs_q = self.blf_theta.get_obsdot()
+        obs_r = self.blf_psi.get_obsdot()
+        f = np.array([(J[1]-J[2]) / J[0] * obs_q * obs_r,
+                      (J[2]-J[0]) / J[1] * obs_p * obs_r,
+                      (J[0]-J[1]) / J[2] * obs_p * obs_q])
+
+        # Inner-Loop
+        u2 = self.blf_phi.get_u(phid, f[0])
+        u3 = self.blf_theta.get_u(thetad, f[1])
+        u4 = self.blf_psi.get_u(psid, f[2])
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
@@ -152,12 +147,14 @@ class Env(BaseEnv):
         self.plant.set_dot(t, rotors,
                            # windvel
                            )
-        # self.blf_x.set_dot(t, x, ref[0])
-        # self.blf_y.set_dot(t, y, ref[1])
-        # self.blf_z.set_dot(t, z, ref[2])
-        # self.blf_phi.set_dot(t, euler[0], phid, f[0])
-        # self.blf_theta.set_dot(t, euler[1], thetad, f[1])
-        # self.blf_psi.set_dot(t, euler[2], psid, f[2])
+        x, y, z = self.plant.pos.state.ravel()
+        euler = quat2angle(self.plant.quat.state)[::-1]
+        self.blf_x.set_dot(t, x, ref[0])
+        self.blf_y.set_dot(t, y, ref[1])
+        self.blf_z.set_dot(t, z, ref[2])
+        self.blf_phi.set_dot(t, euler[0], phid, f[0])
+        self.blf_theta.set_dot(t, euler[1], thetad, f[1])
+        self.blf_psi.set_dot(t, euler[2], psid, f[2])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
