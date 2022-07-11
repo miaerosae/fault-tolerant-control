@@ -134,10 +134,12 @@ class Multicopter(BaseEnv):
         e3 = np.vstack((0, 0, 1))
 
         # wind: vel = vel - windvel
-        dpos = vel
+        dpos = vel  # + 0.5*np.sin(t)
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
-                - dcm.T.dot(self.D_drag).dot(dcm).dot(vel))
+                - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
+                # + 1*np.sin(t)
+                )
         # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
         p, q, r = np.ravel(omega)

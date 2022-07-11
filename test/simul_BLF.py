@@ -26,7 +26,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         self.n = self.plant.mixer.B.shape[1]
@@ -37,7 +37,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=5, index=0, level=0.8),  # scenario a
+            # LoE(time=0, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -50,7 +50,7 @@ class Env(BaseEnv):
         eps = 0.5
         Kxy = np.array([1, 1])/2
         Kz = np.array([1, 1])
-        rho_0, rho_inf = 5, 1e-1
+        rho_0, rho_inf = 15, 1e-1
         k = 0.01
         self.blf_x = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
         self.blf_y = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
@@ -61,7 +61,8 @@ class Env(BaseEnv):
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         eps = 0.01
-        Kang = np.array([1, 1])
+        # Kang = np.array([20, 15])  # for rotor failure case
+        Kang = np.array([5, 1])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
         self.blf_theta = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[1], self.plant.g)
         self.blf_psi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[2], self.plant.g)

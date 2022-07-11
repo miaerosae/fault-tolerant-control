@@ -111,7 +111,7 @@ def exp_plot(loggerpath):
             # plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b", label=r"$\psi$"+" (observation)")
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k"+_ls, label=_label)
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r"+_ls, label=_label)
-        plt.plot(data["t"], data["obs_ang"][:, i, 0], "b"+_ls, label=_label)
+        plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b"+_ls, label=_label)
         plt.legend(loc="upper right")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Euler angles, deg")
