@@ -35,6 +35,7 @@ class Env(BaseEnv):
             vel=np.zeros((3, 1)),
             quat=np.vstack([1, 0, 0, 0]),
             omega=np.zeros((3, 1)),
+            # uncertainty=0.1
         )
         # init = cfg.models.multicopter.init
         # self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
@@ -46,7 +47,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.1),  # scenario a
+            LoE(time=3, index=0, level=0.9),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=n)
 
@@ -55,32 +56,27 @@ class Env(BaseEnv):
 
         # Define agents
         self.CA = CA(self.plant.mixer.B)
-        self.CCA = ConstrainedCA(self.plant.mixer.B)
         self.controller = lpeso.Controller(self.plant.m,
                                            self.plant.g)
         b0 = get_b0(self.plant.m, self.plant.g, self.plant.J)
         self.Bhat = get_B_hat(self.plant.m, self.plant.g, self.plant.J)
         K = get_K()
         Lx, Ly, Lz, Lpsi = 1., 1., 55., 1.
-        Rxy = np.array([10, 20, 50, 50])
-        Rz = np.array([10, 20, 50, 5])
+        Rxy = np.array([10, 10, 100, 100])
+        Rz = np.array([10, 10, 100, 30])
         # TODO: 이거 좀 더 작게 줘도 될듯
 
-        self.lpeso_x = lpeso.lowPowerESO(4, 2, K, b0[0],
+        self.lpeso_x = lpeso.lowPowerESO(4, 5, K, b0[0],
                                          self.controller.F[0, :], Lx, Rxy)
-        self.lpeso_y = lpeso.lowPowerESO(4, 2, K, b0[1],
+        self.lpeso_y = lpeso.lowPowerESO(4, 5, K, b0[1],
                                          self.controller.F[1, :], Ly, Rxy)
-        self.lpeso_z = lpeso.lowPowerESO(4, 2, K, b0[2],
+        self.lpeso_z = lpeso.lowPowerESO(4, 5, K, b0[2],
                                          self.controller.F[2, :], Lz, Rz)
         H = np.array([[3, 3, 1]])
         self.hgeso_psi = lpeso.highGainESO(0.5, H, b0[3],
                                            self.controller.F[3, 0:2], Lpsi)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
-
-        # calculate total fa (for integrating fa[0])
-        self.fa_F = BaseSystem(np.zeros((1)))
-        self.dfa_F = BaseSystem(np.zeros((1)))
 
         nu = np.array([self.plant.m*self.plant.g, 0, 0, 0])[:, None]
         self.u = np.linalg.pinv(self.plant.mixer.B).dot(nu)
@@ -138,12 +134,6 @@ class Env(BaseEnv):
         observation[2] = self.lpeso_z.get_obs()
         observation[3] = self.hgeso_psi.get_obs()
 
-        fa = np.zeros((4, 1))
-        fa[2] = self.lpeso_x.get_dist()
-        fa[1] = self.lpeso_y.get_dist()
-        fa[0] = self.lpeso_z.get_dist()
-        fa[3] = self.hgeso_psi.get_dist()
-
         # Controller
         virtual_ctrl = self.controller.get_virtual(t, obs_ctrl)
 
@@ -151,12 +141,12 @@ class Env(BaseEnv):
         # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         # rotors_cmd = self.CA.get(What).dot(forces)
         W1, W2 = np.eye(6) - What, np.eye(6)
-        W = W1 + W2
+        W_da = W1 + W2
         Bp = self.plant.mixer.B
-        H = Bp.dot(np.linalg.inv(W).dot(Bp.T))
+        H = Bp.dot(np.linalg.inv(W_da).dot(Bp.T))
         G = Bp.T.dot(np.linalg.inv(H))
-        F_ = np.eye(6) - Bp.T.dot(np.linalg.inv(H).dot(Bp.dot(np.linalg.inv(W).dot(W2))))
-        F = np.linalg.inv(W).dot(F_)
+        F_ = np.eye(6) - Bp.T.dot(np.linalg.inv(H).dot(Bp.dot(np.linalg.inv(W_da).dot(W2))))
+        F = np.linalg.inv(W_da).dot(F_)
         rotors_cmd = F.dot(self.u) + G.dot(forces)
         # if t < self.detection_time[1]:
         #     rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
@@ -171,29 +161,33 @@ class Env(BaseEnv):
         #     #                                 self.plant.rotor_max)
         #     rotors_cmd = F.dot(self.u) + G.dot(forces)
 
+        # get true fault value
+        rotors_cmd_noinfo = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        tfa = - self.plant.mixer.B.dot((np.eye(6)-W).dot(rotors_cmd_noinfo))
+
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
+        # TODO
+        phi, theta, psi = quat2angle(self.plant.quat.state)[::-1]
+        fa = np.zeros((4, 1))
+        fa[2] = self.lpeso_x.get_dist()
+        fa[1] = self.lpeso_y.get_dist()
+        fa[0] = self.lpeso_z.get_dist()
+        fa[3] = self.hgeso_psi.get_dist()
+
         rotors = self.fault_manager.get_faulty_input(t, rotors)
         self.u = rotors
-
-        B = get_B(self.plant.m, self.plant.J,
-                  quat2angle(self.plant.quat.state)[::-1], forces)
-        tfa = - (B-self.Bhat).dot(self.plant.mixer.B.dot((np.eye(6)-W).dot(rotors)))
 
         self.plant.set_dot(t, rotors)
         self.controller.set_dot(virtual_ctrl)
 
-        y = np.vstack([self.plant.pos.state, quat2angle(self.plant.quat.state)[::-1][2]])
+        y = np.vstack([self.plant.pos.state, psi])
         self.lpeso_x.set_dot(t, y[0], obs_ref[0, :, :])
         self.lpeso_y.set_dot(t, y[1], obs_ref[1, :, :])
         self.lpeso_z.set_dot(t, y[2], obs_ref[2, :, :])
         self.hgeso_psi.set_dot(t, y[3], obs_ref[3, 0:2, :])
-
-        self.fa_F.dot = self.dfa_F.state
-        self.dfa_F.dot = fa[0]
-        fa = np.vstack((self.fa_F.state, fa[1:4, :]))
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,

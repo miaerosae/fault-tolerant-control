@@ -51,7 +51,7 @@ def exp_plot(loggerpath):
     for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["obs"][:, i, 0], "b", label=_label+" (observation)")
+        # plt.plot(data["t"], data["obs"][:, i, 0], "b", label=_label+" (observation)")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label=_label)
         plt.plot(data["t"], data["ref"][:, i, 0], "r--", label=_label+" (cmd)")
         plt.legend(loc="upper right")
@@ -83,6 +83,20 @@ def exp_plot(loggerpath):
     plt.tight_layout()
     plt.legend()
 
+    # observation: position error
+    plt.figure()
+
+    ax = plt.subplot(311)
+    for i, (_label, _ls) in enumerate(zip(["ex", "ey", "ez"], ["-", "--", "-."])):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
+        plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k"+_ls, label=_label)
+        plt.plot(data["t"], data["obs_pos"][:, i, 0], "b"+_ls, label=_label)
+    plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel("Error observation, m/s")
+    plt.tight_layout()
+    plt.legend()
+
     # euler angles
     plt.figure()
     plt.ylim([-40, 40])
@@ -93,9 +107,11 @@ def exp_plot(loggerpath):
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        if i == 2:
-            plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b", label=r"$\psi$"+" (observation)")
+        # if i == 2:
+            # plt.plot(data["t"], np.rad2deg(data["obs"][:, 3, 0]), "b", label=r"$\psi$"+" (observation)")
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k"+_ls, label=_label)
+        plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r"+_ls, label=_label)
+        plt.plot(data["t"], data["obs_ang"][:, i, 0], "b"+_ls, label=_label)
         plt.legend(loc="upper right")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Euler angles, deg")
@@ -146,33 +162,32 @@ def exp_plot(loggerpath):
     # plt.savefig("lpeso_forces.png", dpi=300)
 
     # disturbance
+    plt.figure()
+
+    ax = plt.subplot(611)
+    for i in range(data["dist"].shape[1]):
+        if i != 0:
+            plt.subplot(611+i, sharex=ax)
+        plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
+        if i == 0:
+            plt.legend()
+    plt.gcf().supylabel("dist")
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
+
+    # obs control
     # plt.figure()
 
     # ax = plt.subplot(411)
-    # for i in range(data["dist"].shape[1]):
+    # for i in range(data["obs_u"].shape[1]):
     #     if i != 0:
     #         plt.subplot(411+i, sharex=ax)
-    #     plt.plot(data["t"], data["dist"][:, i, 0], "r--", label="distarbance")
-    #     plt.plot(data["t"], data["d"][:, i, 0], "k", label=" realdistarbance")
+    #     plt.plot(data["t"], data["obs_u"][:, i, 0], "r--", label="observer control input")
     #     if i == 0:
     #         plt.legend()
-    # plt.gcf().supylabel("dist")
+    # plt.gcf().supylabel("observer control input")
     # plt.gcf().supxlabel("Time, sec")
     # plt.tight_layout()
-
-    # obs control
-    plt.figure()
-
-    ax = plt.subplot(411)
-    for i in range(data["obs_u"].shape[1]):
-        if i != 0:
-            plt.subplot(411+i, sharex=ax)
-        plt.plot(data["t"], data["obs_u"][:, i, 0], "r--", label="observer control input")
-        if i == 0:
-            plt.legend()
-    plt.gcf().supylabel("observer control input")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
     # plt.savefig("Figure_6.png")
 
     # fdi
@@ -186,7 +201,7 @@ def exp_plot(loggerpath):
     #     plt.plot(data["t"], data["fa"][:, i], "k--", label=_label)
     #     plt.legend(loc="upper right")
     # plt.gcf().supxlabel("Time, sec")
-    # plt.gcf().supylabel("FDI information from Intermediate ESO")
+    # plt.gcf().supylabel("FDI information")
     # plt.tight_layout()
 
     plt.show()

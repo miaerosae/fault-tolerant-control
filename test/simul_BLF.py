@@ -26,7 +26,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         self.n = self.plant.mixer.B.shape[1]
@@ -37,7 +37,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.8),  # scenario a
+            # LoE(time=5, index=0, level=0.8),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -49,18 +49,18 @@ class Env(BaseEnv):
         alp = np.array([3, 3, 1])
         eps = 0.5
         Kxy = np.array([1, 1])/2
-        Kz = np.array([3, 2])
-        rho_0, rho_inf = 15, 1e-1
+        Kz = np.array([1, 1])
+        rho_0, rho_inf = 5, 1e-1
         k = 0.01
         self.blf_x = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
         self.blf_y = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
         self.blf_z = BLF.outerLoop(alp, eps, Kz, rho_0, rho_inf, k)
         xi = np.array([-1, 1])
-        rho = np.array([30, 70])
+        rho = np.deg2rad([30, 70])
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        eps = 0.5
+        eps = 0.01
         Kang = np.array([1, 1])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
         self.blf_theta = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[1], self.plant.g)
@@ -69,8 +69,10 @@ class Env(BaseEnv):
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
 
     def get_ref(self, t):
-        pos_des = np.vstack([-2, 0, 0])
+        pos_des = np.vstack([-1, 1, 1])
         vel_des = np.vstack([0, 0, 0])
+        # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
+        # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         ref = np.vstack([pos_des, vel_des, quat_des, omega_des])

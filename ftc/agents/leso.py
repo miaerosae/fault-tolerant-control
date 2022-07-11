@@ -90,6 +90,9 @@ class lowPowerESO(BaseEnv):
         observation = self.xi.state[0][0][0]
         return observation
 
+    def get_dist(self):
+        return self.sig.state[1]
+
     def set_dot(self, t, y, ref):
         '''
         y: desired observer's real state
@@ -132,6 +135,9 @@ class highGainESO(BaseEnv):
 
     def get_obs(self):
         return self.x.state[0]
+
+    def get_dist(self):
+        return self.sig.state
 
 
 class Controller(BaseEnv):

@@ -4,12 +4,13 @@ import numpy as np
 
 
 def sat(L, x):
-    if x > L:
-        return L
-    elif x < -L:
-        return -L
-    else:
-        return x
+    det = x.copy()
+    result = det
+    if det > L:
+        result = L
+    elif det < -L:
+        result = - L
+    return result
 
 
 def fun_psi(Sxi, Bsig, b0, F):
@@ -172,7 +173,7 @@ class highGainESO(BaseEnv):
         self.x.dot, self.sig.dot = dots
 
     def get_obs(self):
-        return self.x.state[0]
+        return self.C.dot(self.x.state)
 
 
 class Controller(BaseEnv):

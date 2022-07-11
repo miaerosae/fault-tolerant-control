@@ -185,14 +185,16 @@ class Env(BaseEnv):
         F = np.linalg.inv(W).dot(F_)
         rotors_cmd = F.dot(self.u) + G.dot(fm)
 
+        # get true fault value
+        rotors_cmd_noinfo = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        tfa = - self.plant.mixer.B.dot((np.eye(6)-W).dot(rotors_cmd_noinfo))
+
         # actuator saturation
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
         self.u = rotors
-
-        tfa = - self.plant.mixer.B.dot((np.eye(6)-W).dot(rotors))
 
         self.plant.set_dot(t, rotors)
         self.controller.set_dot(virtual_ctrl)
