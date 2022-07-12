@@ -1,3 +1,5 @@
+import ray
+import argparse
 import numpy as np
 from numpy import sin, cos
 import matplotlib.pyplot as plt
@@ -165,7 +167,9 @@ class Env(BaseEnv):
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
 
 
-def run(loggerpath):
+def run(loggerpath, i, k):
+    np.random.seed(i)
+
     env = Env()
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
@@ -188,11 +192,28 @@ def run(loggerpath):
     env.close()
 
 
-def exp1(loggerpath):
-    run(loggerpath)
+def exp1(*args, **kwargs):
+    run(*args, **kwargs)
+
+
+def main(args):
+    if args.with_ray:
+        @ray.remote
+        def exp1_ray(*args, **kwargs):
+            return exp1(*args, **kwargs)
+
+        ray.init()
+        futures = [exp1_ray.remote(f"data_{i:02d}.h5", i) for i in range(10)]
+        ray.get(futures)
+        ray.shutdown()
+    else:
+        loggerpath = "data.h5"
+        exp1(loggerpath)
+        exp_plot(loggerpath)
 
 
 if __name__ == "__main__":
-    loggerpath = "data.h5"
-    exp1(loggerpath)
-    exp_plot(loggerpath)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--with-ray", action="store_true")
+    args = parser.parse_args()
+    main(args)
