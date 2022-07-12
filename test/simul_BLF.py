@@ -1,4 +1,5 @@
 import ray
+from ray import tune
 import argparse
 import numpy as np
 from numpy import sin, cos
@@ -27,7 +28,7 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self):
+    def __init__(self, k11, k12, k21, k22, k31, k32):
         super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
@@ -50,26 +51,27 @@ class Env(BaseEnv):
         self.CA = CA(self.plant.mixer.B)
         alp = np.array([3, 3, 1])
         eps = 0.5
-        Kxy = np.array([1, 1])/2
-        Kz = np.array([1, 1])
+        Kxy = np.array([k11, k12])
+        Kz = np.array([k21, k22])
         rho_0, rho_inf = 15, 1e-1
         k = 0.01
         self.blf_x = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
         self.blf_y = BLF.outerLoop(alp, eps, Kxy, rho_0, rho_inf, k)
         self.blf_z = BLF.outerLoop(alp, eps, Kz, rho_0, rho_inf, k)
         xi = np.array([-1, 1])
-        rho = np.deg2rad([30, 70])
+        rho = np.deg2rad([30, 80])
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         eps = 0.01
         # Kang = np.array([20, 15])  # for rotor failure case
-        Kang = np.array([5, 1])
+        Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
         self.blf_theta = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[1], self.plant.g)
         self.blf_psi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[2], self.plant.g)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
+        self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
         pos_des = np.vstack([-1, 1, 1])
@@ -83,6 +85,23 @@ class Env(BaseEnv):
 
     def step(self):
         *_, done = self.update()
+
+        # Stop condition
+        omega = self.plant.omega.state
+        for dang in omega:
+            if abs(dang) > np.deg2rad(80):
+                done = True
+        err_pos = np.array([self.blf_x.e.state[0],
+                            self.blf_y.e.state[0],
+                            self.blf_z.e.state[0]])
+        for err in err_pos:
+            if abs(err) > 10:
+                done = True
+
+        for rotor in self.rotors_cmd:
+            if rotor < 0 or rotor > self.plant.rotor_max + 5:
+                done = True
+
         return done
 
     def set_dot(self, t):
@@ -125,6 +144,7 @@ class Env(BaseEnv):
         forces = np.vstack([u1, u2, u3, u4])
         rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
+        self.rotors_cmd = rotors_cmd
 
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
@@ -167,10 +187,25 @@ class Env(BaseEnv):
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
 
 
-def run(loggerpath, i, k):
-    np.random.seed(i)
+def run_ray(k11, k12, k21, k22, k31, k32):
+    env = Env(k11, k12, k21, k22, k31, k32)
+    env.reset()
 
-    env = Env()
+    while True:
+        env.render()
+        done = env.step()
+
+        if done:
+            break
+
+    time = env.clock.get()
+    env.close()
+
+    return time
+
+
+def run(loggerpath, k11, k12, k21, k22, k31, k32):
+    env = Env(k11, k12, k21, k22, k31, k32)
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
 
@@ -192,23 +227,28 @@ def run(loggerpath, i, k):
     env.close()
 
 
-def exp1(*args, **kwargs):
-    run(*args, **kwargs)
-
-
 def main(args):
     if args.with_ray:
-        @ray.remote
-        def exp1_ray(*args, **kwargs):
-            return exp1(*args, **kwargs)
+        configs = {
+            "k11": tune.uniform(1, 10),
+            "k12": tune.uniform(1, 10),
+            "k21": tune.uniform(1, 20),
+            "k22": tune.uniform(1, 20),
+            "k31": tune.uniform(1, 20),
+            "k32": tune.uniform(1, 20),
+        }
 
-        ray.init()
-        futures = [exp1_ray.remote(f"data_{i:02d}.h5", i) for i in range(10)]
-        ray.get(futures)
-        ray.shutdown()
+        def trainable(configs):
+            score = run_ray(configs["k11"], configs["k12"], configs["k21"],
+                            configs["k22"], configs["k31"], configs["k32"])
+            tune.report(score=score)
+        tune.run(trainable, config=configs, num_samples=10)
+
     else:
         loggerpath = "data.h5"
-        exp1(loggerpath)
+
+        k11, k12, k21, k22, k31, k32 = 6.615, 2.57507, 19.2696, 14.94, 4.98657, 4.20268
+        run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
 
