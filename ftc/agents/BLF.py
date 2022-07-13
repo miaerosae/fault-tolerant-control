@@ -3,16 +3,6 @@ from fym.core import BaseEnv, BaseSystem
 import numpy as np
 
 
-def sat(x, bound):
-    lb, ub = bound.ravel()
-    if x < lb:
-        return lb
-    elif x > ub:
-        return ub
-    else:
-        return x
-
-
 class outerLoop(BaseEnv):
     def __init__(self, alp, eps, K, rho_0, rho_inf, k):
         super().__init__()
@@ -78,13 +68,14 @@ class innerLoop(BaseEnv):
         alp, eps = self.alp, self.eps
         nu = self.get_virtual(ref)
         bound = f + self.b*self.xi
+        nu_sat = np.clip(nu, bound[0], bound[1])
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * (y - x[0])
-        xdot[1, :] = x[2] + sat(nu, bound) + (alp[1]/eps**2) * (y - x[0])
+        xdot[1, :] = x[2] + nu_sat + (alp[1]/eps**2) * (y - x[0])
         xdot[2, :] = (alp[2]/eps**3) * (y - x[0])
         lambdot = np.zeros((2, 1))
         lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
-        lambdot[1] = - self.c[1]*lamb[1] + (sat(nu, bound) - nu)
+        lambdot[1] = - self.c[1]*lamb[1] + (nu_sat - nu)
         return xdot, lambdot
 
     def get_virtual(self, ref):
@@ -106,7 +97,8 @@ class innerLoop(BaseEnv):
     def get_u(self, ref, f):
         nu = self.get_virtual(ref)
         bound = f + self.b*self.xi
-        u = (sat(nu, bound) - f) / self.b
+        nu_sat = np.clip(nu, bound[0], bound[1])
+        u = (nu_sat - f) / self.b
         return u
 
     def set_dot(self, t, y, ref, f):
