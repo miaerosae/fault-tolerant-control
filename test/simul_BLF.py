@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=30)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         self.n = self.plant.mixer.B.shape[1]
@@ -63,7 +63,7 @@ class Env(BaseEnv):
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        eps = 0.01
+        eps = 0.5
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
@@ -74,10 +74,12 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-1, 1, 1])
+        pos_des = np.vstack([-3, 0, 0])/2
         vel_des = np.vstack([0, 0, 0])
-        # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
-        # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
+        # pi = np.pi
+        # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
+        #                      np.sin(5*pi*t/10)*np.sin(pi*t/10)*cos(pi/4),
+        #                      sin(5*pi*t/10)*sin(pi/4)])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
@@ -87,20 +89,20 @@ class Env(BaseEnv):
         *_, done = self.update()
 
         # Stop condition
-        omega = self.plant.omega.state
-        for dang in omega:
-            if abs(dang) > np.deg2rad(80):
-                done = True
-        err_pos = np.array([self.blf_x.e.state[0],
-                            self.blf_y.e.state[0],
-                            self.blf_z.e.state[0]])
-        for err in err_pos:
-            if abs(err) > 10:
-                done = True
+        # omega = self.plant.omega.state
+        # for dang in omega:
+        #     if abs(dang) > np.deg2rad(80):
+        #         done = True
+        # err_pos = np.array([self.blf_x.e.state[0],
+        #                     self.blf_y.e.state[0],
+        #                     self.blf_z.e.state[0]])
+        # for err in err_pos:
+        #     if abs(err) > 10:
+        #         done = True
 
-        for rotor in self.rotors_cmd:
-            if rotor < 0 or rotor > self.plant.rotor_max + 5:
-                done = True
+        # for rotor in self.rotors_cmd:
+        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
+        #         done = True
 
         return done
 
@@ -247,7 +249,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 6.615, 2.57507, 19.2696, 14.94, 4.98657, 4.20268
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 10, 10
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 

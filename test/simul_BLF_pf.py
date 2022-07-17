@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         self.n = self.plant.mixer.B.shape[1]
@@ -66,7 +66,7 @@ class Env(BaseEnv):
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        Rang = np.array([80, 100])
+        Rang = np.array([np.deg2rad(80), 100])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(l, alp, bet, Rang, Kang, xi,
@@ -80,7 +80,7 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-1, 0, 1])
+        pos_des = np.vstack([-1, 0, 0])
         vel_des = np.vstack([0, 0, 0])
         # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
@@ -253,7 +253,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 0.1, 0.1, 0.3, 0.3, .4, .4
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 10, 10
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
