@@ -86,12 +86,17 @@ def exp_plot(loggerpath):
     # observation: position error
     plt.figure()
 
+    pos_bounds = np.zeros((np.shape(data["x"]["pos"][:, 0, 0])[0]))
+    for i in range(np.shape(data["x"]["pos"][:, 0, 0])[0]):
+        pos_bounds[i] = (15-1e-1) * np.exp(-0.2*data["t"][i]) + 1e-1
     ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip(["ex", "ey", "ez"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k"+_ls, label=_label)
-        plt.plot(data["t"], data["obs_pos"][:, i, 0], "b"+_ls, label=_label)
+        plt.plot(data["t"], data["obs_pos"][:, i, 0], "r"+_ls, label=_label)
+        plt.plot(data["t"], pos_bounds, "b", label=_label)
+        plt.plot(data["t"], -pos_bounds, "b", label=_label)
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Error observation, m/s")
     plt.tight_layout()

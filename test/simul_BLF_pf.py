@@ -40,7 +40,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=0, index=0, level=0.5),  # scenario a
+            # LoE(time=5, index=0, level=0.9),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -49,15 +49,15 @@ class Env(BaseEnv):
 
         # Define agents
         self.CA = CA(self.plant.mixer.B)
-        l = 5
-        alp = np.array([3, 3, 3])
-        bet = np.array([6.4, 2.131])
+        l = 3
+        alp = np.array([23, 23, 23])
+        bet = np.array([80.3686, 30.0826])
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
         Rxy = np.array([10, 100])
-        Rz = np.array([10, 100])
+        Rz = np.array([10, 30])
         rho_0, rho_inf = 15, 1e-1
-        k = 0.01
+        k = 0.2
         self.blf_x = BLF.outerLoop(l, alp, bet, Rxy, Kxy, rho_0, rho_inf, k)
         self.blf_y = BLF.outerLoop(l, alp, bet, Rxy, Kxy, rho_0, rho_inf, k)
         self.blf_z = BLF.outerLoop(l, alp, bet, Rz, Kz, rho_0, rho_inf, k)
@@ -80,7 +80,7 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-1, 0, 0])
+        pos_des = np.vstack([-0, 1, 0])
         vel_des = np.vstack([0, 0, 0])
         # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
@@ -93,20 +93,20 @@ class Env(BaseEnv):
         *_, done = self.update()
 
         # Stop condition
-        omega = self.plant.omega.state
-        for dang in omega:
-            if abs(dang) > np.deg2rad(80):
-                done = True
-        err_pos = np.array([self.blf_x.e.state[0],
-                            self.blf_y.e.state[0],
-                            self.blf_z.e.state[0]])
-        for err in err_pos:
-            if abs(err) > 10:
-                done = True
+        # omega = self.plant.omega.state
+        # for dang in omega:
+        #     if abs(dang) > np.deg2rad(80):
+        #         done = True
+        # err_pos = np.array([self.blf_x.e.state[0],
+        #                     self.blf_y.e.state[0],
+        #                     self.blf_z.e.state[0]])
+        # for err in err_pos:
+        #     if abs(err) > 10:
+        #         done = True
 
-        for rotor in self.rotors_cmd:
-            if rotor < 0 or rotor > self.plant.rotor_max + 5:
-                done = True
+        # for rotor in self.rotors_cmd:
+        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
+        #         done = True
 
         return done
 
