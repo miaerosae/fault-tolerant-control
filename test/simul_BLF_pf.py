@@ -40,7 +40,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=5, index=0, level=0.9),  # scenario a
+            LoE(time=3, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -49,7 +49,7 @@ class Env(BaseEnv):
 
         # Define agents
         self.CA = CA(self.plant.mixer.B)
-        l = 3
+        l = 2
         alp = np.array([23, 23, 23])
         bet = np.array([80.3686, 30.0826])
         Kxy = np.array([k11, k12])
@@ -80,7 +80,7 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-0, 1, 0])
+        pos_des = np.vstack([-0, 0, 1])
         vel_des = np.vstack([0, 0, 0])
         # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
@@ -148,7 +148,8 @@ class Env(BaseEnv):
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        rotors_cmd = self.CA.get(What).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
         self.rotors_cmd = rotors_cmd
 
@@ -189,7 +190,7 @@ class Env(BaseEnv):
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist,
+                    virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
 
 
@@ -253,7 +254,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 10, 10
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 15, 15
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
