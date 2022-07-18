@@ -180,19 +180,19 @@ def exp_plot(loggerpath):
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
 
-    # obs control
-    # plt.figure()
+    # q
+    plt.figure()
 
-    # ax = plt.subplot(411)
-    # for i in range(data["obs_u"].shape[1]):
-    #     if i != 0:
-    #         plt.subplot(411+i, sharex=ax)
-    #     plt.plot(data["t"], data["obs_u"][:, i, 0], "r--", label="observer control input")
-    #     if i == 0:
-    #         plt.legend()
-    # plt.gcf().supylabel("observer control input")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.tight_layout()
+    ax = plt.subplot(311)
+    for i in range(data["q"].shape[1]):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
+        plt.plot(data["t"], data["q"][:, i, 0], "r--", label="position control input")
+        if i == 0:
+            plt.legend()
+    plt.gcf().supylabel("observer control input")
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
     # plt.savefig("Figure_6.png")
 
     # fdi
