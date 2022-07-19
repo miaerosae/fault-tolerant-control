@@ -51,7 +51,7 @@ class outerLoop(BaseEnv):
         z2 = e[1] - alpha
         dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*(z1+dz1) \
             + ddrho*z1 + drho*dz1
-        q = - e[2] + dalpha - K[1]*z2 - z1
+        q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         return q
 
     def set_dot(self, t, y, ref):

@@ -50,7 +50,7 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         alp = np.array([3, 3, 1])
-        eps = 0.01
+        eps = 0.5
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
         rho_0, rho_inf = 15, 1e-1
@@ -63,7 +63,7 @@ class Env(BaseEnv):
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        eps = 0.01
+        # eps = 0.01
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
@@ -74,7 +74,7 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-3, 0, 0])/2
+        pos_des = np.vstack([-1, 1, 0])/2
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
@@ -249,7 +249,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 1, 1
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 20, 15
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
