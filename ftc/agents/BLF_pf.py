@@ -82,9 +82,9 @@ class innerLoop(BaseEnv):
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
 
-    def deriv(self, x, eta, lamb, y, ref, f):
+    def deriv(self, x, eta, lamb, t, y, ref, f):
         l, alp, bet, r = self.l, self.alp, self.bet, self.r
-        nu = self.get_virtual(ref)
+        nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
 
@@ -102,10 +102,11 @@ class innerLoop(BaseEnv):
         lambdot[1] = - self.c[1]*lamb[1] + (nu_sat - nu)
         return xdot, etadot, lambdot
 
-    def get_virtual(self, ref):
+    def get_virtual(self, t, ref):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
+        # lamb = np.zeros((2, 1))
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]
@@ -117,8 +118,8 @@ class innerLoop(BaseEnv):
             - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
         return nu
 
-    def get_u(self, ref, f):
-        nu = self.get_virtual(ref)
+    def get_u(self, t, ref, f):
+        nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
         u = (nu_sat - f) / self.b
@@ -126,7 +127,7 @@ class innerLoop(BaseEnv):
 
     def set_dot(self, t, y, ref, f):
         states = self.observe_list()
-        dots = self.deriv(*states, y, ref, f)
+        dots = self.deriv(*states, t, y, ref, f)
         self.x.dot, self.eta.dot, self.lamb.dot = dots
 
     def get_obs(self):

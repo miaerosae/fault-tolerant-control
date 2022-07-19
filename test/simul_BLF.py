@@ -40,7 +40,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=10, index=0, level=0.6),  # scenario a
+            # LoE(time=10, index=0, level=0.6),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -50,7 +50,7 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         alp = np.array([3, 3, 1])
-        eps = 0.5
+        eps = 0.01
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
         rho_0, rho_inf = 15, 1e-1
@@ -63,7 +63,7 @@ class Env(BaseEnv):
         c = np.array([20, 20])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        eps = 0.001
+        eps = 0.01
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(alp, eps, Kang, xi, rho, c, b[0], self.plant.g)
@@ -185,7 +185,7 @@ class Env(BaseEnv):
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist,
+                    virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
 
 
@@ -249,7 +249,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 20, 15
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 1, 1
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 

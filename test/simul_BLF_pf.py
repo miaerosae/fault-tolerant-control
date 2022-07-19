@@ -40,7 +40,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            LoE(time=3, index=0, level=0.5),  # scenario a
+            # LoE(time=3, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -80,7 +80,7 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-0, 0, 1])
+        pos_des = np.vstack([-0, 0, 0])
         vel_des = np.vstack([0, 0, 0])
         # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
@@ -139,17 +139,17 @@ class Env(BaseEnv):
                       (J[0]-J[1]) / J[2] * obs_p * obs_q])
 
         # Inner-Loop
-        u2 = self.blf_phi.get_u(phid, f[0])
-        u3 = self.blf_theta.get_u(thetad, f[1])
-        u4 = self.blf_psi.get_u(psid, f[2])
+        u2 = self.blf_phi.get_u(t, phid, f[0])
+        u3 = self.blf_theta.get_u(t, thetad, f[1])
+        u4 = self.blf_psi.get_u(t, psid, f[2])
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
-        rotors_cmd = self.CA.get(What).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = self.CA.get(What).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
         self.rotors_cmd = rotors_cmd
 
@@ -254,7 +254,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 15, 15
+        k11, k12, k21, k22, k31, k32 = 1, 1, 3, 2, 20, 15
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 

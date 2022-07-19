@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.1,
+        "delay": 0.2,
         "threshold": 0.,
     },
 
