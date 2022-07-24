@@ -138,9 +138,9 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": 0.05,
-            "rho": np.array([5, 1e-1]),
-            "rho_k": 0.1,
+            "eps": 0.3,
+            "rho": np.array([2, 1e-1]),
+            "rho_k": 0.05,
         },
         # --- innerLoop --- #
         "iL": {

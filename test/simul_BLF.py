@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
         self.n = self.plant.mixer.B.shape[1]
@@ -81,7 +81,7 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t), np.cos(t), 0])
+        pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
@@ -271,7 +271,7 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        k11, k12, k21, k22, k31, k32 = 1, 0.5, 1, 1, 20, 15
+        k11, k12, k21, k22, k31, k32 = 1.5, 0.5, 1, 1, 30, 20
         run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
