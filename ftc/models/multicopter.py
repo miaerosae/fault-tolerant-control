@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 import fym
 from fym.core import BaseEnv, BaseSystem
@@ -8,6 +9,18 @@ import ftc.config
 
 
 cfg = ftc.config.load(__name__)
+
+
+def stable_sigmoid(x):
+
+    if x >= 0:
+        z = math.exp(-x)
+        sig = 1 / (1 + z)
+        return sig
+    else:
+        z = math.exp(x)
+        sig = z / (1 + z)
+        return sig
 
 
 class Mixer:
@@ -100,7 +113,7 @@ class Multicopter(BaseEnv):
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
     def __init__(self, pos, vel, quat, omega,
-                 dx=0.0, dy=0.0, dz=0.0, uncertainty=0, blade=False):
+                 dx=0.0, dy=0.0, dz=0.0, uncertainty=False, blade=False):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -112,8 +125,6 @@ class Multicopter(BaseEnv):
         for k, v in fym.parser.decode(cfg.physProp).items():
             self.__setattr__(k, v)
 
-        self.J = (1 - uncertainty) * self.J
-
         self.Jinv = np.linalg.inv(self.J)
         self.M_gyroscopic = np.zeros((3, 1))
         self.A_drag = np.diag(np.zeros(3))  # currently ignored
@@ -122,6 +133,7 @@ class Multicopter(BaseEnv):
         self.mixer = Mixer(d=self.d, c=self.c, b=self.b)
 
         self.blade = blade
+        self.uncertainty = uncertainty
 
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel):
         if self.blade is False:
@@ -133,12 +145,39 @@ class Multicopter(BaseEnv):
         m, g, J = self.m, self.g, self.J
         e3 = np.vstack((0, 0, 1))
 
+        # uncertainty
+        upos = np.zeros((3, 1))
+        uvel = np.zeros((3, 1))
+        ueuler = np.zeros((3, 1))
+        uomega = np.zeros((3, 1))
+        if self.uncertainty is True:
+            upos = np.vstack([
+                0.5*np.cos(2*np.pi*t),
+                0.2*np.sin(0.5*np.pi*t),
+                0.3*stable_sigmoid(t),
+            ])
+            uvel = np.vstack([
+                0.8*stable_sigmoid(t),
+                0.5*np.sin(np.pi*t),
+                0.2*np.sin(3*t) + 0.1*np.sin(0.5*np.pi*t)
+            ])
+            ueuler = np.vstack([
+                0.1*np.tanh(np.sqrt(2)*t),
+                0.3*np.cos(2*t+1) + 0.2*stable_sigmoid(t),
+                - 0.5*np.sin(5*np.pi*t),
+            ])
+            uomega = np.vstack([
+                0.2*stable_sigmoid(t) - 0.5*np.sin(0.5*np.pi*t),
+                0.5*np.tanh(np.sqrt(2)*t),
+                0.3*np.cos(2*t+1)
+            ])
+
         # wind: vel = vel - windvel
-        dpos = vel  # + 0.5*np.sin(t)
+        dpos = vel + upos
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
-                # + 1*np.sin(t)
+                + uvel
                 )
         # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
@@ -150,7 +189,7 @@ class Multicopter(BaseEnv):
                                 [r, q, -p, 0.]]).dot(quat)
         eps = 1 - (quat[0]**2+quat[1]**2+quat[2]**2+quat[3]**2)
         k = 1
-        dquat = dquat + k*eps*quat
+        dquat = dquat + k*eps*quat + angle2quat(ueuler[2], ueuler[1], ueuler[0])
         domega = self.Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)
@@ -158,7 +197,8 @@ class Multicopter(BaseEnv):
             - self.A_drag.dot(dcm).dot(vel)
             - self.B_drag.dot(omega)
             + windvel
-        )
+        ) \
+            + uomega
 
         return dpos, dvel, dquat, domega
 
