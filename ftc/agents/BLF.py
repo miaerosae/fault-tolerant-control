@@ -4,12 +4,12 @@ import numpy as np
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho_0, rho_inf, k):
+    def __init__(self, alp, eps, K, rho, k, init):
         super().__init__()
-        self.e = BaseSystem(np.zeros((3, 1)))
+        self.e = BaseSystem(np.vstack([init, 0, 0]))
 
-        self.alp, self.eps, self.K = alp, eps, K
-        self.rho_0, self.rho_inf, self.k = rho_0, rho_inf, k
+        self.alp, self.eps, self.K, self.k = alp, eps, K, k
+        self.rho_0, self.rho_inf = rho.ravel()
 
     def deriv(self, e, y, ref, t):
         alp, eps = self.alp, self.eps
@@ -33,8 +33,8 @@ class outerLoop(BaseEnv):
         dz1 = e[1]/rho - e[0]*drho/rho**2
         alpha = - (1-z1**2)*rho*K[0]*z1 + drho*z1
         z2 = e[1] - alpha
-        dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*(z1+dz1) \
-            + ddrho*z1 + drho*dz1
+        dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*z1 \
+            - (1-z1**2)*rho*K[0]*dz1 + ddrho*z1 + drho*dz1
         q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         return q
 
@@ -64,9 +64,9 @@ class innerLoop(BaseEnv):
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
 
-    def deriv(self, x, lamb, y, ref, f):
+    def deriv(self, x, lamb, t, y, ref, f):
         alp, eps = self.alp, self.eps
-        nu = self.get_virtual(ref)
+        nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
         xdot = np.zeros((3, 1))
@@ -78,11 +78,11 @@ class innerLoop(BaseEnv):
         lambdot[1] = - self.c[1]*lamb[1] + (nu_sat - nu)
         return xdot, lambdot
 
-    def get_virtual(self, ref):
+    def get_virtual(self, t, ref):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
-        # lamb = np.vstack([0, 0])
+        lamb = np.vstack([0, 0])
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]
@@ -94,8 +94,8 @@ class innerLoop(BaseEnv):
             - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
         return nu
 
-    def get_u(self, ref, f):
-        nu = self.get_virtual(ref)
+    def get_u(self, t, ref, f):
+        nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
         u = (nu_sat - f) / self.b
@@ -103,7 +103,7 @@ class innerLoop(BaseEnv):
 
     def set_dot(self, t, y, ref, f):
         states = self.observe_list()
-        self.x.dot, self.lamb.dot = self.deriv(*states, y, ref, f)
+        self.x.dot, self.lamb.dot = self.deriv(*states, t, y, ref, f)
 
     def get_obs(self):
         return self.x.state[0]

@@ -129,6 +129,30 @@ default_settings = fym.parser.parse({
         },
     },
 
+    # :::::: BLF :::::: #
+
+    # ====== agents.BLF ====== #
+
+    "agents.BLF": {
+
+        # --- outerLoop --- #
+        "oL": {
+            "alp": np.array([3, 3, 1]),
+            "eps": 0.05,
+            "rho": np.array([5, 1e-1]),
+            "rho_k": 0.1,
+        },
+        # --- innerLoop --- #
+        "iL": {
+            "alp": np.array([3, 3, 1]),
+            "eps": 0.1,
+            "xi": np.array([-1, 1]),
+            "rho": np.deg2rad(np.array([40, 90])),
+            "c": np.array([20, 20]),
+        },
+    },
+
+
     # :::::: FTC EVALUATION ENV :::::: #
 
     # ====== env ====== #
