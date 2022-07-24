@@ -139,8 +139,8 @@ default_settings = fym.parser.parse({
         "oL": {
             "alp": np.array([3, 3, 1]),
             "eps": 0.3,
-            "rho": np.array([2, 1e-1]),
-            "rho_k": 0.05,
+            "rho": np.array([5, 1e-1]),
+            "rho_k": 0.1,
         },
         # --- innerLoop --- #
         "iL": {
@@ -150,6 +150,8 @@ default_settings = fym.parser.parse({
             "rho": np.deg2rad(np.array([40, 90])),
             "c": np.array([20, 20]),
         },
+        # --- gain K --- #
+        "K": np.array([1.0, 0.5, 3, 2, 20, 15]),
     },
 
 
