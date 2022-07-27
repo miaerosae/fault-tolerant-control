@@ -29,9 +29,11 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
-        self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega)
+        self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
+                                 # uncertainty=True,
+                                 )
         self.n = self.plant.mixer.B.shape[1]
 
         # Define actuator dynamics
@@ -40,7 +42,7 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=10, index=0, level=0.8),  # scenario a
+            # LoE(time=5, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -52,7 +54,7 @@ class Env(BaseEnv):
         params = cfg.agents.BLF
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
-        self.pos_ref = np.vstack([-1, 1, 1])
+        self.pos_ref = np.vstack([-0, 1, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[0][0])
@@ -80,8 +82,8 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = self.pos_ref
-        # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
+        # pos_des = self.pos_ref
+        pos_des = np.vstack([np.sin(t), np.cos(t), -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
@@ -121,7 +123,7 @@ class Env(BaseEnv):
         ref = self.get_ref(t)
         W = self.fdi.get_true(t)
         What = self.fdi.get(t)
-        windvel = self.get_windvel(t)
+        # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
         q = np.zeros((3, 1))
@@ -166,7 +168,8 @@ class Env(BaseEnv):
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
+        rotors_cmd = self.CA.get(W).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
         self.rotors_cmd = rotors_cmd
 
@@ -194,7 +197,7 @@ class Env(BaseEnv):
 
         # set_dot
         self.plant.set_dot(t, rotors,
-                           windvel
+                           # windvel
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]

@@ -156,21 +156,21 @@ class Multicopter(BaseEnv):
                 0.2*np.sin(0.5*np.pi*t),
                 0.3*stable_sigmoid(t),
             ])
-            uvel = np.vstack([
-                0.8*stable_sigmoid(t),
-                0.5*np.sin(np.pi*t),
-                0.2*np.sin(3*t) + 0.1*np.sin(0.5*np.pi*t)
-            ])
-            ueuler = np.vstack([
-                0.1*np.tanh(np.sqrt(2)*t),
-                0.3*np.cos(2*t+1) + 0.2*stable_sigmoid(t),
-                - 0.5*np.sin(5*np.pi*t),
-            ])
-            uomega = np.vstack([
-                0.2*stable_sigmoid(t) - 0.5*np.sin(0.5*np.pi*t),
-                0.5*np.tanh(np.sqrt(2)*t),
-                0.3*np.cos(2*t+1)
-            ])
+            # uvel = np.vstack([
+            #     0.8*stable_sigmoid(t),
+            #     0.5*np.sin(np.pi*t),
+            #     0.2*np.sin(3*t) + 0.1*np.sin(0.5*np.pi*t)
+            # ])
+            # ueuler = np.vstack([
+            #     0.1*np.tanh(np.sqrt(2)*t),
+            #     0.3*np.cos(2*t+1) + 0.2*stable_sigmoid(t),
+            #     - 0.5*np.sin(5*np.pi*t),
+            # ])
+            # uomega = np.vstack([
+            #     0.2*stable_sigmoid(t) - 0.5*np.sin(0.5*np.pi*t),
+            #     0.5*np.tanh(np.sqrt(2)*t),
+            #     0.3*np.cos(2*t+1)
+            # ])
 
         # wind: vel = vel - windvel
         dpos = vel + upos
