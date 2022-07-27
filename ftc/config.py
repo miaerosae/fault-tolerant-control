@@ -151,7 +151,7 @@ default_settings = fym.parser.parse({
             "c": np.array([0, 0]),
         },
         # --- gain K --- #
-        "K": np.array([2, 1, 3, 2, 20, 15]),
+        "K": np.array([2, 1, 3, 2, 50, 45]),
     },
 
 

@@ -43,7 +43,7 @@ class Env(BaseEnv):
         self.sensor_faults = []
         self.fault_manager = LoEManager([
             LoE(time=3, index=0, level=0.5),  # scenario a
-            LoE(time=6, index=2, level=0.8),  # scenario b
+            # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
         # Define FDI
@@ -169,7 +169,7 @@ class Env(BaseEnv):
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
         # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
-        rotors_cmd = self.CA.get(W).dot(forces)
+        rotors_cmd = self.CA.get(What).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
         self.rotors_cmd = rotors_cmd
 
