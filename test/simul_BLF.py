@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=30)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
                                  # uncertainty=True,
@@ -42,8 +42,8 @@ class Env(BaseEnv):
         # Define faults
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=5, index=0, level=0.5),  # scenario a
-            # LoE(time=6, index=2, level=0.8),  # scenario b
+            LoE(time=3, index=0, level=0.5),  # scenario a
+            LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
         # Define FDI
@@ -54,7 +54,7 @@ class Env(BaseEnv):
         params = cfg.agents.BLF
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
-        self.pos_ref = np.vstack([-0, 1, 0])
+        self.pos_ref = np.vstack([-0, 1/2, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[0][0])
@@ -83,7 +83,7 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t), np.cos(t), -t])
+        pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
