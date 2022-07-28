@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import fym
 from fym.utils.rot import angle2quat, quat2angle
+from ftc.agents.param import get_uncertainties
 import ftc.config
 
 cfg = ftc.config.load()
@@ -174,10 +175,18 @@ def exp_plot(loggerpath):
     # disturbance
     plt.figure()
 
+    real_dist_mat = np.zeros((6, np.shape(data["t"])[0]))
+    for i in range(np.shape(data["t"])[0]):
+        t = data["t"][i]
+        upos, uvel, ueuler, uomega = get_uncertainties(t, True)
+        real_dist_mat[0, i], real_dist_mat[1, i], real_dist_mat[2, i] = uvel.ravel()
+        real_dist_mat[3, i], real_dist_mat[4, i], real_dist_mat[5, i] = uomega.ravel()
+
     ax = plt.subplot(611)
     for i in range(data["dist"].shape[1]):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
+        plt.plot(data["t"], real_dist_mat[i, :], "r", label="real disturbance")
         plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
         if i == 0:
             plt.legend()
