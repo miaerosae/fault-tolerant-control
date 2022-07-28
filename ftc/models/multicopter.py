@@ -164,7 +164,7 @@ class Multicopter(BaseEnv):
             ueuler = np.vstack([
                 0.1*np.tanh(np.sqrt(2)*t),
                 0.3*np.cos(2*t+1) + 0.2*stable_sigmoid(t),
-                - 0.5*np.sin(5*np.pi*t),
+                - .05*np.sin(5*np.pi*t),
             ])
             uomega = np.vstack([
                 0.2*stable_sigmoid(t) - 0.5*np.sin(0.5*np.pi*t),
