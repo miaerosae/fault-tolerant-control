@@ -75,21 +75,18 @@ def get_uncertainties(t, uncertainty):
     ueuler = np.zeros((3, 1))
     uomega = np.zeros((3, 1))
     if uncertainty is True:
+        # upos와 ueuler가 어떤 의미가 있지..?
         # upos = np.vstack([
         #     0.5*np.cos(2*np.pi*t),
         #     0.2*np.sin(0.5*np.pi*t),
         #     0.3*stable_sigmoid(t),
         # ])
-        # uvel = np.vstack([
-        #     0.8*stable_sigmoid(t),
-        #     0.5*np.sin(np.pi*t),
-        #     0.2*np.sin(3*t) + 0.1*np.sin(0.5*np.pi*t)
-        # ])
-        # ueuler = np.vstack([
-        #     0.1*np.tanh(np.sqrt(2)*t),
-        #     0.3*np.cos(2*t+1) + 0.2*stable_sigmoid(t),
-        #     - 0.5*np.sin(5*np.pi*t),
-        # ])
+        uvel = np.vstack([
+            0.8*stable_sigmoid(t),
+            0.5*np.sin(np.pi*t),
+            0.2*np.sin(3*t) + 0.1*np.sin(0.5*np.pi*t)
+        ])
+        # ueuler = np.vstack([0.1, 0.1, 0.1])
         uomega = np.vstack([
             0.2*stable_sigmoid(t) - 0.5*np.sin(0.5*np.pi*t),
             0.5*np.tanh(np.sqrt(2)*t),

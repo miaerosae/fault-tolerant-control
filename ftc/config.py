@@ -149,7 +149,7 @@ default_settings = fym.parser.parse({
             "eps": np.array([3, 3, 5])*5,
             # "eps": 0.01,
             "xi": np.array([-1, 1]),
-            "rho": np.deg2rad(np.array([40, 90])),
+            "rho": np.deg2rad(np.array([30, 90])),
             "c": np.array([0, 0]),
         },
         # --- gain K --- #

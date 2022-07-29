@@ -82,8 +82,8 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
+        pos_des = self.pos_ref
+        # pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
