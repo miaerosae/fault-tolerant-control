@@ -12,7 +12,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
-import ftc.agents.BLF as BLF
+import ftc.agents.BLF_g as BLF
 from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
 from copy import deepcopy
@@ -55,26 +55,26 @@ class Env(BaseEnv):
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
         self.pos_ref = np.vstack([-0, 1/2, 0])
-        self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
+        self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[0][0], params.theta)
-        self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
+        self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[1][0], params.theta)
-        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps, Kz,
+        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[2][0], params.theta)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
-        self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g, params.theta)
-        self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                        params.iL.xi, params.iL.rho,
-                                       params.iL.c, b[1], self.plant.g), params.theta
-        self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+                                       params.iL.c, b[1], self.plant.g, params.theta)
+        self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[2], self.plant.g, params.theta)
 

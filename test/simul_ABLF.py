@@ -52,15 +52,14 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
-        k11, k12, k21, k22, k31, k32, k41, k42 = cfg.agents.BLF.K.ravel()
-        Kx = np.array([k11, k12])
-        Ky = np.array([k21, k22])
-        Kz = np.array([k31, k32])
+        k11, k12, k21, k22, k31, k32 = cfg.agents.BLF.K.ravel()
+        Kxy = np.array([k11, k12])
+        Kz = np.array([k21, k22])
         self.pos_ref = np.vstack([-0, 1/2, 0])
-        self.blf_x = ABLF.outerLoop(params.oL.alp, params.oL.eps[0], Kx,
+        self.blf_x = ABLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                     params.oL.rho, params.oL.rho_k,
                                     -self.pos_ref[0][0])
-        self.blf_y = ABLF.outerLoop(params.oL.alp, params.oL.eps[1], Ky,
+        self.blf_y = ABLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                     params.oL.rho, params.oL.rho_k,
                                     -self.pos_ref[1][0])
         self.blf_z = ABLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
@@ -69,14 +68,14 @@ class Env(BaseEnv):
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
-        Kang = np.array([k41, k42])
-        self.blf_phi = ABLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
+        Kang = np.array([k31, k32])
+        self.blf_phi = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
                                       params.iL.xi, params.iL.rho,
                                       params.iL.c, b[0], self.plant.g)
-        self.blf_theta = ABLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
+        self.blf_theta = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
                                         params.iL.xi, params.iL.rho,
                                         params.iL.c, b[1], self.plant.g)
-        self.blf_psi = ABLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
+        self.blf_psi = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
                                       params.iL.xi, params.iL.rho,
                                       params.iL.c, b[2], self.plant.g)
 

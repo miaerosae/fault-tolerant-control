@@ -50,13 +50,13 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         l = 2
-        alp = np.array([23, 23, 23])
-        bet = np.array([80.3686, 30.0826])
+        alp = np.array([3, 3, 2])
+        bet = np.array([8.5714, 3.2122])
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
         Rxy = np.array([10, 100])
         Rz = np.array([10, 30])
-        rho_0, rho_inf = 15, 1e-1
+        rho_0, rho_inf = 2, 1e-1
         k = 0.2
         self.blf_x = BLF.outerLoop(l, alp, bet, Rxy, Kxy, rho_0, rho_inf, k)
         self.blf_y = BLF.outerLoop(l, alp, bet, Rxy, Kxy, rho_0, rho_inf, k)
@@ -80,10 +80,10 @@ class Env(BaseEnv):
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([-1, 1, 2])
-        vel_des = np.vstack([0, 0, 0])
-        # pos_des = np.vstack([np.sin(t), np.cos(t), -t])
-        # vel_des = np.vstack([np.cos(t), -np.sin(t), -1])
+        # pos_des = np.vstack([-1, 1, 2])
+        # vel_des = np.vstack([0, 0, 0])
+        pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
+        vel_des = np.vstack([np.cos(t)/2, -np.sin(t)/2, -1])
         quat_des = np.vstack([1, 0, 0, 0])
         omega_des = np.vstack([0, 0, 0])
         ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
