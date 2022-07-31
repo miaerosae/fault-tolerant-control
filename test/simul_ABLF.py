@@ -69,13 +69,13 @@ class Env(BaseEnv):
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
-        self.blf_phi = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_phi = ABLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                       params.iL.xi, params.iL.rho,
                                       params.iL.c, b[0], self.plant.g)
-        self.blf_theta = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_theta = ABLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                         params.iL.xi, params.iL.rho,
                                         params.iL.c, b[1], self.plant.g)
-        self.blf_psi = ABLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_psi = ABLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                       params.iL.xi, params.iL.rho,
                                       params.iL.c, b[2], self.plant.g)
 

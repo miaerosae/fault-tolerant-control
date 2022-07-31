@@ -12,7 +12,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
-import ftc.agents.BLF_g as BLF
+import ftc.agents.ABLF_g as BLF
 from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
 from copy import deepcopy
@@ -32,7 +32,7 @@ class Env(BaseEnv):
         super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 uncertainty=True,
+                                 # uncertainty=True,
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -193,12 +193,13 @@ class Env(BaseEnv):
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]
+        omega = self.plant.omega.state
         self.blf_x.set_dot(t, x, ref[0])
         self.blf_y.set_dot(t, y, ref[1])
         self.blf_z.set_dot(t, z, ref[2])
-        self.blf_phi.set_dot(t, euler[0], phid, f[0])
-        self.blf_theta.set_dot(t, euler[1], thetad, f[1])
-        self.blf_psi.set_dot(t, euler[2], psid, f[2])
+        self.blf_phi.set_dot(t, euler[0], omega[0], phid, f[0])
+        self.blf_theta.set_dot(t, euler[1], omega[1], thetad, f[1])
+        self.blf_psi.set_dot(t, euler[2], omega[2], psid, f[2])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,

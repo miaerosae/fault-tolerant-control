@@ -3,23 +3,28 @@ from fym.core import BaseEnv, BaseSystem
 import numpy as np
 
 
+def func_g(x, theta):
+    return np.sign(x) * abs(x)**theta
+
+
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, init):
+    def __init__(self, alp, eps, K, rho, k, init, theta):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
+        self.theta = theta
 
     def deriv(self, e, y, ref, t):
-        alp, eps = self.alp, self.eps
+        alp, eps, theta = self.alp, self.eps, self.theta
         e_real = y - ref
 
         q = self.get_virtual(t)
         edot = np.zeros((3, 1))
-        edot[0, :] = e[1] + (alp[0]/eps) * (e_real - e[0])
-        edot[1, :] = e[2] + q + (alp[1]/eps**2) * (e_real - e[0])
-        edot[2, :] = (alp[2]/eps**3) * (e_real - e[0])
+        edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (e_real - e[0]), theta[0])
+        edot[1, :] = e[2] + q + alp[1] * func_g(eps**2 * (e_real - e[0]), theta[1])
+        edot[2, :] = alp[2] * eps * func_g(eps**2 * (e_real - e[0]), theta[2])
         return edot
 
     def get_virtual(self, t):
@@ -55,7 +60,7 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, alp, eps, K, xi, rho, c, b, g):
+    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -64,43 +69,42 @@ class innerLoop(BaseEnv):
         self.alp, self.eps, self.K = alp, eps, K
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
+        self.theta = theta
 
     def deriv(self, x, lamb, kappa, t, y1, y2, ref, f):
-        alp, eps, b = self.alp, self.eps, self.b
-        u, z2 = self.get_virtual(t, ref, f)
-        u_sat = np.clip(u, self.xi[0], self.xi[1])
+        alp, eps, theta = self.alp, self.eps, self.theta
+        u = self.get_ureal(t, ref, f)
+        u_sat = self.get_u(t, ref, f)
         xdot = np.zeros((3, 1))
-        xdot[0, :] = x[1] + (alp[0]/eps) * (y1 - x[0])
-        xdot[1, :] = x[2] + kappa*f + u_sat*b + (alp[1]/eps**2) * (y1 - x[0])
-        xdot[2, :] = (alp[2]/eps**3) * (y1 - x[0])
+        xdot[0, :] = x[1] + (alp[0]/eps) * func_g(eps**2 * (y1 - x[0]), theta[0])
+        xdot[1, :] = (x[2] + kappa*f + self.b*u_sat
+                      + alp[1] * func_g(eps**2 * (y1 - x[0]), theta[1]))
+        xdot[2, :] = alp[2] * eps * func_g(eps**2 * (y1 - x[0]), theta[2])
         lambdot = np.zeros((2, 1))
         lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
         lambdot[1] = - self.c[1]*lamb[1] + (u_sat - u)
-        kappadot = f*z2
+        kappadot = (y2 - x[1]) * f
         return xdot, lambdot, kappadot
 
-    def get_virtual(self, t, ref, f):
-        '''
-        does not consider lambda
-        '''
+    def get_ureal(self, t, ref, f):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
-        # lamb = self.lamb.state
-        lamb = np.zeros((2, 1))
+        lamb = self.lamb.state
         kappa = self.kappa.state
+        lamb = np.vstack([0, 0])
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]
         alpha = - K[0]*z1 - c[0]*lamb[0]
         z2 = x[1] - dref - alpha - lamb[1]
-        dalpha = -K[0]*x[1] + K[0]*ref
-        u = self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2
-                      - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
-                      - kappa*f)
-        return u, z2
+        dalpha = - K[0]*(x[1] - dref + c[0]*lamb[0] - lamb[1]) \
+            - c[0]*(-c[0]*lamb[0] + lamb[1])
+        u = self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2 - kappa*f
+                      - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2])
+        return u
 
     def get_u(self, t, ref, f):
-        u, _ = self.get_virtual(t, ref, f)
+        u = self.get_ureal(t, ref, f)
         u_sat = np.clip(u, self.xi[0], self.xi[1])
         return u_sat
 
