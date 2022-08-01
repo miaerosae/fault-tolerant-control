@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
                                  uncertainty=True,
@@ -54,27 +54,27 @@ class Env(BaseEnv):
         params = cfg.agents.BLF
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
-        self.pos_ref = np.vstack([-0, 1/2, 0])
-        self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
+        self.pos_ref = np.vstack([-0, 0, 0])
+        self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[0][0])
-        self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps, Kxy,
+        self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[1][0])
-        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps, Kz,
+        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
                                    params.oL.rho, params.oL.rho_k,
                                    -self.pos_ref[2][0])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
-        self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g)
-        self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                        params.iL.xi, params.iL.rho,
                                        params.iL.c, b[1], self.plant.g)
-        self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps, Kang,
+        self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[2], self.plant.g)
 
@@ -83,7 +83,8 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
+                             np.sin(t/2)*np.sin(np.pi*t/10), -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
