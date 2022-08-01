@@ -94,9 +94,9 @@ class innerLoop(BaseEnv):
         alpha = - K[0]*z1 - c[0]*lamb[0]
         z2 = x[1] - dref - alpha - lamb[1]
         dalpha = -K[0]*x[1] + K[0]*ref
-        u = self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2
-                      - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
-                      - kappa*f)
+        u = 1 / self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2
+                          - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
+                          - kappa*f)
         return u, z2
 
     def get_u(self, t, ref, f):

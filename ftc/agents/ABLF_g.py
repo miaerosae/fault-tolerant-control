@@ -73,7 +73,7 @@ class innerLoop(BaseEnv):
 
     def deriv(self, x, lamb, kappa, t, y1, y2, ref, f):
         alp, eps, theta = self.alp, self.eps, self.theta
-        u = self.get_ureal(t, ref, f)
+        u, kappadot = self.get_ureal(t, ref, f)
         u_sat = self.get_u(t, ref, f)
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * func_g(eps**2 * (y1 - x[0]), theta[0])
@@ -83,7 +83,6 @@ class innerLoop(BaseEnv):
         lambdot = np.zeros((2, 1))
         lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
         lambdot[1] = - self.c[1]*lamb[1] + (u_sat - u)
-        kappadot = (y2 - x[1]) * f
         return xdot, lambdot, kappadot
 
     def get_ureal(self, t, ref, f):
@@ -99,9 +98,11 @@ class innerLoop(BaseEnv):
         z2 = x[1] - dref - alpha - lamb[1]
         dalpha = - K[0]*(x[1] - dref + c[0]*lamb[0] - lamb[1]) \
             - c[0]*(-c[0]*lamb[0] + lamb[1])
-        u = self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2 - kappa*f
-                      - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2])
-        return u
+        u = 1 / self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2 - kappa*f
+                          - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2])
+        kappadot = ((y2 - x[1]) * f
+                    - z2/(rho2**2-z2**2)*f)
+        return u, kappadot
 
     def get_u(self, t, ref, f):
         u = self.get_ureal(t, ref, f)
