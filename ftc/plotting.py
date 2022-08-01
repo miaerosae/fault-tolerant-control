@@ -57,6 +57,7 @@ def exp_plot(loggerpath):
             plt.subplot(311+i, sharex=ax)
         # plt.plot(data["t"], data["obs"][:, i, 0], "b", label=_label+" (observation)")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label=_label)
+        plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label=_label)
         plt.plot(data["t"], data["ref"][:, i, 0], "r--", label=_label+" (cmd)")
         plt.legend(loc="upper right")
     # plt.axvspan(3, detection_time[0], alpha=0.2, color="b")
