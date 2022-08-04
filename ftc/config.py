@@ -97,6 +97,9 @@ default_settings = fym.parser.parse({
             "ch": 0.04,  # Propeller chord [m]
             "a0": 6,  # Slope of the lift curve per radian [-]
 
+            # TODO
+            "max_IGE_ratio": 1.6,  # maximum IGE ratio
+
             # Parameters from P. Pounds et al., 2010
             "sigma": 0.054,  # Solidity ratio [-]
             "thetat": np.deg2rad(4.4),  # Blade tip angle [rad]
@@ -165,6 +168,7 @@ default_settings = fym.parser.parse({
         "int_unc": False,
         "faultBias": False,
         "noise": False,  # Estimator real value noise
+        "groundEffect": True,
     },
 
 

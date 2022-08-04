@@ -84,6 +84,7 @@ class Env(BaseEnv):
                                      params.iL.c, b[2], self.plant.g,
                                      cond.noise)
 
+        self.groundEffect = cond.groundEffect
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
         self.rotors_cmd = np.zeros((6, 1))
 
@@ -173,6 +174,10 @@ class Env(BaseEnv):
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
+
+        # Ground Effect
+        if self.groundEffect is True:
+            u1 = self.plant.groundEffect(u1)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])

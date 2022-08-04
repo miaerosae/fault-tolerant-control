@@ -138,14 +138,20 @@ class Multicopter(BaseEnv):
 
         # uncertainty
         ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
-        int_pos = np.zeros((3, 1))
-        int_vel = np.vstack([
-            vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
-            -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
-            vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
-        ])
-        int_euler = np.zeros((3, 1))
-        int_omega = np.zeros((3, 1))
+        if self.int_unc is True:
+            int_pos = np.zeros((3, 1))
+            int_vel = np.vstack([
+                vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
+                -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
+                vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
+            ])
+            int_euler = np.zeros((3, 1))
+            int_omega = np.zeros((3, 1))
+        else:
+            int_pos = np.zeros((3, 1))
+            int_vel = np.zeros((3, 1))
+            int_euler = np.zeros((3, 1))
+            int_omega = np.zeros((3, 1))
 
         # wind: vel = vel - windvel
         dpos = vel + ext_pos + int_pos
@@ -184,6 +190,20 @@ class Multicopter(BaseEnv):
         states = self.observe_list()
         dots = self.deriv(t, *states, rotors, windvel)
         self.pos.dot, self.vel.dot, self.quat.dot, self.omega.dot = dots
+
+    def groundEffect(self, u1):
+        h = - self.pos.state[2]
+
+        if h == 0:
+            ratio = 2
+        else:
+            ratio = 1 / (1 - (self.R/4/self.pos.state[2])**2)
+
+        if ratio > self.max_IGE_ratio:
+            u1_d = self.max_IGE_ratio * u1
+        else:
+            u1_d = ratio * u1
+        return u1_d
 
     def get_d(self, W, rotors):
         rotor_n = rotors.shape[0]
