@@ -23,49 +23,6 @@ default_settings = fym.parser.parse({
         "threshold": 0.,
     },
 
-    # ====== ftc.agents ====== #
-
-    # ------ ftc.agents.switcing_lqr ------ #
-
-    "agents.switching_lqr": {
-
-        "LQRGainList": [
-
-            # No failure
-            {
-                "Q": np.diag(np.hstack((
-                    [10, 10, 10],
-                    [1, 1, 1],
-                    [100, 100, 100],
-                    [1, 1, 1],
-                ))),
-                "R": np.diag([1, 1, 1, 1, 1, 1]),
-            },
-
-            # One failure
-            {
-                "Q": np.diag(np.hstack((
-                    [10, 10, 10],
-                    [1, 1, 1],
-                    [100, 100, 100],
-                    [1, 1, 1],
-                ))),
-                "R": np.diag([1, 1, 1, 1, 1, 1]),
-            },
-
-            # Two failures
-            {
-                "Q": np.diag(np.hstack((
-                    [1000, 1000, 1000],
-                    [100, 100, 100],
-                    [0, 0, 0],
-                    [1, 1, 1],
-                ))),
-                "R": np.diag([1, 1, 1, 1, 1, 1]),
-            },
-        ],
-    },
-
     # ====== ftc.plants ====== #
 
     # ------ ftc.plants.multicopter ------ #
@@ -97,8 +54,7 @@ default_settings = fym.parser.parse({
             "ch": 0.04,  # Propeller chord [m]
             "a0": 6,  # Slope of the lift curve per radian [-]
 
-            # TODO
-            "max_IGE_ratio": 1.6,  # maximum IGE ratio
+            "max_IGE_ratio": 1.6,  # TODO: maximum IGE ratio
 
             # Parameters from P. Pounds et al., 2010
             "sigma": 0.054,  # Solidity ratio [-]
@@ -145,6 +101,7 @@ default_settings = fym.parser.parse({
             "eps": np.array([0.5, 0.5, 0.5]),
             "rho": np.array([3, 5e-2]),
             "rho_k": 0.1,
+            "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
@@ -154,6 +111,7 @@ default_settings = fym.parser.parse({
             "xi": np.array([-1, 1]),
             "rho": np.deg2rad(np.array([30, 80])),
             "c": np.array([20, 20]),
+            "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "K": np.array([1.5, 1, 3, 2, 20, 15]),
@@ -167,8 +125,8 @@ default_settings = fym.parser.parse({
         "ext_unc": False,
         "int_unc": False,
         "faultBias": False,
-        "noise": False,  # Estimator real value noise
-        "groundEffect": True,
+        "noise": True,  # Estimator real value noise
+        "groundEffect": False,
     },
 
 

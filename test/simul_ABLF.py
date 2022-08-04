@@ -28,11 +28,13 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self):
-        super().__init__(dt=0.01, max_t=30)
+    def __init__(self, k11, k12, k21, k22, k31, k32):
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
+        cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 uncertainty=True,
+                                 blade=cond.blade, ext_unc=cond.ext_unc,
+                                 int_unc=cond.int_unc
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -40,9 +42,10 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
+        self.fault_bias = cond.faultBias
         self.sensor_faults = []
         self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.5),  # scenario a
+            LoE(time=3, index=0, level=0.5),  # scenario a
             # LoE(time=6, index=2, level=0.8),  # scenario b
         ], no_act=self.n)
 
@@ -52,39 +55,46 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
-        k11, k12, k21, k22, k31, k32 = cfg.agents.BLF.K.ravel()
         Kxy = np.array([k11, k12])
         Kz = np.array([k21, k22])
-        self.pos_ref = np.vstack([-0, 1/2, 0])
+        self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = ABLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                     params.oL.rho, params.oL.rho_k,
-                                    -self.pos_ref[0][0])
+                                    params.oL.gamma[0],
+                                    -self.pos_ref[0][0], cond.noise)
         self.blf_y = ABLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                     params.oL.rho, params.oL.rho_k,
-                                    -self.pos_ref[1][0])
+                                    params.oL.gamma[1],
+                                    -self.pos_ref[1][0], cond.noise)
         self.blf_z = ABLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
                                     params.oL.rho, params.oL.rho_k,
-                                    -self.pos_ref[2][0])
+                                    params.oL.gamma[2],
+                                    -self.pos_ref[2][0], cond.noise)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = ABLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                       params.iL.xi, params.iL.rho,
-                                      params.iL.c, b[0], self.plant.g)
+                                      params.iL.c, b[0], self.plant.g,
+                                      params.iL.gamma[0], cond.noise)
         self.blf_theta = ABLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                         params.iL.xi, params.iL.rho,
-                                        params.iL.c, b[1], self.plant.g)
+                                        params.iL.c, b[1], self.plant.g,
+                                        params.iL.gamma[0], cond.noise)
         self.blf_psi = ABLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                       params.iL.xi, params.iL.rho,
-                                      params.iL.c, b[2], self.plant.g)
+                                      params.iL.c, b[2], self.plant.g,
+                                      params.iL.gamma[0], cond.noise)
 
+        self.groundEffect = cond.groundEffect
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
         self.rotors_cmd = np.zeros((6, 1))
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t)/2, np.cos(t)/2, -t])
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
+                             np.sin(t/2)*np.sin(np.pi*t/10), -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
@@ -120,26 +130,27 @@ class Env(BaseEnv):
         pi = np.pi
         return 0.5*np.sin(pi*t+1)
 
+    def get_faultBias(self, t):
+        if self.fault_bias is True:
+            delta = np.diag([0.1*np.cos(np.pi*t),
+                             0.2*np.sin(5/2*t),
+                             0.3/(1+np.exp(-t)),
+                             0.1*np.sin(0.5*t)])
+        else:
+            delta = np.zeros((4, 4))
+        return delta
+
     def set_dot(self, t):
         ref = self.get_ref(t)
         W = self.fdi.get_true(t)
-        What = self.fdi.get(t)
+        What = self.fdi.get(t) + self.get_faultBias(t)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
         q = np.zeros((3, 1))
-        q[0] = self.blf_x.get_virtual(t)
-        q[1] = self.blf_y.get_virtual(t)
-        q[2] = self.blf_z.get_virtual(t)
-        # q[0] = np.clip(self.blf_x.get_virtual(t),
-        #                - self.plant.rotor_max*2/self.plant.m/2,
-        #                self.plant.rotor_max*2/self.plant.m/2)
-        # q[1] = np.clip(self.blf_y.get_virtual(t),
-        #                - self.plant.rotor_max*3/self.plant.m/2,
-        #                self.plant.rotor_max*3/self.plant.m/2)
-        # q[2] = np.clip(self.blf_z.get_virtual(t)-self.plant.g,
-        #                - self.plant.rotor_max*self.n/self.plant.m,
-        #                0)
+        q[0], _ = self.blf_x.get_virtual(t)
+        q[1], _ = self.blf_y.get_virtual(t)
+        q[2], _ = self.blf_z.get_virtual(t)
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -166,6 +177,10 @@ class Env(BaseEnv):
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
+
+        # Ground Effect
+        if self.groundEffect is True:
+            u1 = self.plant.groundEffect(u1)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
@@ -196,23 +211,31 @@ class Env(BaseEnv):
         obs_ang[1] = self.blf_theta.get_obs()
         obs_ang[2] = self.blf_psi.get_obs()
 
+        # Update parameter
+        theta = np.zeros((6, 1))
+        theta[0] = self.blf_x.get_theta()
+        theta[1] = self.blf_y.get_theta()
+        theta[2] = self.blf_z.get_theta()
+        theta[3] = self.blf_phi.get_theta()
+        theta[4] = self.blf_theta.get_theta()
+        theta[5] = self.blf_psi.get_theta()
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]
-        omega = self.plant.omega.state
         self.blf_x.set_dot(t, x, ref[0])
         self.blf_y.set_dot(t, y, ref[1])
         self.blf_z.set_dot(t, z, ref[2])
-        self.blf_phi.set_dot(t, euler[0], omega[0], phid, f[0])
-        self.blf_theta.set_dot(t, euler[1], omega[1], thetad, f[1])
-        self.blf_psi.set_dot(t, euler[2], omega[2], psid, f[2])
+        self.blf_phi.set_dot(t, euler[0], phid, f[0])
+        self.blf_theta.set_dot(t, euler[1], thetad, f[1])
+        self.blf_psi.set_dot(t, euler[2], psid, f[2])
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist, q=q,
+                    virtual_u=forces, dist=dist, q=q, theta=theta,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
 
 
@@ -233,8 +256,8 @@ def run_ray(k11, k12, k21, k22, k31, k32):
     return time
 
 
-def run(loggerpath):
-    env = Env()
+def run(loggerpath, k11, k12, k21, k22, k31, k32):
+    env = Env(k11, k12, k21, k22, k31, k32)
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
 
@@ -276,7 +299,8 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        run(loggerpath)
+        k11, k12, k21, k22, k31, k32 = cfg.agents.BLF.K.ravel()
+        run(loggerpath, k11, k12, k21, k22, k31, k32)
         exp_plot(loggerpath)
 
 
