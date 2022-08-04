@@ -4,16 +4,19 @@ import numpy as np
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, init):
+    def __init__(self, alp, eps, K, rho, k, init, noise=False):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
+        self.noise = noise
 
     def deriv(self, e, y, ref, t):
         alp, eps = self.alp, self.eps
         e_real = y - ref
+        if self.noise is True:
+            e_real = e_real + 0.001*np.random.randn(1)
 
         q = self.get_virtual(t)
         edot = np.zeros((3, 1))
@@ -31,10 +34,9 @@ class outerLoop(BaseEnv):
 
         z1 = e[0] / rho
         dz1 = e[1]/rho - e[0]*drho/rho**2
-        alpha = - (1-z1**2)*rho*K[0]*z1 + drho*z1
+        alpha = - rho*K[0]*z1 + drho*z1
         z2 = e[1] - alpha
-        dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*z1 \
-            - (1-z1**2)*rho*K[0]*dz1 + ddrho*z1 + drho*dz1
+        dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1
         q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         return q
 
@@ -55,7 +57,7 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, alp, eps, K, xi, rho, c, b, g):
+    def __init__(self, alp, eps, K, xi, rho, c, b, g, noise):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -63,12 +65,15 @@ class innerLoop(BaseEnv):
         self.alp, self.eps, self.K = alp, eps, K
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
+        self.noise = noise
 
     def deriv(self, x, lamb, t, y, ref, f):
         alp, eps = self.alp, self.eps
         nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
+        if self.noise is True:
+            y = y + np.deg2rad(0.001)*np.random.randn(1)
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * (y - x[0])
         xdot[1, :] = x[2] + nu_sat + (alp[1]/eps**2) * (y - x[0])
@@ -82,7 +87,7 @@ class innerLoop(BaseEnv):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
-        lamb = np.vstack([0, 0])
+        # lamb = np.vstack([0, 0])
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]

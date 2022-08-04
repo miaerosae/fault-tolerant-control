@@ -102,7 +102,8 @@ class Multicopter(BaseEnv):
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
     def __init__(self, pos, vel, quat, omega,
-                 dx=0.0, dy=0.0, dz=0.0, uncertainty=False, blade=False):
+                 dx=0.0, dy=0.0, dz=0.0, blade=False,
+                 ext_unc=False, int_unc=False):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -122,7 +123,8 @@ class Multicopter(BaseEnv):
         self.mixer = Mixer(d=self.d, c=self.c, b=self.b)
 
         self.blade = blade
-        self.uncertainty = uncertainty
+        self.ext_unc = ext_unc
+        self.int_unc = int_unc
 
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel):
         if self.blade is False:
@@ -135,14 +137,22 @@ class Multicopter(BaseEnv):
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
-        upos, uvel, ueuler, uomega = get_uncertainties(t, self.uncertainty)
+        ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
+        int_pos = np.zeros((3, 1))
+        int_vel = np.vstack([
+            vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
+            -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
+            vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
+        ])
+        int_euler = np.zeros((3, 1))
+        int_omega = np.zeros((3, 1))
 
         # wind: vel = vel - windvel
-        dpos = vel + upos
+        dpos = vel + ext_pos + int_pos
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
-                + uvel
+                + ext_vel + int_vel
                 )
         # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
@@ -154,7 +164,10 @@ class Multicopter(BaseEnv):
                                 [r, q, -p, 0.]]).dot(quat)
         eps = 1 - (quat[0]**2+quat[1]**2+quat[2]**2+quat[3]**2)
         k = 1
-        dquat = dquat + k*eps*quat + angle2quat(ueuler[2], ueuler[1], ueuler[0])
+        dquat = (dquat + k*eps*quat
+                 + angle2quat(ext_euler[2]+int_euler[2],
+                              ext_euler[1]+int_euler[1],
+                              ext_euler[0]+int_euler[0]))
         domega = self.Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)
@@ -163,7 +176,7 @@ class Multicopter(BaseEnv):
             - self.B_drag.dot(omega)
             + windvel
         ) \
-            + uomega
+            + ext_omega + int_omega
 
         return dpos, dvel, dquat, domega
 

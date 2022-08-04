@@ -142,7 +142,6 @@ default_settings = fym.parser.parse({
             "eps": np.array([0.5, 0.5, 0.5]),
             "rho": np.array([3, 5e-2]),
             "rho_k": 0.1,
-            "rho2": 5
         },
         # --- innerLoop --- #
         "iL": {
@@ -155,7 +154,17 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "K": np.array([1.5, 1, 3, 2, 20, 15]),
-        "theta": np.array([1, 1, 1]) * 0.7
+        "theta": np.array([1, 1, 1]) * 0.7,
+    },
+
+    # :::::: SIMULATION CONDITION :::::: #
+
+    "simul_condi": {
+        "blade": False,
+        "ext_unc": False,
+        "int_unc": False,
+        "faultBias": False,
+        "noise": False,  # Estimator real value noise
     },
 
 

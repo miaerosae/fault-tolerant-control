@@ -29,10 +29,12 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=30)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
+        cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 uncertainty=True,
+                                 blade=cond.blade, ext_unc=cond.ext_unc,
+                                 int_unc=cond.int_unc
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -40,6 +42,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
+        self.fault_bias = cond.faultBias
         self.sensor_faults = []
         self.fault_manager = LoEManager([
             # LoE(time=3, index=0, level=0.5),  # scenario a
@@ -57,26 +60,29 @@ class Env(BaseEnv):
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[0][0])
+                                   -self.pos_ref[0][0], cond.noise)
         self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[1][0])
+                                   -self.pos_ref[1][0], cond.noise)
         self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[2][0])
+                                   -self.pos_ref[2][0], cond.noise)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([20, 15])  # for rotor failure case
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                      params.iL.xi, params.iL.rho,
-                                     params.iL.c, b[0], self.plant.g)
+                                     params.iL.c, b[0], self.plant.g,
+                                     cond.noise)
         self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                        params.iL.xi, params.iL.rho,
-                                       params.iL.c, b[1], self.plant.g)
+                                       params.iL.c, b[1], self.plant.g,
+                                       cond.noise)
         self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                      params.iL.xi, params.iL.rho,
-                                     params.iL.c, b[2], self.plant.g)
+                                     params.iL.c, b[2], self.plant.g,
+                                     cond.noise)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
         self.rotors_cmd = np.zeros((6, 1))
@@ -120,10 +126,20 @@ class Env(BaseEnv):
         pi = np.pi
         return 0.5*np.sin(pi*t+1)
 
+    def get_faultBias(self, t):
+        if self.fault_bias is True:
+            delta = np.diag([0.1*np.cos(np.pi*t),
+                             0.2*np.sin(5/2*t),
+                             0.3/(1+np.exp(-t)),
+                             0.1*np.sin(0.5*t)])
+        else:
+            delta = np.zeros((4, 4))
+        return delta
+
     def set_dot(self, t):
         ref = self.get_ref(t)
         W = self.fdi.get_true(t)
-        What = self.fdi.get(t)
+        What = self.fdi.get(t) + self.get_faultBias(t)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -131,15 +147,6 @@ class Env(BaseEnv):
         q[0] = self.blf_x.get_virtual(t)
         q[1] = self.blf_y.get_virtual(t)
         q[2] = self.blf_z.get_virtual(t)
-        # q[0] = np.clip(self.blf_x.get_virtual(t),
-        #                - self.plant.rotor_max*2/self.plant.m/2,
-        #                self.plant.rotor_max*2/self.plant.m/2)
-        # q[1] = np.clip(self.blf_y.get_virtual(t),
-        #                - self.plant.rotor_max*3/self.plant.m/2,
-        #                self.plant.rotor_max*3/self.plant.m/2)
-        # q[2] = np.clip(self.blf_z.get_virtual(t)-self.plant.g,
-        #                - self.plant.rotor_max*self.n/self.plant.m,
-        #                0)
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
