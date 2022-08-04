@@ -4,21 +4,30 @@ import numpy as np
 
 
 def func_g(x, theta):
-    return np.sign(x) * abs(x)**theta
+    # return np.sign(x) * abs(x)**theta
+    delta = 1
+    if abs(x) < delta:
+        return x / delta**(1-theta)
+    else:
+        return np.sign(x) * abs(x)**theta
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, init, theta):
+    def __init__(self, alp, eps, K, rho, k, noise, init, theta):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
-        self.theta = theta
+        self.theta = np.array([theta, 2*theta-1, 3*theta-2])
+        self.noise = noise
 
     def deriv(self, e, y, ref, t):
         alp, eps, theta = self.alp, self.eps, self.theta
         e_real = y - ref
+
+        if self.noise is True:
+            e_real = e_real + 0.001*np.random.randn(1)
 
         q = self.get_virtual(t)
         edot = np.zeros((3, 1))
@@ -60,7 +69,7 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta):
+    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -68,13 +77,18 @@ class innerLoop(BaseEnv):
         self.alp, self.eps, self.K = alp, eps, K
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
-        self.theta = theta
+        self.theta = np.array([theta, 2*theta-1, 3*theta-2])
+        self.noise = noise
 
     def deriv(self, x, lamb, t, y, ref, f):
         alp, eps, theta = self.alp, self.eps, self.theta
         nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
+
+        if self.noise is True:
+            y = y + np.deg2rad(0.001)*np.random.randn(1)
+
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * func_g(eps**2 * (y - x[0]), theta[0])
         xdot[1, :] = x[2] + nu_sat + alp[1] * func_g(eps**2 * (y - x[0]), theta[1])

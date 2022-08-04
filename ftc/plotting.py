@@ -196,18 +196,18 @@ def exp_plot(loggerpath):
     plt.tight_layout()
 
     # Update parameter
-    plt.figure()
+    # plt.figure()
 
-    ax = plt.subplot(611)
-    for i in range(data["dist"].shape[1]):
-        if i != 0:
-            plt.subplot(611+i, sharex=ax)
-        plt.plot(data["t"], data["theta"][:, i, 0], "k", label="update parameter")
-        if i == 0:
-            plt.legend()
-    plt.gcf().supylabel("update parameter")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
+    # ax = plt.subplot(611)
+    # for i in range(data["dist"].shape[1]):
+    #     if i != 0:
+    #         plt.subplot(611+i, sharex=ax)
+    #     plt.plot(data["t"], data["theta"][:, i, 0], "k", label="update parameter")
+    #     if i == 0:
+    #         plt.legend()
+    # plt.gcf().supylabel("update parameter")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
 
     # q
     plt.figure()

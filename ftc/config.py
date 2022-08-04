@@ -97,8 +97,8 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([2, 2, 3]),
-            "eps": np.array([0.5, 0.5, 0.5]),
+            "eps": np.array([2, 2, 3]),
+            # "eps": np.array([0.5, 0.5, 0.5]),
             "rho": np.array([3, 5e-2]),
             "rho_k": 0.1,
             "gamma": np.array([2, 2, 2]),
@@ -106,8 +106,8 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([5, 5, 5]),
-            "eps": np.array([0.05, 0.05, 0.05]),
+            "eps": np.array([5, 5, 5]),
+            # "eps": np.array([0.05, 0.05, 0.05]),
             "xi": np.array([-1, 1]),
             "rho": np.deg2rad(np.array([30, 80])),
             "c": np.array([20, 20]),
@@ -115,7 +115,7 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "K": np.array([1.5, 1, 3, 2, 20, 15]),
-        "theta": np.array([1, 1, 1]) * 0.7,
+        "theta": 0.7,
     },
 
     # :::::: SIMULATION CONDITION :::::: #
@@ -123,7 +123,7 @@ default_settings = fym.parser.parse({
     "simul_condi": {
         "blade": False,
         "ext_unc": False,
-        "int_unc": False,
+        "int_unc": True,
         "faultBias": False,
         "noise": True,  # Estimator real value noise
         "groundEffect": False,

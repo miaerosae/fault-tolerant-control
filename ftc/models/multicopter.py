@@ -103,7 +103,7 @@ class Multicopter(BaseEnv):
     """
     def __init__(self, pos, vel, quat, omega,
                  dx=0.0, dy=0.0, dz=0.0, blade=False,
-                 ext_unc=False, int_unc=False):
+                 ext_unc=False, int_unc=False, hub=False):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -125,6 +125,7 @@ class Multicopter(BaseEnv):
         self.blade = blade
         self.ext_unc = ext_unc
         self.int_unc = int_unc
+        self.hub = hub
 
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel):
         if self.blade is False:
