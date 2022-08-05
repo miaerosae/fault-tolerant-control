@@ -141,10 +141,15 @@ class Multicopter(BaseEnv):
         ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
         if self.int_unc is True:
             int_pos = np.zeros((3, 1))
+            # int_vel = np.vstack([
+            #     vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
+            #     -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
+            #     vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
+            # ])
             int_vel = np.vstack([
-                vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
-                -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
-                vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
+                np.sin(vel[0])*vel[1],
+                np.sin(vel[1])*vel[2],
+                np.exp(-t)*np.sin(t+np.pi/4)
             ])
             int_euler = np.zeros((3, 1))
             int_omega = np.zeros((3, 1))

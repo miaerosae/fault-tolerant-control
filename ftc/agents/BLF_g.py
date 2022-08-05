@@ -19,6 +19,7 @@ class outerLoop(BaseEnv):
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
+        # self.theta = np.ones((3,)) * theta
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
         self.noise = noise
 

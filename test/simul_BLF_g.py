@@ -92,7 +92,8 @@ class Env(BaseEnv):
     def get_ref(self, t):
         # pos_des = self.pos_ref
         pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
-                             np.sin(t/2)*np.sin(np.pi*t/10), -t])
+                             np.sin(t/2)*np.sin(np.pi*t/10),
+                             -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
         # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
