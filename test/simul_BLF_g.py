@@ -29,12 +29,13 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=40)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
                                  blade=cond.blade, ext_unc=cond.ext_unc,
-                                 int_unc=cond.int_unc
+                                 int_unc=cond.int_unc, hub=cond.hub,
+                                 gyro=cond.gyro
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -87,7 +88,7 @@ class Env(BaseEnv):
                                      cond.noise)
 
         self.detection_time = self.fault_manager.fault_times + self.fdi.delay
-        self.rotors_cmd = np.zeros((6, 1))
+        self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
@@ -173,10 +174,10 @@ class Env(BaseEnv):
         # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         rotors_cmd = self.CA.get(What).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
-        self.rotors_cmd = rotors_cmd
 
         # Set actuator faults
         rotors = self.fault_manager.get_faulty_input(t, rotors)
+        self.prev_rotors = rotors
 
         # Disturbance
         dist = np.zeros((6, 1))
@@ -199,7 +200,8 @@ class Env(BaseEnv):
 
         # set_dot
         self.plant.set_dot(t, rotors,
-                           # windvel
+                           # windvel,
+                           prev_rotors=self.prev_rotors
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]

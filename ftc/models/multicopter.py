@@ -101,9 +101,8 @@ class Multicopter(BaseEnv):
     References:
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
-    def __init__(self, pos, vel, quat, omega,
-                 dx=0.0, dy=0.0, dz=0.0, blade=False,
-                 ext_unc=False, int_unc=False, hub=False):
+    def __init__(self, pos, vel, quat, omega, blade, ext_unc, int_unc,
+                 hub, gyro, dx=0.0, dy=0.0, dz=0.0, ):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -126,8 +125,9 @@ class Multicopter(BaseEnv):
         self.ext_unc = ext_unc
         self.int_unc = int_unc
         self.hub = hub
+        self.gyro = gyro
 
-    def deriv(self, t, pos, vel, quat, omega, rotors, windvel):
+    def deriv(self, t, pos, vel, quat, omega, rotors, windvel, prev_rotors):
         if self.blade is False:
             F, M1, M2, M3 = self.mixer.inverse(rotors)
             M = np.vstack((M1, M2, M3))
@@ -139,25 +139,8 @@ class Multicopter(BaseEnv):
 
         # uncertainty
         ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
-        if self.int_unc is True:
-            int_pos = np.zeros((3, 1))
-            # int_vel = np.vstack([
-            #     vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
-            #     -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
-            #     vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
-            # ])
-            int_vel = np.vstack([
-                np.sin(vel[0])*vel[1],
-                np.sin(vel[1])*vel[2],
-                np.exp(-t)*np.sin(t+np.pi/4)
-            ])
-            int_euler = np.zeros((3, 1))
-            int_omega = np.zeros((3, 1))
-        else:
-            int_pos = np.zeros((3, 1))
-            int_vel = np.zeros((3, 1))
-            int_euler = np.zeros((3, 1))
-            int_omega = np.zeros((3, 1))
+        int_pos, int_vel, int_euler, int_omega = self.get_int_uncertainties(t, vel)
+        gyro = self.get_gyro(omega, rotors, prev_rotors)
 
         # wind: vel = vel - windvel
         dpos = vel + ext_pos + int_pos
@@ -183,6 +166,7 @@ class Multicopter(BaseEnv):
         domega = self.Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)
+            + gyro
             - self.M_gyroscopic
             - self.A_drag.dot(dcm).dot(vel)
             - self.B_drag.dot(omega)
@@ -192,10 +176,49 @@ class Multicopter(BaseEnv):
 
         return dpos, dvel, dquat, domega
 
-    def set_dot(self, t, rotors, windvel=np.zeros((3, 1))):
+    def set_dot(self, t, rotors, windvel=np.zeros((3, 1)),
+                prev_rotors=np.zeros((4, 1))):
         states = self.observe_list()
-        dots = self.deriv(t, *states, rotors, windvel)
+        dots = self.deriv(t, *states, rotors, windvel, prev_rotors)
         self.pos.dot, self.vel.dot, self.quat.dot, self.omega.dot = dots
+
+    def get_int_uncertainties(self, t, vel):
+        if self.int_unc is True:
+            int_pos = np.zeros((3, 1))
+            # int_vel = np.vstack([
+            #     vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
+            #     -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
+            #     vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
+            # ])
+            int_vel = np.vstack([
+                np.sin(vel[0])*vel[1],
+                np.sin(vel[1])*vel[2],
+                np.exp(-t)*np.sin(t+np.pi/4)
+            ])
+            int_euler = np.zeros((3, 1))
+            int_omega = np.zeros((3, 1))
+        else:
+            int_pos = np.zeros((3, 1))
+            int_vel = np.zeros((3, 1))
+            int_euler = np.zeros((3, 1))
+            int_omega = np.zeros((3, 1))
+        return int_pos, int_vel, int_euler, int_omega
+
+    def get_gyro(self, omega, rotors, prev_rotors):
+        # propeller gyro effect
+        if self.gyro is True:
+            p, q, r = omega.ravel()
+            Omega = rotors ** (1/2)
+            Omega_r = - Omega[0] + Omega[1] - Omega[2] + Omega[3]
+            prev_Omega = prev_rotors ** (1/2)
+            prev_Omega_r = (- prev_Omega[0] + prev_Omega[1]
+                            - prev_Omega[2] + prev_Omega[3])
+            gyro = np.vstack([self.Jr * q * Omega_r,
+                              - self.Jr * p * Omega_r,
+                              self.Jr * (Omega_r - prev_Omega_r)])
+        else:
+            gyro = np.zeros((3, 1))
+        return gyro
 
     def groundEffect(self, u1):
         h = - self.pos.state[2]

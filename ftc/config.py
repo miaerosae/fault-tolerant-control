@@ -62,6 +62,7 @@ default_settings = fym.parser.parse({
             "Jr": 0.6 * 1e-4,  # rotor inertia
             "t_max": 0.15,  # max torque
             "w_max": 1000,  # max rotor speed
+            "h": 2.56e-2,  # CoG to rot. plane
 
             # Parameters from P. Pounds et al., 2010
             "sigma": 0.054,  # Solidity ratio [-]
@@ -116,7 +117,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([3, 3, 3]),
             # "eps": np.array([0.5, 0.5, 0.5]),
-            "rho": np.array([2, 5e-2]),
+            "rho": np.array([2, 1e-1]),
             "rho_k": 0.1,
             "gamma": np.array([2, 2, 2]),
         },
@@ -131,7 +132,7 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "K": np.array([1.5, 2, 3, 2, 20, 15]),
+        "K": np.array([3, 3, 3, 2, 20, 15]),
         "theta": 0.7,
     },
 
@@ -144,6 +145,8 @@ default_settings = fym.parser.parse({
         "faultBias": False,
         "noise": True,  # Estimator real value noise
         "groundEffect": True,
+        "hub": False,
+        "gyro": True,
     },
 
 
