@@ -22,9 +22,9 @@ class Mixer:
 
         if rtype == "quad":
             B = np.array(
-                [[1, 1, 1, 1],
-                 [0, -d, 0, d],
-                 [d, 0, -d, 0],
+                [[b, b, b, b],
+                 [0, -b*d, 0, b*d],
+                 [b*d, 0, -b*d, 0],
                  [-c, c, -c, c]]
             )
 

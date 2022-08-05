@@ -48,22 +48,29 @@ default_settings = fym.parser.parse({
 
             # Parameters from Baldini et al., 2020
             "kr": 1e-3 * np.eye(3),  # Rotational friction coefficient [N*s*m/rad]
-            "Jr": 6e-5,  # Rotor inertia [N*m]
+            # "Jr": 6e-5,  # Rotor inertia [N*m]
             "CdA": 0.08,  # Flat plate area [m^2]
-            "R": 0.15,  # Rotor radius [m]
-            "ch": 0.04,  # Propeller chord [m]
+            # "R": 0.15,  # Rotor radius [m]
+            # "ch": 0.04,  # Propeller chord [m]
             "a0": 6,  # Slope of the lift curve per radian [-]
 
             "max_IGE_ratio": 1.6,  # TODO: maximum IGE ratio
+            "Rrad": 0.15,  # propeller radius
+            "ch": 0.014,  # propeller chord
+            "theta0": 0.26,  # incidence angle
+            "thetatw": 0.045,  # twist angle
+            "Jr": 0.6 * 1e-4,  # rotor inertia
+            "t_max": 0.15,  # max torque
+            "w_max": 1000,  # max rotor speed
 
             # Parameters from P. Pounds et al., 2010
             "sigma": 0.054,  # Solidity ratio [-]
-            "thetat": np.deg2rad(4.4),  # Blade tip angle [rad]
+            # "thetat": np.deg2rad(4.4),  # Blade tip angle [rad]
             "CT": 0.0047,  # Thrust coefficient [-]
         },
 
         # Physical properties by several authors
-        "modelFrom": "Taeyoung_Lee",
+        "modelFrom": "OS4",
 
         "physPropBy": {
             # Prof. Taeyoung Lee's model for quadrotor UAV [1]
@@ -83,6 +90,16 @@ default_settings = fym.parser.parse({
                 "d": 0.215,  # distance to each rotor from the center of mass
                 "c": 1.2864e-7,  # z-dir moment coefficient caused by rotor force
                 "b": 6.546e-6,
+                "rotor_min": 0,
+            },
+
+            # OS4
+            "OS4": {
+                "J": np.diag([0.0075, 0.0075, 0.013]),
+                "m": 0.65,
+                "d": 0.23,  # arm length
+                "c": 0.75 * 1e-6,  # drag moment coefficient
+                "b": 0.0000313,  # thrust coefficient
                 "rotor_min": 0,
             },
         },
@@ -169,6 +186,10 @@ def _set_maximum_rotor(settings):
     elif modelauthor == "GP_falconi":
         rotor_max = {"models.multicopter.physPropBy.GP_falconi":
                      {"rotor_max": 3e5}  # about 2 * m * g / b / 6
+                     }
+    elif modelauthor == "OS4":
+        rotor_max = {"models.multicopter.physPropBy.OS4":
+                     {"rotor_max": 1e6}
                      }
     fym.parser.update(settings, rotor_max)
 
