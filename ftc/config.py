@@ -126,7 +126,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([5, 5, 5]),
             # "eps": np.array([0.05, 0.05, 0.05]),
-            "xi": np.array([-1, 1]),
+            "xi": np.array([-1, 1])*0.15,
             "rho": np.deg2rad(np.array([30, 80])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),

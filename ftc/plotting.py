@@ -43,7 +43,7 @@ def exp_plot(loggerpath):
         if i == 0:
             plt.legend(loc='upper right')
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Rotor thrust")
+    plt.gcf().supylabel("Angular rate of each rotor")
     plt.tight_layout()
     # plt.savefig("lpeso_rotor_input.png")
 
