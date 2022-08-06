@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=40)
+        super().__init__(dt=0.01, max_t=50)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,

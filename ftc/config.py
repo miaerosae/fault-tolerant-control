@@ -132,7 +132,7 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "K": np.array([3, 3, 3, 2, 20, 15]),
+        "K": np.array([4, 15, 4, 15, 20, 15]),
         "theta": 0.7,
     },
 
