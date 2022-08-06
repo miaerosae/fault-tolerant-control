@@ -37,9 +37,9 @@ def exp_plot(loggerpath):
     for i in range(data["rotors"].shape[1]):
         if i != 0:
             plt.subplot(221+i, sharex=ax)
-        plt.ylim([rotor_min-5, rotor_max+5])
-        plt.plot(data["t"], data["rotors"][:, i], "k-", label="Response")
-        plt.plot(data["t"], data["rotors_cmd"][:, i], "r--", label="Command")
+        plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
+        plt.plot(data["t"], np.sqrt(data["rotors"][:, i]), "k-", label="Response")
+        plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
         if i == 0:
             plt.legend(loc='upper right')
     plt.gcf().supxlabel("Time, sec")
