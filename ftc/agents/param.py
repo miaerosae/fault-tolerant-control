@@ -86,7 +86,11 @@ def get_uncertainties(t, uncertainty):
             0.2*np.sin(np.pi*t),
             0.2*np.sin(3*t) - 0.1*np.sin(0.5*np.pi*t)
         ])
-        # ueuler = np.vstack([0.1, 0.1, 0.1])
+        ueuler = np.vstack([
+            0.3*stable_sigmoid(t),
+            0.1*np.cos(np.pi*t+np.pi/4),
+            0.2*np.sin(0.5*np.pi*t),
+        ])
         uomega = np.vstack([
             0.2*stable_sigmoid(t) - 0.4*np.sin(0.5*np.pi*t),
             0.1*np.tanh(np.sqrt(2)*t),
