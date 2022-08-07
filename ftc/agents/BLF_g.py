@@ -46,10 +46,9 @@ class outerLoop(BaseEnv):
 
         z1 = e[0] / rho
         dz1 = e[1]/rho - e[0]*drho/rho**2
-        alpha = - (1-z1**2)*rho*K[0]*z1 + drho*z1
+        alpha = - rho*K[0]*z1 + drho*z1
         z2 = e[1] - alpha
-        dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*z1 \
-            - (1-z1**2)*rho*K[0]*dz1 + ddrho*z1 + drho*dz1
+        dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1
         q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         return q
 
