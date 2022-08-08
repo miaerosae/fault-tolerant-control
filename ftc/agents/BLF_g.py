@@ -102,7 +102,6 @@ class innerLoop(BaseEnv):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
-        lamb = np.vstack([0, 0])
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]

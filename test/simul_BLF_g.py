@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0
+from ftc.agents.param import get_b0, get_W, get_What, get_faulty_input
 from ftc.plotting import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=50)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -43,14 +43,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.sensor_faults = []
-        self.fault_manager = LoEManager([
-            # LoE(time=3, index=0, level=0.5),  # scenario a
-            # LoE(time=6, index=2, level=0.8),  # scenario b
-        ], no_act=self.n)
-
-        # Define FDI
-        self.fdi = self.fault_manager.fdi
+        self.delay = cfg.faults.manager.delay
 
         # Define agents
         self.CA = CA(self.plant.mixer.B)
@@ -87,13 +80,12 @@ class Env(BaseEnv):
                                      params.iL.c, b[2], self.plant.g, params.theta,
                                      cond.noise)
 
-        self.detection_time = self.fault_manager.fault_times + self.fdi.delay
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
-                             np.sin(t/2)*np.sin(np.pi*t/10),
+        pos_des = np.vstack([2*np.sin(t/2)*np.cos(np.pi*t/10),
+                             np.sin(t/2)*np.sin(np.pi*t/5),
                              -t])
         vel_des = np.vstack([0, 0, 0])
         # pi = np.pi
@@ -132,8 +124,8 @@ class Env(BaseEnv):
 
     def set_dot(self, t):
         ref = self.get_ref(t)
-        W = self.fdi.get_true(t)
-        What = self.fdi.get(t)
+        W = get_W(t)
+        What = get_What(t, self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -176,7 +168,7 @@ class Env(BaseEnv):
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
-        rotors = self.fault_manager.get_faulty_input(t, rotors)
+        rotors = get_faulty_input(W, rotors)
         self.prev_rotors = rotors
 
         # Disturbance
@@ -248,7 +240,7 @@ def run(loggerpath, k11, k12, k21, k22, k31, k32):
 
         if done:
             env_info = {
-                "detection_time": env.detection_time,
+                # "detection_time": env.detection_time,
                 "rotor_min": env.plant.rotor_min,
                 "rotor_max": env.plant.rotor_max,
             }

@@ -113,7 +113,8 @@ def exp_plot(loggerpath):
 
     # euler angles
     plt.figure()
-    plt.ylim([-40, 40])
+    bound = cfg.agents.BLF.iL.rho[0]
+    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     ax = plt.subplot(311)
     angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
@@ -138,7 +139,8 @@ def exp_plot(loggerpath):
 
     # angular rates
     plt.figure()
-    plt.ylim([-90, 90])
+    bound = cfg.agents.BLF.iL.rho[1]
+    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
         plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)

@@ -4,21 +4,31 @@ import numpy as np
 
 
 def func_g(x, theta):
-    return np.sign(x) * abs(x)**theta
+    # return np.sign(x) * abs(x)**theta
+    delta = 1
+    if abs(x) < delta:
+        return x / delta**(1-theta)
+    else:
+        return np.sign(x) * abs(x)**theta
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, init, theta):
+    def __init__(self, alp, eps, K, rho, k, noise, init, theta):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
-        self.theta = theta
+        self.theta = np.array([theta, 2*theta-1, 3*theta-2])
+        # self.theta = theta
+        self.noise = noise
 
     def deriv(self, e, y, ref, t):
         alp, eps, theta = self.alp, self.eps, self.theta
         e_real = y - ref
+
+        if self.noise is True:
+            e_real = e_real + 0.001*np.random.randn(1)
 
         q = self.get_virtual(t)
         edot = np.zeros((3, 1))
@@ -36,10 +46,9 @@ class outerLoop(BaseEnv):
 
         z1 = e[0] / rho
         dz1 = e[1]/rho - e[0]*drho/rho**2
-        alpha = - (1-z1**2)*rho*K[0]*z1 + drho*z1
+        alpha = - rho*K[0]*z1 + drho*z1
         z2 = e[1] - alpha
-        dalpha = 2*rho*K[0]*dz1*z1**2 - (1-z1**2)*drho*K[0]*z1 \
-            - (1-z1**2)*rho*K[0]*dz1 + ddrho*z1 + drho*dz1
+        dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1
         q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         return q
 
@@ -60,7 +69,7 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta):
+    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -69,12 +78,20 @@ class innerLoop(BaseEnv):
         self.alp, self.eps, self.K = alp, eps, K
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
-        self.theta = theta
+        # self.theta = theta
+        self.theta = np.array([theta, 2*theta-1, 3*theta-2])
+        self.noise = noise
 
     def deriv(self, x, lamb, kappa, t, y1, y2, ref, f):
         alp, eps, theta = self.alp, self.eps, self.theta
-        u, kappadot = self.get_ureal(t, ref, f)
-        u_sat = self.get_u(t, ref, f)
+
+        if self.noise is True:
+            y1 = y1 + np.deg2rad(0.001)*np.random.randn(1)
+            y2 = y2 + np.deg2rad(0.001)*np.random.randn(1)
+
+        u, kappadot = self.get_ureal(t, ref, f, y2)
+        u_sat = self.get_u(t, ref, f, y2)
+
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * func_g(eps**2 * (y1 - x[0]), theta[0])
         xdot[1, :] = (x[2] + kappa*f + self.b*u_sat
@@ -85,12 +102,11 @@ class innerLoop(BaseEnv):
         lambdot[1] = - self.c[1]*lamb[1] + (u_sat - u)
         return xdot, lambdot, kappadot
 
-    def get_ureal(self, t, ref, f):
+    def get_ureal(self, t, ref, f, y2):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
         kappa = self.kappa.state
-        lamb = np.vstack([0, 0])
         dref, ddref = 0, 0
 
         z1 = x[0] - ref - lamb[0]
@@ -101,11 +117,11 @@ class innerLoop(BaseEnv):
         u = 1 / self.b * (- c[1]*lamb[1] + dalpha + ddref - K[1]*z2 - kappa*f
                           - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2])
         kappadot = ((y2 - x[1]) * f
-                    - z2/(rho2**2-z2**2)*f)
+                    - z2/(rho[1]**2-z2**2)*f)
         return u, kappadot
 
-    def get_u(self, t, ref, f):
-        u = self.get_ureal(t, ref, f)
+    def get_u(self, t, ref, f, y2):
+        u, _ = self.get_ureal(t, ref, f, y2)
         u_sat = np.clip(u, self.xi[0], self.xi[1])
         return u_sat
 

@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.2,
+        "delay": 0.15,
         "threshold": 0.,
     },
 
@@ -117,8 +117,8 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([3, 3, 3]),
             # "eps": np.array([0.5, 0.5, 0.5]),
-            "rho": np.array([2, 1e-1]),
-            "rho_k": 0.1,
+            "rho": np.array([10, 9.5]),
+            "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
@@ -127,7 +127,7 @@ default_settings = fym.parser.parse({
             "eps": np.array([5, 5, 5]),
             # "eps": np.array([0.05, 0.05, 0.05]),
             "xi": np.array([-1, 1])*0.15,
-            "rho": np.deg2rad(np.array([30, 80])),
+            "rho": np.deg2rad(np.array([40, 100])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
