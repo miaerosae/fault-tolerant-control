@@ -140,13 +140,13 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
-        "ext_unc": True,
-        "int_unc": True,
+        "ext_unc": False,
+        "int_unc": False,
         "faultBias": False,
-        "noise": True,  # Estimator real value noise
-        "groundEffect": True,
+        "noise": False,  # Estimator real value noise
+        "groundEffect": False,
         "hub": False,
-        "gyro": True,
+        "gyro": False,
     },
 
 
