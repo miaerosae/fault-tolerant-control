@@ -134,6 +134,28 @@ default_settings = fym.parser.parse({
         # --- gain K --- #
         "K": np.array([4, 15, 4, 15, 20, 15]),
         "theta": 0.7,
+
+        # --- peaking-free --- #
+        "pf.oL": {
+            "l": 2,
+            "alp": np.array([3, 3, 2]),
+            "bet": np.array([3.98, 0.993]),
+            "Rxy": np.array([10, 100]),
+            "Rz": np.array([10, 30]),
+            "rho": np.array([2, 0.5]),
+            "rho_k": 0.1,
+        },
+        "pf.iL": {
+            "l": 5,
+            "alp": np.array([3, 3, 2]),
+            "bet": np.array([3.98, 0.993]),
+            "xi": np.array([-1, 1])*0.15,
+            "rho": np.deg2rad(np.array([30, 80])),
+            "c": np.array([0, 0]),
+            "Rang": np.array([np.deg2rad(80), 100]),
+        },
+        "pf.K": np.array([4, 15, 4, 15, 20, 15]),
+
     },
 
     # :::::: SIMULATION CONDITION :::::: #
