@@ -126,7 +126,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([5, 5, 5]),
             # "eps": np.array([0.05, 0.05, 0.05]),
-            "xi": np.array([-1, 1])*0.15,
+            "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([40, 100])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
@@ -140,21 +140,21 @@ default_settings = fym.parser.parse({
             "l": 2,
             "alp": np.array([3, 3, 2]),
             "bet": np.array([3.98, 0.993]),
-            "Rxy": np.array([10, 100]),
+            "Rxy": np.array([10, 10]),
             "Rz": np.array([10, 30]),
-            "rho": np.array([2, 0.5]),
-            "rho_k": 0.1,
+            "rho": np.array([10, 9.1]),
+            "rho_k": 0.3,
         },
         "pf.iL": {
-            "l": 5,
+            "l": 7,
             "alp": np.array([3, 3, 2]),
             "bet": np.array([3.98, 0.993]),
-            "xi": np.array([-1, 1])*0.15,
-            "rho": np.deg2rad(np.array([30, 80])),
-            "c": np.array([0, 0]),
-            "Rang": np.array([np.deg2rad(80), 100]),
+            "xi": np.array([-1, 1]) * 0.15,
+            "rho": np.deg2rad(np.array([40, 80])),
+            "c": np.array([20, 20]),
+            "Rang": np.array([np.deg2rad(80), 10]),
         },
-        "pf.K": np.array([4, 15, 4, 15, 20, 15]),
+        "pf.K": np.array([10, 15, 10, 15, 20, 25]),
 
     },
 
@@ -162,13 +162,13 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
-        "ext_unc": False,
-        "int_unc": False,
+        "ext_unc": True,
+        "int_unc": True,
         "faultBias": False,
-        "noise": False,  # Estimator real value noise
-        "groundEffect": False,
+        "noise": True,  # Estimator real value noise
+        "groundEffect": True,
         "hub": False,
-        "gyro": False,
+        "gyro": True,
     },
 
 

@@ -29,7 +29,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, k11, k12, k21, k22, k31, k32):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=50)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -43,6 +43,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
+        self.fault = True
         self.delay = cfg.faults.manager.delay
 
         # Define agents
@@ -115,8 +116,8 @@ class Env(BaseEnv):
 
     def set_dot(self, t):
         ref = self.get_ref(t)
-        W = get_W(t)
-        What = get_What(t, self.delay)
+        W = get_W(t, self.fault)
+        What = get_What(t, self.delay, self.fault)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
