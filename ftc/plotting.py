@@ -4,6 +4,7 @@ import fym
 from fym.utils.rot import angle2quat, quat2angle
 from ftc.agents.param import get_uncertainties
 import ftc.config
+from ftc.agents.param import get_sumOfDist
 
 cfg = ftc.config.load()
 
@@ -187,18 +188,18 @@ def exp_plot(loggerpath):
     # disturbance
     plt.figure()
 
-    # real_dist_mat = np.zeros((6, np.shape(data["t"])[0]))
-    # for i in range(np.shape(data["t"])[0]):
-    #     t = data["t"][i]
-    #     upos, uvel, ueuler, uomega = get_uncertainties(t, True)
-    #     real_dist_mat[0, i], real_dist_mat[1, i], real_dist_mat[2, i] = uvel.ravel()
-    #     real_dist_mat[3, i], real_dist_mat[4, i], real_dist_mat[5, i] = uomega.ravel()
+    real_dist = np.zeros((6, np.size(data["t"])))
+    ext_dist = cfg.simul_condi.ext_unc
+    for i in range(np.size(data["t"])):
+        t = data["t"][i]
+        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
                                 r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
+        plt.plot(data["t"], real_dist[i, :], "r-", label="true")
         plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
         plt.ylabel(_label)
         if i == 0:
