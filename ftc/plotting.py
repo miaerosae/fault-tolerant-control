@@ -16,24 +16,22 @@ def exp_plot(loggerpath):
     rotor_max = info["rotor_max"]
 
     # FDI
-    plt.figure()
+    plt.figure(figsize=(6, 4.5))
 
-    ax = plt.subplot(221)
+    name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
     for i in range(data["W"].shape[1]):
-        if i != 0:
-            plt.subplot(221+i, sharex=ax)
         plt.ylim([0-0.1, 1+0.1])
-        plt.plot(data["t"], data["W"][:, i, i], "r--", label="Actual")
-        plt.plot(data["t"], data["What"][:, i, i], "k-", label="Estimated")
-        if i == 0:
-            plt.legend(loc='upper right')
-    plt.gcf().supylabel("FDI")
-    plt.gcf().supxlabel("Time, sec")
+        plt.plot(data["t"], data["W"][:, i, i], "--", label=name[i])
+    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.ylabel(r"$\lambda_i$, i=1, 2, 3, 4")
+    plt.xlabel("Time, sec")
     plt.tight_layout()
+    plt.savefig("lambda.png", dpi=300)
 
     # Rotor
-    plt.figure()
+    plt.figure(figsize=(7, 5))
 
+    name = [r"$\omega_1$", r"$\omega_2$", r"$\omega_3$", r"$\omega_4$"]
     ax = plt.subplot(221)
     for i in range(data["rotors"].shape[1]):
         if i != 0:
@@ -41,27 +39,27 @@ def exp_plot(loggerpath):
         plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
         plt.plot(data["t"], np.sqrt(data["rotors"][:, i]), "k-", label="Response")
         plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
-        if i == 0:
-            plt.legend(loc='upper right')
+        plt.ylabel(name[i])
+        if i == 1:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3))
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Angular rate of each rotor")
     plt.tight_layout()
-    # plt.savefig("lpeso_rotor_input.png")
+    # plt.savefig("rotor_input.png")
 
     # Position
-    plt.figure()
+    # plt.figure()
     # plt.ylim([-5, 5])
 
-    ax = plt.subplot(311)
-    for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
-        plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label="Real")
-        plt.plot(data["t"], data["ref"][:, i, 0], "r--", label="Desired")
-        plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc='upper right')
+    # ax = plt.subplot(311)
+    # for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
+    #     plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label="Real")
+    #     plt.plot(data["t"], data["ref"][:, i, 0], "r--", label="Desired")
+    #     plt.ylabel(_label)
+    #     if i == 0:
+    #         plt.legend(loc='upper right')
     # plt.axvspan(3, detection_time[0], alpha=0.2, color="b")
     # plt.axvline(detection_time[0], alpha=0.8, color="b", linewidth=0.5)
     # plt.annotate("Rotor 0 fails", xy=(3, 0), xytext=(3.5, 0.5),
@@ -70,27 +68,27 @@ def exp_plot(loggerpath):
     # plt.axvline(detection_time[1], alpha=0.8, color="b", linewidth=0.5)
     # plt.annotate("Rotor 2 fails", xy=(6, 0), xytext=(7.5, 0.2),
     #              arrowprops=dict(arrowstyle='->', lw=1.5))
-    plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Position, m")
-    plt.tight_layout()
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.gcf().supylabel("Position, m")
+    # plt.tight_layout()
     # plt.savefig("lpeso_pos.png", dpi=300)
 
     # velocity
-    plt.figure()
-    plt.ylim([-5, 5])
+    # plt.figure()
+    # plt.ylim([-5, 5])
 
-    ax = plt.subplot(311)
-    for i, (_label, _ls) in enumerate(zip(["Vx", "Vy", "Vz"], ["-", "--", "-."])):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["x"]["vel"][:, i, 0], "k"+_ls, label=_label)
-        plt.ylabel(_label)
-    plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Velocity, m/s")
-    plt.tight_layout()
+    # ax = plt.subplot(311)
+    # for i, (_label, _ls) in enumerate(zip(["Vx", "Vy", "Vz"], ["-", "--", "-."])):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], data["x"]["vel"][:, i, 0], "k"+_ls, label=_label)
+    #     plt.ylabel(_label)
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.gcf().supylabel("Velocity, m/s")
+    # plt.tight_layout()
 
     # observation: position error
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     rho = cfg.agents.BLF.oL.rho
     rho_k = cfg.agents.BLF.oL.rho_k
@@ -98,22 +96,22 @@ def exp_plot(loggerpath):
     for i in range(np.shape(data["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data["t"][i]) + rho[1]
     ax = plt.subplot(311)
-    for i, (_label, _ls) in enumerate(zip(["ex", "ey", "ez"], ["-", "--", "-."])):
+    for i, (_label, _ls) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
-        plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k-.", label="Real")
-        plt.plot(data["t"], pos_bounds, "c")
+        plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k--", label="Real")
+        plt.plot(data["t"], pos_bounds, "c", label="Bound")
         plt.plot(data["t"], -pos_bounds, "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right')
+            plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.5))
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Error observation, m/s")
     plt.tight_layout()
+    plt.savefig("pos_err.png", dpi=300)
 
     # euler angles
-    plt.figure()
+    plt.figure(figsize=(9, 7))
     bound = cfg.agents.BLF.iL.rho[0]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
@@ -127,33 +125,33 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k-.", label="Real")
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r--", label="Desired")
         plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
+                 np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c",
+                 label="Bound")
         plt.plot(data["t"],
                  -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right')
+            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.5))
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Euler angles, deg")
     plt.tight_layout()
-    # plt.savefig("lpeso_angle.png", dpi=300)
+    plt.savefig("angle.png", dpi=300)
 
     # angular rates
-    plt.figure()
+    plt.figure(figsize=(9, 7))
     bound = cfg.agents.BLF.iL.rho[1]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
         plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)
     plt.plot(data["t"],
-             np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
+             np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c",
+             label="Bound")
     plt.plot(data["t"],
              -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Angular rates, deg/s")
     plt.tight_layout()
     plt.legend(loc='upper right')
-    # plt.savefig("Figure_3.png")
+    plt.savefig("angular.png", dpi=300)
 
     # observation
     # plt.figure()
@@ -172,21 +170,27 @@ def exp_plot(loggerpath):
     # plt.tight_layout()
 
     # virtual control
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     ax = plt.subplot(411)
-    for i, _label in enumerate([r"$F$", r"$M_{\phi}$", r"$M_{\theta}$", r"$M_{\psi}$"]):
+    for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
         if i != 0:
             plt.subplot(411+i, sharex=ax)
         plt.plot(data["t"], data["virtual_u"][:, i], "k-", label=_label)
-        plt.ylabel(_label)
+        if i == 0:
+            plt.ylabel(_label, labelpad=10)
+        elif i == 1:
+            plt.ylabel(_label, labelpad=5)
+        elif i == 2:
+            plt.ylabel(_label, labelpad=10)
+        elif i == 3:
+            plt.ylabel(_label, labelpad=0)
     plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Generalized forces")
     plt.tight_layout()
-    # plt.savefig("lpeso_forces.png", dpi=300)
+    plt.savefig("forces.png", dpi=300)
 
     # disturbance
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     real_dist = np.zeros((6, np.size(data["t"])))
     ext_dist = cfg.simul_condi.ext_unc
@@ -195,18 +199,29 @@ def exp_plot(loggerpath):
         real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
 
     ax = plt.subplot(611)
-    for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
-                                r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
+    for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
+                                r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
-        plt.plot(data["t"], real_dist[i, :], "r-", label="true")
-        plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
-        plt.ylabel(_label)
+        plt.plot(data["t"], data["dist"][:, i, 0], "k", label="Estimated value")
+        plt.plot(data["t"], real_dist[i, :], "r--", label="Real value")
         if i == 0:
-            plt.legend(loc='upper right')
-    plt.gcf().supylabel("dist")
+            plt.ylabel(_label, labelpad=15)
+        elif i == 1:
+            plt.ylabel(_label, labelpad=12)
+        elif i == 2:
+            plt.ylabel(_label, labelpad=20)
+        elif i == 3:
+            plt.ylabel(_label, labelpad=19)
+        elif i == 4:
+            plt.ylabel(_label, labelpad=12)
+        elif i == 5:
+            plt.ylabel(_label, labelpad=0)
+        if i == 0:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.7))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
+    plt.savefig("dist.png", dpi=300)
 
     # Update parameter
     # plt.figure()
@@ -223,17 +238,17 @@ def exp_plot(loggerpath):
     # plt.tight_layout()
 
     # q
-    plt.figure()
+    # plt.figure()
 
-    ax = plt.subplot(311)
-    for i, _label in enumerate([r"$q_x$", r"$q_y$", r"$q_z$"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["q"][:, i, 0], "k-")
-        plt.ylabel(_label)
-    plt.gcf().supylabel("observer control input")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
+    # ax = plt.subplot(311)
+    # for i, _label in enumerate([r"$q_x$", r"$q_y$", r"$q_z$"]):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], data["q"][:, i, 0], "k-")
+    #     plt.ylabel(_label)
+    # plt.gcf().supylabel("observer control input")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
     # plt.savefig("Figure_6.png")
 
     # fdi

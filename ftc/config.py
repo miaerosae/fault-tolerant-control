@@ -117,25 +117,25 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([5, 5, 5]),
             # "eps": np.array([0.5, 0.5, 0.5]),
-            "rho": np.array([1, 0.5]),
-            "rho_k": 0.5,
+            "rho": np.array([0.5, 0.2]),
+            "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([10, 10, 10]),
+            "eps": np.array([8, 8, 8]),
             # "eps": np.array([0.05, 0.05, 0.05]),
             "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([30, 90])),
-            "c": np.array([20, 20]),
+            "rho": np.deg2rad(np.array([40, 100])),
+            "c": np.array([0, 0]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        "Kxy": np.array([4, 15, .0]),
-        "Kz": np.array([4, 15, .0]),
-        "Kang": np.array([20, 25, .0]),
+        "Kxy": np.array([2, 30, .0]),
+        "Kz": np.array([2, 30, .0]),
+        "Kang": np.array([20, 35, .0]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -167,12 +167,12 @@ default_settings = fym.parser.parse({
         "blade": False,
         # "ext_unc": True,
         "ext_unc": True,
-        "int_unc": True,
+        "int_unc": False,
         "faultBias": False,
         "noise": False,  # Estimator real value noise
-        "groundEffect": True,
+        "groundEffect": False,
         "hub": False,
-        "gyro": True,
+        "gyro": False,
     },
 
 

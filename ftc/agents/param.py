@@ -77,7 +77,7 @@ def get_uncertainties(t, uncertainty):
     if uncertainty is True:
         # upos와 ueuler가 어떤 의미가 있지..?
         upos = np.vstack([
-            0.1*np.cos(2*np.pi*t),
+            0.1*np.cos(0.2*np.pi*t),
             0.2*np.sin(0.5*np.pi*t),
             0.3*np.cos(t),
         ])
@@ -102,8 +102,8 @@ def get_uncertainties(t, uncertainty):
 def get_sumOfDist(t, condi):
     pi = np.pi
     ref_dist = np.zeros((6, 1))
-    ref_dist[0] = - (- pi/10*np.cos(t/2)*np.sin(pi*t/10)
-                     - (1/4 + pi**2/100)*np.sin(t/2)*np.cos(pi*t/10))
+    ref_dist[0] = - (- pi/5*np.cos(t/2)*np.sin(pi*t/5)
+                     - (1/4 + pi**2/25)*np.sin(t/2)*np.cos(pi*t/5))
     ref_dist[1] = - (pi/5*np.cos(t/2)*np.cos(pi*t/5)
                      - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5))
 
@@ -112,7 +112,7 @@ def get_sumOfDist(t, condi):
         m1, m2, m3, m4 = get_uncertainties(t, True)
         ext_dist[0:3] = m2
         ext_dist[3:6] = m4
-        int_dist = np.vstack([- 0.1*2*pi*np.sin(2*pi*t),
+        int_dist = np.vstack([- 0.1*0.2*pi*np.sin(0.2*pi*t),
                               0.2*0.5*pi*np.cos(0.5*pi*t),
                               - 0.3*np.sin(t),
                               0.3*np.cos(t),
@@ -139,12 +139,12 @@ def get_W(t, fault):
             W2 = 1
 
         if t > 10:
-            W3 = 0.9
+            W3 = 0.6
         else:
             W3 = 1
 
         if t > 25:
-            W4 = 0.5
+            W4 = 1.0
         else:
             W4 = 1
         W = np.diag([W1, W2, W3, W4])
@@ -154,7 +154,8 @@ def get_W(t, fault):
     #         W = np.diag([0.6, 1, 1, 1])
     #     else:
     #         W = np.diag([1, 1, 1, 1])
-    # W = np.diag([1, 1, 1, 1])
+    else:
+        W = np.diag([1, 1, 1, 1])
     return W
 
 

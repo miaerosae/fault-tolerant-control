@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=30)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -85,7 +85,7 @@ class Env(BaseEnv):
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
                              np.sin(t/2)*np.sin(np.pi*t/5),
                              -t])
         vel_des = np.vstack([0, 0, 0])
@@ -273,10 +273,10 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        Kxy = cfg.agents.BLF.Kxy.ravel()
-        Kz = cfg.agents.BLF.Kz.ravel()
-        Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        # Kxy = cfg.agents.BLF.Kxy.ravel()
+        # Kz = cfg.agents.BLF.Kz.ravel()
+        # Kang = cfg.agents.BLF.Kang.ravel()
+        # run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath)
 
 
