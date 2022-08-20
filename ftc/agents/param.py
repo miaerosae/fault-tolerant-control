@@ -79,24 +79,47 @@ def get_uncertainties(t, uncertainty):
         upos = np.vstack([
             0.1*np.cos(2*np.pi*t),
             0.2*np.sin(0.5*np.pi*t),
-            0.3*stable_sigmoid(t),
+            0.3*np.cos(t),
         ])
         uvel = np.vstack([
-            0.1*stable_sigmoid(t),
+            0.1*np.sin(t),
             0.2*np.sin(np.pi*t),
             0.2*np.sin(3*t) - 0.1*np.sin(0.5*np.pi*t)
         ])
         ueuler = np.vstack([
-            0.3*stable_sigmoid(t),
+            0.3*np.sin(t),
             0.1*np.cos(np.pi*t+np.pi/4),
             0.2*np.sin(0.5*np.pi*t),
         ])
         uomega = np.vstack([
-            0.2*stable_sigmoid(t) - 0.4*np.sin(0.5*np.pi*t),
-            0.1*np.tanh(np.sqrt(2)*t),
+            - 0.2*np.sin(0.5*np.pi*t),
+            0.1*np.cos(np.sqrt(2)*t),
             0.1*np.cos(2*t+1)
         ])
     return upos, uvel, ueuler, uomega
+
+
+def get_sumOfDist(t, condi):
+    pi = np.pi
+    ref_dist = np.zeros((6, 1))
+    ref_dist[0] = - (- pi/10*np.cos(t/2)*np.sin(pi*t/10)
+                     - (1/4 + pi**2/100)*np.sin(t/2)*np.cos(pi*t/10))
+    ref_dist[1] = - (pi/5*np.cos(t/2)*np.cos(pi*t/5)
+                     - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5))
+
+    if condi is True:
+        ext_dist = np.zeros((6, 1))
+        m1, m2, m3, m4 = get_uncertainties(t, True)
+        ext_dist[0:3] = m2
+        ext_dist[3:6] = m4
+        int_dist = np.vstack([- 0.1*2*pi*np.sin(2*pi*t),
+                              0.2*0.5*pi*np.cos(0.5*pi*t),
+                              - 0.3*np.sin(t),
+                              0.3*np.cos(t),
+                              - 0.1*pi*np.sin(pi*t+pi/4),
+                              0.2*0.5*pi*np.cos(0.5*pi*t)])
+        ref_dist = ref_dist + ext_dist + int_dist
+    return ref_dist
 
 
 def get_W(t, fault):
@@ -126,8 +149,12 @@ def get_W(t, fault):
             W4 = 1
         W = np.diag([W1, W2, W3, W4])
 
-    else:
-        W = np.diag([1, 1, 1, 1])
+    # else:
+    #     if t > 3:
+    #         W = np.diag([0.6, 1, 1, 1])
+    #     else:
+    #         W = np.diag([1, 1, 1, 1])
+    W = np.diag([1, 1, 1, 1])
     return W
 
 
@@ -158,8 +185,12 @@ def get_What(t, delay, fault):
             W4 = 1
         What = np.diag([W1, W2, W3, W4])
 
-    else:
-        What = np.diag([1, 1, 1, 1])
+    # else:
+    #     if t > 3 + delay:
+    #         What = np.diag([0.6, 1, 1, 1])
+    #     else:
+    #         What = np.diag([1, 1, 1, 1])
+    What = np.diag([1, 1, 1, 1])
     return What
 
 

@@ -284,5 +284,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("data1.h5", "data.h5")
+    main(args)
+    # comp.exp_plot("data1.h5", "data.h5")
