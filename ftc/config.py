@@ -133,9 +133,9 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        "Kxy": np.array([4, 15, .1]),
-        "Kz": np.array([4, 15, .1]),
-        "Kang": np.array([20, 25, .05]),
+        "Kxy": np.array([4, 15, .0]),
+        "Kz": np.array([4, 15, .0]),
+        "Kang": np.array([20, 25, .0]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -166,13 +166,13 @@ default_settings = fym.parser.parse({
     "simul_condi": {
         "blade": False,
         # "ext_unc": True,
-        "ext_unc": False,
-        "int_unc": False,
+        "ext_unc": True,
+        "int_unc": True,
         "faultBias": False,
         "noise": False,  # Estimator real value noise
-        "groundEffect": False,
+        "groundEffect": True,
         "hub": False,
-        "gyro": False,
+        "gyro": True,
     },
 
 

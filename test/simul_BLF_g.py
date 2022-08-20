@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W, get_What, get_faulty_input
+from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=30)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -44,7 +44,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
 
         # Define agents
@@ -126,7 +126,7 @@ class Env(BaseEnv):
     def set_dot(self, t):
         ref = self.get_ref(t)
         W = get_W(t, self.fault)
-        What = get_What(t, self.delay, self.fault)
+        What = get_W(t-self.delay, self.fault)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
