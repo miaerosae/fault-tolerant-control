@@ -41,7 +41,7 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
         plt.ylabel(name[i])
         if i == 1:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3))
+            plt.legend(loc='upper center', ncol=2, mode="expand", bbox_to_anchor=(0.5, 1.3))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     # plt.savefig("rotor_input.png")
@@ -105,7 +105,7 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], -pos_bounds, "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.5))
+            plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.3))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     plt.savefig("pos_err.png", dpi=300)
@@ -131,7 +131,7 @@ def exp_plot(loggerpath):
                  -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.5))
+            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.3))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     plt.savefig("angle.png", dpi=300)
@@ -149,8 +149,8 @@ def exp_plot(loggerpath):
     plt.plot(data["t"],
              -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
     plt.gcf().supxlabel("Time, sec")
+    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.1))
     plt.tight_layout()
-    plt.legend(loc='upper right')
     plt.savefig("angular.png", dpi=300)
 
     # observation
@@ -178,7 +178,7 @@ def exp_plot(loggerpath):
             plt.subplot(411+i, sharex=ax)
         plt.plot(data["t"], data["virtual_u"][:, i], "k-", label=_label)
         if i == 0:
-            plt.ylabel(_label, labelpad=10)
+            plt.ylabel(_label, labelpad=23)
         elif i == 1:
             plt.ylabel(_label, labelpad=5)
         elif i == 2:
@@ -218,7 +218,7 @@ def exp_plot(loggerpath):
         elif i == 5:
             plt.ylabel(_label, labelpad=0)
         if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.7))
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     plt.savefig("dist.png", dpi=300)
