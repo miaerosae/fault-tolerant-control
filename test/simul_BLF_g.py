@@ -145,20 +145,10 @@ class Env(BaseEnv):
         # phid, thetad, psid = np.deg2rad([10, 0, 0]).ravel()
         eulerd = np.vstack([phid, thetad, psid])
 
-        # caculate f
-        J = np.diag(self.plant.J)
-        obs_p = self.blf_phi.get_obsdot()
-        obs_q = self.blf_theta.get_obsdot()
-        obs_r = self.blf_psi.get_obsdot()
-        f = np.array([(J[1]-J[2]) / J[0] * obs_q * obs_r,
-                      (J[2]-J[0]) / J[1] * obs_p * obs_r,
-                      (J[0]-J[1]) / J[2] * obs_p * obs_q])
-        # f = np.zeros((3,))
-
         # Inner-Loop
-        u2 = self.blf_phi.get_u(t, phid, f[0])
-        u3 = self.blf_theta.get_u(t, thetad, f[1])
-        u4 = self.blf_psi.get_u(t, psid, f[2])
+        u2 = self.blf_phi.get_u(t, phid)
+        u3 = self.blf_theta.get_u(t, thetad)
+        u4 = self.blf_psi.get_u(t, psid)
 
         # Saturation u1
         # u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
@@ -193,6 +183,13 @@ class Env(BaseEnv):
         obs_ang[1] = self.blf_theta.get_obs()
         obs_ang[2] = self.blf_psi.get_obs()
 
+        # caculate f
+        J = np.diag(self.plant.J)
+        p, q, r = self.plant.omega.state
+        f = np.array([(J[1]-J[2]) / J[0] * q * r,
+                      (J[2]-J[0]) / J[1] * p * r,
+                      (J[0]-J[1]) / J[2] * p * q])
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel,
@@ -203,9 +200,9 @@ class Env(BaseEnv):
         self.blf_x.set_dot(t, x, ref[0])
         self.blf_y.set_dot(t, y, ref[1])
         self.blf_z.set_dot(t, z, ref[2])
-        self.blf_phi.set_dot(t, euler[0], phid, f[0])
-        self.blf_theta.set_dot(t, euler[1], thetad, f[1])
-        self.blf_psi.set_dot(t, euler[2], psid, f[2])
+        self.blf_phi.set_dot(t, euler[0], phid)
+        self.blf_theta.set_dot(t, euler[1], thetad)
+        self.blf_psi.set_dot(t, euler[2], psid)
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,

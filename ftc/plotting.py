@@ -193,6 +193,8 @@ def exp_plot(loggerpath):
     for i in range(np.size(data["t"])):
         t = data["t"][i]
         real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    for i in range(3):
+        real_dist[:, i+3] = data["f"][:, i, 0]
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
