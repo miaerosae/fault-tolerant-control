@@ -46,6 +46,7 @@ class outerLoop(BaseEnv):
     def get_virtual(self, t, *args):
         e = self.e.state
         integ_e = self.integ_e.state
+
         if self.BLF is True:
             rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
             rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
@@ -85,7 +86,7 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise):
+    def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise, BLF=True):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -96,6 +97,7 @@ class innerLoop(BaseEnv):
         self.c, self.b, self.g = c, b, g
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
         self.noise = noise
+        self.BLF = BLF
 
     def deriv(self, x, lamb, integ_e, t, y, ref):
         alp, eps, theta = self.alp, self.eps, self.theta
@@ -123,15 +125,21 @@ class innerLoop(BaseEnv):
         integ_e = self.integ_e.state
         dref, ddref = 0, 0
 
-        z1 = x[0] - ref - lamb[0]
-        dz1 = x[1] - dref + c[0]*lamb[0] - lamb[1]
-        alpha = - K[0]*z1 - c[0]*lamb[0] - K[2]*integ_e*(rho[0]**2-z1**2)
-        z2 = x[1] - dref - alpha - lamb[1]
-        dalpha = - K[0]*(x[1] - dref + c[0]*lamb[0] - lamb[1]) \
-            - c[0]*(-c[0]*lamb[0] + lamb[1]) - K[2]*(x[0]-ref)*(rho[0]**2-z1**2) \
-            + K[2]*2*z1*dz1*integ_e
-        nu = - c[1]*lamb[1] + dalpha + ddref - K[1]*z2 \
-            - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
+        if self.BLF is True:
+            z1 = x[0] - ref - lamb[0]
+            dz1 = x[1] - dref + c[0]*lamb[0] - lamb[1]
+            alpha = - K[0]*z1 - c[0]*lamb[0] - K[2]*integ_e*(rho[0]**2-z1**2)
+            z2 = x[1] - dref - alpha - lamb[1]
+            dalpha = - K[0]*(x[1] - dref + c[0]*lamb[0] - lamb[1]) \
+                - c[0]*(-c[0]*lamb[0] + lamb[1]) - K[2]*(x[0]-ref)*(rho[0]**2-z1**2) \
+                + K[2]*2*z1*dz1*integ_e
+            nu = - c[1]*lamb[1] + dalpha + ddref - K[1]*z2 \
+                - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
+        else:
+            alpha = K[0]*(ref-x[0]) + dref
+            dalpha = K[0]*(dref-x[1]) + ddref
+            nu = -x[2] + dalpha + K[1]*(alpha-x[1])
+
         return nu
 
     def get_u(self, t, ref):
