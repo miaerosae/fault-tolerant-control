@@ -62,6 +62,10 @@ class outerLoop(BaseEnv):
                 + K[2]*2*z1*dz1*rho**2*integ_e
             q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         else:
+            '''
+            normal BS controller: "Backstepping Control for a Quadrotor Helicopter",
+            Tarek. M., Abelaziz. B.
+            '''
             dref, ddref = args
             alpha = K[0]*(ref-e[0]) + dref
             dalpha = K[0]*(dref-e[1]) + ddref
