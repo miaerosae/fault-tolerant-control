@@ -173,6 +173,7 @@ default_settings = fym.parser.parse({
         "groundEffect": False,
         "hub": False,
         "gyro": False,
+        "BLF": False,
     },
 
 

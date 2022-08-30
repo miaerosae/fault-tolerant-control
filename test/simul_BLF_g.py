@@ -44,7 +44,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
 
         # Define agents
@@ -56,47 +56,53 @@ class Env(BaseEnv):
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    cond.noise,
-                                   -self.pos_ref[0][0], params.theta)
+                                   -self.pos_ref[0][0], params.theta,
+                                   cond.BLF)
         self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    cond.noise,
-                                   -self.pos_ref[1][0], params.theta)
+                                   -self.pos_ref[1][0], params.theta,
+                                   cond.BLF)
         self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
                                    params.oL.rho, params.oL.rho_k,
                                    cond.noise,
-                                   -self.pos_ref[2][0], params.theta)
+                                   -self.pos_ref[2][0], params.theta,
+                                   cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([k31, k32, k33])
         self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g, params.theta,
-                                     cond.noise)
+                                     cond.noise, cond.BLF)
         self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
                                        params.iL.xi, params.iL.rho,
                                        params.iL.c, b[1], self.plant.g, params.theta,
-                                       cond.noise)
+                                       cond.noise, cond.BLF)
         self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[2], self.plant.g, params.theta,
-                                     cond.noise)
+                                     cond.noise, cond.BLF)
 
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        # pos_des = self.pos_ref
-        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/10),
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
                              np.sin(t/2)*np.sin(np.pi*t/5),
                              -t])
-        vel_des = np.vstack([0, 0, 0])
-        # pi = np.pi
-        # pos_des = np.vstack([np.sin(5*pi*t/10)*np.cos(pi*t/10)*cos(pi/4),
-        #                      np.sin(5*pi*t/10)*np.sin(pi*t/10)*cos(pi/4),
-        #                      sin(5*pi*t/10)*sin(pi/4)])
-        quat_des = np.vstack([1, 0, 0, 0])
-        omega_des = np.vstack([0, 0, 0])
-        ref = np.vstack([pos_des, vel_des, quat_des, omega_des])
-        return ref
+        return pos_des
+
+    def get_dref(self, t):
+        pi = np.pi
+        dref = np.vstack([1/2*np.cos(t/2)*np.cos(pi*t/5)-pi/5*np.sin(t/2)*np.sin(pi*t/5),
+                          1/2*np.cos(t/2)*np.sin(pi*t/5)+pi/5*np.sin(t/2)*np.cos(pi*t/5),
+                          -1])
+        ddref = np.vstack([(- pi/5*np.cos(t/2)*np.sin(pi*t/5)
+                            - (1/4 + pi**2/25)*np.sin(t/2)*np.cos(pi*t/5)),
+                           (pi/5*np.cos(t/2)*np.cos(pi*t/5)
+                            - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5)),
+                           0])
+        return dref, ddref
 
     def step(self):
         *_, done = self.update()
@@ -125,15 +131,16 @@ class Env(BaseEnv):
 
     def set_dot(self, t):
         ref = self.get_ref(t)
+        dref, ddref = self.get_dref(t)
         W = get_W(t, self.fault)
-        What = get_What(t, self.delay, self.fault)
+        What = get_W(t-self.delay, self.fault)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
         q = np.zeros((3, 1))
-        q[0] = self.blf_x.get_virtual(t)
-        q[1] = self.blf_y.get_virtual(t)
-        q[2] = self.blf_z.get_virtual(t)
+        q[0] = self.blf_x.get_virtual(t, ref[0], dref[0], ddref[0])
+        q[1] = self.blf_y.get_virtual(t, ref[1], dref[1], ddref[1])
+        q[2] = self.blf_z.get_virtual(t, ref[2], dref[2], ddref[2])
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -185,10 +192,10 @@ class Env(BaseEnv):
 
         # caculate f
         J = np.diag(self.plant.J)
-        p, q, r = self.plant.omega.state
-        f = np.array([(J[1]-J[2]) / J[0] * q * r,
-                      (J[2]-J[0]) / J[1] * p * r,
-                      (J[0]-J[1]) / J[2] * p * q])
+        p_, q_, r_ = self.plant.omega.state
+        f = np.array([(J[1]-J[2]) / J[0] * q_ * r_,
+                      (J[2]-J[0]) / J[1] * p_ * r_,
+                      (J[0]-J[1]) / J[2] * p_ * q_])
 
         # set_dot
         self.plant.set_dot(t, rotors,
@@ -197,9 +204,9 @@ class Env(BaseEnv):
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]
-        self.blf_x.set_dot(t, x, ref[0])
-        self.blf_y.set_dot(t, y, ref[1])
-        self.blf_z.set_dot(t, z, ref[2])
+        self.blf_x.set_dot(t, x, ref[0], dref[0], ddref[0])
+        self.blf_y.set_dot(t, y, ref[1], dref[1], ddref[1])
+        self.blf_z.set_dot(t, z, ref[2], dref[2], ddref[2])
         self.blf_phi.set_dot(t, euler[0], phid)
         self.blf_theta.set_dot(t, euler[1], thetad)
         self.blf_psi.set_dot(t, euler[2], psid)

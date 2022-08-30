@@ -35,7 +35,7 @@ class outerLoop(BaseEnv):
         if self.noise is True:
             e_real = e_real + 0.001*np.random.randn(1)
 
-        q = self.get_virtual(t, *args)
+        q = self.get_virtual(t, ref, *args)
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (e_real - e[0]), theta[0])
         edot[1, :] = e[2] + q + alp[1] * func_g(eps**2 * (e_real - e[0]), theta[1])
@@ -43,12 +43,12 @@ class outerLoop(BaseEnv):
         integ_edot = y - ref
         return edot, integ_edot
 
-    def get_virtual(self, t, *args):
+    def get_virtual(self, t, ref, *args):
         e = self.e.state
         integ_e = self.integ_e.state
+        rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
 
         if self.BLF is True:
-            rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
             rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
             drho = - k * (rho_0-rho_inf) * np.exp(-k*t)
             ddrho = k**2 * (rho_0-rho_inf) * np.exp(-k*t)
@@ -62,9 +62,9 @@ class outerLoop(BaseEnv):
                 + K[2]*2*z1*dz1*rho**2*integ_e
             q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         else:
-            xd, dxd, ddxd = args
-            alpha = K[0]*(xd-e[0]) + dxd
-            dalpha = K[0]*(dxd-e[1]) + ddxd
+            dref, ddref = args
+            alpha = K[0]*(ref-e[0]) + dref
+            dalpha = K[0]*(dref-e[1]) + ddref
             q = -e[2] + dalpha + K[1]*(alpha-e[1])
 
         return q

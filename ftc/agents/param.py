@@ -102,8 +102,8 @@ def get_uncertainties(t, uncertainty):
 def get_sumOfDist(t, condi):
     pi = np.pi
     ref_dist = np.zeros((6, 1))
-    ref_dist[0] = - (- pi/10*np.cos(t/2)*np.sin(pi*t/10)
-                     - (1/4 + pi**2/100)*np.sin(t/2)*np.cos(pi*t/10))
+    ref_dist[0] = - (- pi/5*np.cos(t/2)*np.sin(pi*t/5)
+                     - (1/4 + pi**2/25)*np.sin(t/2)*np.cos(pi*t/5))
     ref_dist[1] = - (pi/5*np.cos(t/2)*np.cos(pi*t/5)
                      - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5))
 
@@ -154,44 +154,9 @@ def get_W(t, fault):
     #         W = np.diag([0.6, 1, 1, 1])
     #     else:
     #         W = np.diag([1, 1, 1, 1])
-    W = np.diag([1, 1, 1, 1])
+    else:
+        W = np.diag([1, 1, 1, 1])
     return W
-
-
-def get_What(t, delay, fault):
-    if fault is True:
-        if t > 20 + delay:
-            W1 = 0.4
-        elif t > 3 + delay:
-            W1 = (- 40/17**2 * (t+14) * (t-20) + 40) * 0.01
-        else:
-            W1 = 1
-
-        if t > 11 + delay:
-            W2 = 0.7
-        elif t > 6 + delay:
-            W2 = (6/5 * (t-11)**2 + 70) * 0.01
-        else:
-            W2 = 1
-
-        if t > 10 + delay:
-            W3 = 0.9
-        else:
-            W3 = 1
-
-        if t > 25 + delay:
-            W4 = 0.5
-        else:
-            W4 = 1
-        What = np.diag([W1, W2, W3, W4])
-
-    # else:
-    #     if t > 3 + delay:
-    #         What = np.diag([0.6, 1, 1, 1])
-    #     else:
-    #         What = np.diag([1, 1, 1, 1])
-    What = np.diag([1, 1, 1, 1])
-    return What
 
 
 def get_faulty_input(W, rotors):
