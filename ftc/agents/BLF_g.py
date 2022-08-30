@@ -25,7 +25,7 @@ class outerLoop(BaseEnv):
         self.noise = noise
         self.BLF = BLF
 
-    def deriv(self, e, integ_e, y, ref, t):
+    def deriv(self, e, integ_e, y, ref, t, *args):
         alp, eps, theta = self.alp, self.eps, self.theta
         if self.BLF is True:
             e_real = y - ref  # for error-subsystem estimation
@@ -35,7 +35,7 @@ class outerLoop(BaseEnv):
         if self.noise is True:
             e_real = e_real + 0.001*np.random.randn(1)
 
-        q = self.get_virtual(t)
+        q = self.get_virtual(t, *args)
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (e_real - e[0]), theta[0])
         edot[1, :] = e[2] + q + alp[1] * func_g(eps**2 * (e_real - e[0]), theta[1])
@@ -68,9 +68,9 @@ class outerLoop(BaseEnv):
 
         return q
 
-    def set_dot(self, t, y, ref):
+    def set_dot(self, t, y, ref, *args):
         states = self.observe_list()
-        self.e.dot, self.integ_e.dot = self.deriv(*states, y, ref, t)
+        self.e.dot, self.integ_e.dot = self.deriv(*states, y, ref, t, *args)
 
     def get_err(self):
         return self.e.state[0]
@@ -97,10 +97,10 @@ class innerLoop(BaseEnv):
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
         self.noise = noise
 
-    def deriv(self, x, lamb, integ_e, t, y, ref, f):
+    def deriv(self, x, lamb, integ_e, t, y, ref):
         alp, eps, theta = self.alp, self.eps, self.theta
         nu = self.get_virtual(t, ref)
-        bound = f + self.b*self.xi
+        bound = self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
 
         if self.noise is True:
@@ -134,16 +134,16 @@ class innerLoop(BaseEnv):
             - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
         return nu
 
-    def get_u(self, t, ref, f):
+    def get_u(self, t, ref):
         nu = self.get_virtual(t, ref)
-        bound = f + self.b*self.xi
+        bound = self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
-        u = (nu_sat - f) / self.b
+        u = nu_sat / self.b
         return u
 
-    def set_dot(self, t, y, ref, f):
+    def set_dot(self, t, y, ref):
         states = self.observe_list()
-        dots = self.deriv(*states, t, y, ref, f)
+        dots = self.deriv(*states, t, y, ref)
         self.x.dot, self.lamb.dot, self.integ_e.dot = dots
 
     def get_obs(self):
