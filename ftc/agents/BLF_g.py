@@ -13,7 +13,7 @@ def func_g(x, theta):
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, noise, init, theta):
+    def __init__(self, alp, eps, K, rho, k, noise, init, theta, BLF=True):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
         self.integ_e = BaseSystem(np.zeros((1,)))
@@ -23,10 +23,14 @@ class outerLoop(BaseEnv):
         # self.theta = np.ones((3,)) * theta
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
         self.noise = noise
+        self.BLF = BLF
 
     def deriv(self, e, integ_e, y, ref, t):
         alp, eps, theta = self.alp, self.eps, self.theta
-        e_real = y - ref
+        if self.BLF is True:
+            e_real = y - ref  # for error-subsystem estimation
+        else:
+            e_real = y  # for state-subsystem estimation
 
         if self.noise is True:
             e_real = e_real + 0.001*np.random.randn(1)
@@ -39,22 +43,29 @@ class outerLoop(BaseEnv):
         integ_edot = y - ref
         return edot, integ_edot
 
-    def get_virtual(self, t):
-        rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
+    def get_virtual(self, t, *args):
         e = self.e.state
         integ_e = self.integ_e.state
-        rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
-        drho = - k * (rho_0-rho_inf) * np.exp(-k*t)
-        ddrho = k**2 * (rho_0-rho_inf) * np.exp(-k*t)
+        if self.BLF is True:
+            rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
+            rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
+            drho = - k * (rho_0-rho_inf) * np.exp(-k*t)
+            ddrho = k**2 * (rho_0-rho_inf) * np.exp(-k*t)
 
-        z1 = e[0] / rho
-        dz1 = e[1]/rho - e[0]*drho/rho**2
-        alpha = - rho*K[0]*z1 + drho*z1 - K[2]*(1-z1**2)*rho**2*integ_e
-        z2 = e[1] - alpha
-        dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1 \
-            - K[2]*(1-z1**2)*(rho**2*e[0]+2*rho*drho*integ_e) \
-            + K[2]*2*z1*dz1*rho**2*integ_e
-        q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
+            z1 = e[0] / rho
+            dz1 = e[1]/rho - e[0]*drho/rho**2
+            alpha = - rho*K[0]*z1 + drho*z1 - K[2]*(1-z1**2)*rho**2*integ_e
+            z2 = e[1] - alpha
+            dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1 \
+                - K[2]*(1-z1**2)*(rho**2*e[0]+2*rho*drho*integ_e) \
+                + K[2]*2*z1*dz1*rho**2*integ_e
+            q = - e[2] + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
+        else:
+            xd, dxd, ddxd = args
+            alpha = K[0]*(xd-e[0]) + dxd
+            dalpha = K[0]*(dxd-e[1]) + ddxd
+            q = -e[2] + dalpha + K[1]*(alpha-e[1])
+
         return q
 
     def set_dot(self, t, y, ref):
