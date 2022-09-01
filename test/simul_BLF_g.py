@@ -277,10 +277,10 @@ def main(args):
     else:
         loggerpath = "data.h5"
 
-        Kxy = cfg.agents.BLF.Kxy.ravel()
-        Kz = cfg.agents.BLF.Kz.ravel()
-        Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        # Kxy = cfg.agents.BLF.Kxy.ravel()
+        # Kz = cfg.agents.BLF.Kz.ravel()
+        # Kang = cfg.agents.BLF.Kang.ravel()
+        # run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath)
 
 
