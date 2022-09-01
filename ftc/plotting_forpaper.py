@@ -22,7 +22,7 @@ def exp_plot(loggerpath):
     for i in range(data["W"].shape[1]):
         plt.ylim([0-0.1, 1+0.1])
         plt.plot(data["t"], data["W"][:, i, i], "--", label=name[i])
-    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.2))
     plt.ylabel(r"$\lambda_i$, i=1, 2, 3, 4")
     plt.xlabel("Time, sec")
     plt.tight_layout()
@@ -105,7 +105,7 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], -pos_bounds, "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.3))
+            plt.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.35))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     plt.savefig("pos_err.png", dpi=300)
@@ -131,7 +131,7 @@ def exp_plot(loggerpath):
                  -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.3))
+            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.35))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     plt.savefig("angle.png", dpi=300)
