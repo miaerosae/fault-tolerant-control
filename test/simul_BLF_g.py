@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W, get_What, get_faulty_input
+from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
