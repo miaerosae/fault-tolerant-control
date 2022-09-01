@@ -14,16 +14,18 @@ from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
 from ftc.agents.param import get_b0, get_W, get_faulty_input
-from ftc.plotting import exp_plot
+from ftc.plotting_forpaper import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
 
+
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
-plt.rc("axes", grid=True)
+plt.rc("axes", grid=True, labelsize=12, titlesize=12)
 plt.rc("grid", linestyle="--", alpha=0.8)
+plt.rc("legend", fontsize=12)
 
 cfg = ftc.config.load()
 
