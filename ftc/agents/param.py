@@ -124,30 +124,16 @@ def get_sumOfDist(t, condi):
 
 def get_W(t, fault):
     if fault is True:
-        if t > 20:
-            W1 = 0.4
-        elif t > 3:
-            W1 = (- 40/17**2 * (t+14) * (t-20) + 40) * 0.01
+        if t > 5:
+            W1 = 0.5
         else:
             W1 = 1
 
-        if t > 11:
+        if t > 7:
             W2 = 0.7
-        elif t > 6:
-            W2 = (6/5 * (t-11)**2 + 70) * 0.01
         else:
             W2 = 1
-
-        if t > 10:
-            W3 = 0.9
-        else:
-            W3 = 1
-
-        if t > 25:
-            W4 = 0.5
-        else:
-            W4 = 1
-        W = np.diag([W1, W2, W3, W4])
+        W = np.diag([W1, W2, 1, 1])
 
     # else:
     #     if t > 3:

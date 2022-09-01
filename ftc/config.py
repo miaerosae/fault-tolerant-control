@@ -117,25 +117,25 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([5, 5, 5]),
             # "eps": np.array([0.5, 0.5, 0.5]),
-            "rho": np.array([1, 0.5]),
+            "rho": np.array([0.5, 0.2]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([10, 10, 10]),
+            "eps": np.array([8, 8, 8]),
             # "eps": np.array([0.05, 0.05, 0.05]),
             "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([30, 90])),
-            "c": np.array([20, 20]),
+            "rho": np.deg2rad(np.array([45, 130])),
+            "c": np.array([0, 0]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        "Kxy": np.array([4, 15, .1]),
-        "Kz": np.array([4, 15, .1]),
-        "Kang": np.array([20, 25, .05]),
+        "Kxy": np.array([1, 31, .0]),
+        "Kz": np.array([1, 31, .0]),
+        "Kang": np.array([20, 35, .0]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -173,7 +173,7 @@ default_settings = fym.parser.parse({
         "groundEffect": False,
         "hub": False,
         "gyro": False,
-        "BLF": False,
+        "BLF": True,
     },
 
 

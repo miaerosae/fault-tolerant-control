@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W, get_What, get_faulty_input
+from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -21,7 +21,7 @@ from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
 
 plt.rc("text", usetex=False)
-plt.rc("lines", linewidth=1)
+plt.rc("lines", linewidth=1.5)
 plt.rc("axes", grid=True)
 plt.rc("grid", linestyle="--", alpha=0.8)
 
@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=30)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
