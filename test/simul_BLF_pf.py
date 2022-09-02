@@ -53,30 +53,30 @@ class Env(BaseEnv):
         Kz = np.array([k21, k22])
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.Rxy, Kxy, params.oL.rho,
+                                   params.oL.dist_range, Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[0][0])
         self.blf_y = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.Rxy, Kxy, params.oL.rho,
+                                   params.oL.dist_range, Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[1][0])
         self.blf_z = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.Rz, Kz, params.oL.rho,
+                                   params.oL.dist_range, Kz, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[2][0])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k31, k32])
         self.blf_phi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
-                                     params.iL.Rang, Kang, params.iL.xi,
+                                     params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
         self.blf_theta = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
-                                       params.iL.Rang, Kang, params.iL.xi,
+                                       params.iL.dist_range, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[0],
                                        self.plant.g, cond.noise)
         self.blf_psi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
-                                     params.iL.Rang, Kang, params.iL.xi,
+                                     params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
 
