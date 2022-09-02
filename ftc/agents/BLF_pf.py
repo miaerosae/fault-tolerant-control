@@ -13,18 +13,25 @@ def sat(x, L):
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, l, alp, bet, r, K, rho, k, noise, init):
+    def __init__(self, l, alp, bet, dist_range, K, rho, k, noise, init):
         super().__init__()
         self.e = BaseSystem(np.zeros((3, 1)))
         self.eta = BaseSystem(np.zeros((2, 1)))
 
         self.alp, self.K, self.k = alp, K, k
-        self.l, self.bet, self.r = l, bet, r
+        self.l, self.bet, self.dist_range = l, bet, dist_range
         self.rho_0, self.rho_inf = rho.ravel()
         self.noise = noise
 
+    def get_R(self, t):
+        rho_0, rho_inf, k = self.rho_0, self.rho_inf, self.k
+        rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
+        R = np.array([2*rho, self.dist_range])
+        return R
+
     def deriv(self, e, eta, y, ref, t):
-        l, alp, bet, r = self.l, self.alp, self.bet, self.r
+        l, alp, bet = self.l, self.alp, self.bet
+        R = self.get_R(t)
         e_real = y - ref
 
         if self.noise is True:
@@ -33,12 +40,12 @@ class outerLoop(BaseEnv):
         q = self.get_virtual(t)
         edot = np.zeros((3, 1))
         edot[0, :] = eta[0] + l * alp[0] * (e_real - e[0])
-        edot[1, :] = eta[1] + q + l * alp[1] * (sat(eta[0], r[0]) - e[1])
-        edot[2, :] = l * alp[2] * (sat(eta[1], r[1]) - e[2])
+        edot[1, :] = eta[1] + q + l * alp[1] * (sat(eta[0], R[0]) - e[1])
+        edot[2, :] = l * alp[2] * (sat(eta[1], R[1]) - e[2])
 
         etadot = np.zeros((2, 1))
-        etadot[0, :] = sat(eta[1], r[1]) + q + l**2 * bet[0] * (e_real - e[0])
-        etadot[1, :] = l**2 * bet[1] * (sat(eta[0], r[0]) - e[1])
+        etadot[0, :] = sat(eta[1], R[1]) + q + l**2 * bet[0] * (e_real - e[0])
+        etadot[1, :] = l**2 * bet[1] * (sat(eta[0], R[0]) - e[1])
 
         return edot, etadot
 
@@ -74,20 +81,24 @@ class innerLoop(BaseEnv):
     rho: bound of state x, dx
     virtual input nu = f + b*u
     '''
-    def __init__(self, l, alp, bet, r, K, xi, rho, c, b, g, noise):
+    def __init__(self, l, alp, bet, dist_range, K, xi, rho, c, b, g, noise):
         super().__init__()
         self.x = BaseSystem(np.zeros((3, 1)))
         self.eta = BaseSystem(np.zeros((2, 1)))
         self.lamb = BaseSystem(np.zeros((2, 1)))
 
         self.alp, self.K = alp, K
-        self.l, self.bet, self.r = l, bet, r
+        self.l, self.bet, self.dist_range = l, bet, dist_range
         self.xi, self.rho = xi, rho
         self.c, self.b, self.g = c, b, g
         self.noise = noise
 
+    def get_R(self, t):
+        return np.array([self.rho[1], self.dist_range])
+
     def deriv(self, x, eta, lamb, t, y, ref, f):
-        l, alp, bet, r = self.l, self.alp, self.bet, self.r
+        l, alp, bet = self.l, self.alp, self.bet
+        R = self.get_R(t)
         nu = self.get_virtual(t, ref)
         bound = f + self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
@@ -97,12 +108,12 @@ class innerLoop(BaseEnv):
 
         xdot = np.zeros((3, 1))
         xdot[0, :] = eta[0] + l * alp[0] * (y - x[0])
-        xdot[1, :] = eta[1] + nu_sat + l * alp[1] * (sat(eta[0], r[0]) - x[1])
-        xdot[2, :] = l * alp[2] * (sat(eta[1], r[1]) - x[2])
+        xdot[1, :] = eta[1] + nu_sat + l * alp[1] * (sat(eta[0], R[0]) - x[1])
+        xdot[2, :] = l * alp[2] * (sat(eta[1], R[1]) - x[2])
 
         etadot = np.zeros((2, 1))
-        etadot[0, :] = sat(eta[1], r[1]) + nu_sat + l**2 * bet[0] * (y - x[0])
-        etadot[1, :] = l**2 * bet[1] * (sat(eta[0], r[0]) - x[1])
+        etadot[0, :] = sat(eta[1], R[1]) + nu_sat + l**2 * bet[0] * (y - x[0])
+        etadot[1, :] = l**2 * bet[1] * (sat(eta[0], R[0]) - x[1])
 
         lambdot = np.zeros((2, 1))
         lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
