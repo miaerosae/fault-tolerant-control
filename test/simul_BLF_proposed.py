@@ -12,9 +12,10 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
-import ftc.agents.BLF_pf as BLF
+import ftc.agents.BLF_proposed as BLF
 from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
+import ftc.plotting_comp as comp
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -53,29 +54,29 @@ class Env(BaseEnv):
         self.blf_x = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
                                    params.oL.R, Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[0][0])
+                                   -self.pos_ref[0][0], params.theta)
         self.blf_y = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
                                    params.oL.R, Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[1][0])
+                                   -self.pos_ref[1][0], params.theta)
         self.blf_z = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
                                    params.oL.R, Kz, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[2][0])
+                                   -self.pos_ref[2][0], params.theta)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         self.blf_phi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
-                                     self.plant.g, cond.noise)
+                                     self.plant.g, params.theta, cond.noise)
         self.blf_theta = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
                                        params.iL.dist_range, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[0],
-                                       self.plant.g, cond.noise)
+                                       self.plant.g, params.theta, cond.noise)
         self.blf_psi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
-                                     self.plant.g, cond.noise)
+                                     self.plant.g, params.theta, cond.noise)
 
         self.prev_rotors = np.zeros((4, 1))
 
@@ -262,4 +263,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    main(args)
+    # main(args)
+    comp.exp_plot("data.h5", "data1.h5")

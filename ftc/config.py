@@ -143,9 +143,9 @@ default_settings = fym.parser.parse({
             "l": 2,
             "alp": np.array([3, 3, 2]),
             "bet": np.array([3.98, 0.993]),
-            "rho": np.array([10, 9.1]),
+            "rho": np.array([5, 3.5]),
             "rho_k": 0.3,
-            "dist_range": 5,
+            "R": np.array([5, 5]),
         },
         "pf.iL": {
             "l": 7,
@@ -154,9 +154,10 @@ default_settings = fym.parser.parse({
             "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([40, 80])),
             "c": np.array([20, 20]),
-            "dist_range": 5,
+            "dist_range": 5,  # disturbance saturation value
         },
         "pf.K": np.array([10, 15, 10, 15, 20, 25]),
+        "pf.theta": 0.7,
 
     },
 
