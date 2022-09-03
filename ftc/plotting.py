@@ -9,7 +9,7 @@ from ftc.agents.param import get_sumOfDist
 cfg = ftc.config.load()
 
 
-def exp_plot(loggerpath):
+def exp_plot(loggerpath, pf):
     data, info = fym.load(loggerpath, with_info=True)
     # detection_time = info["detection_time"]
     rotor_min = info["rotor_min"]
@@ -92,8 +92,12 @@ def exp_plot(loggerpath):
     # observation: position error
     plt.figure()
 
-    rho = cfg.agents.BLF.oL.rho
-    rho_k = cfg.agents.BLF.oL.rho_k
+    if pf is True:
+        rho = cfg.agents.BLF.pf.oL.rho
+        rho_k = cfg.agents.BLF.pf.oL.rho_k
+    else:
+        rho = cfg.agents.BLF.oL.rho
+        rho_k = cfg.agents.BLF.oL.rho_k
     pos_bounds = np.zeros((np.shape(data["x"]["pos"][:, 0, 0])[0]))
     for i in range(np.shape(data["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data["t"][i]) + rho[1]
@@ -114,7 +118,10 @@ def exp_plot(loggerpath):
 
     # euler angles
     plt.figure()
-    bound = cfg.agents.BLF.iL.rho[0]
+    if pf is True:
+        bound = cfg.agents.BLF.pf.iL.rho[0]
+    else:
+        bound = cfg.agents.BLF.iL.rho[0]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     ax = plt.subplot(311)
@@ -127,9 +134,9 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k-.", label="Real")
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r--", label="Desired")
         plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
+                 np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
         plt.plot(data["t"],
-                 -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
+                 -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc='upper right')
@@ -140,15 +147,18 @@ def exp_plot(loggerpath):
 
     # angular rates
     plt.figure()
-    bound = cfg.agents.BLF.iL.rho[1]
+    if pf is True:
+        bound = cfg.agents.BLF.pf.iL.rho[1]
+    else:
+        bound = cfg.agents.BLF.iL.rho[1]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
         plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)
     plt.plot(data["t"],
-             np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
+             np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
     plt.plot(data["t"],
-             -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
+             -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Angular rates, deg/s")
     plt.tight_layout()

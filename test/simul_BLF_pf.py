@@ -255,7 +255,7 @@ def main(args):
         Kz = cfg.agents.BLF.Kz.ravel()
         Kang = cfg.agents.BLF.Kang.ravel()
         run(loggerpath, Kxy, Kz, Kang)
-        exp_plot(loggerpath)
+        exp_plot(loggerpath, True)
 
 
 if __name__ == "__main__":

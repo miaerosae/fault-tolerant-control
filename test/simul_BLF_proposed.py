@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -256,12 +256,12 @@ def main(args):
         Kz = cfg.agents.BLF.Kz.ravel()
         Kang = cfg.agents.BLF.Kang.ravel()
         run(loggerpath, Kxy, Kz, Kang)
-        exp_plot(loggerpath)
+        exp_plot(loggerpath, True)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("data.h5", "data1.h5")
+    main(args)
+    # comp.exp_plot("data.h5", "data1.h5")
