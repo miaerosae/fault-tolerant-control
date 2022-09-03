@@ -4,7 +4,7 @@ import numpy as np
 
 
 def func_g(x, theta, delta):
-    delta = 1
+    # return abs(x)**theta * np.sign(x)
     if abs(x) < delta:
         return x / delta**(1-theta)
     else:
@@ -57,6 +57,15 @@ class outerLoop(BaseEnv):
         etadot[0, :] = (sat(eta[1], R[1]) + q
                         + bet[0] * func_g(l**2*(e_real - e[0]), theta[0], delta))
         etadot[1, :] = bet[1] * func_g(l**2*(sat(eta[0], R[0]) - e[1]), theta[1], delta)
+        # edot[0, :] = eta[0] + alp[0] * sat(l*(e_real - e[0]), l*delta)
+        # edot[1, :] = (eta[1] + q
+        #               + alp[1] * sat(l*(sat(eta[0], R[0]) - e[1]), l*delta))
+        # edot[2, :] = alp[2] * sat(l*(sat(eta[1], R[1]) - e[2]), l*delta)
+
+        # etadot = np.zeros((2, 1))
+        # etadot[0, :] = (sat(eta[1], R[1]) + q
+        #                 + bet[0] * sat(l**2*(e_real - e[0]), l**2*delta))
+        # etadot[1, :] = bet[1] * sat(l**2*(sat(eta[0], R[0]) - e[1]), l**2*delta)
 
         return edot, etadot
 
@@ -132,6 +141,15 @@ class innerLoop(BaseEnv):
         etadot[0, :] = (sat(eta[1], R[1]) + nu_sat
                         + bet[0] * func_g(l**2*(y - x[0]), theta[0], delta))
         etadot[1, :] = bet[1] * func_g(l**2*(sat(eta[0], R[0]) - x[1]), theta[1], delta)
+        # xdot[0, :] = eta[0] + alp[0] * sat(l*(y - x[0]), l*delta)
+        # xdot[1, :] = (eta[1] + nu_sat
+        #               + alp[1] * sat(l*(sat(eta[0], R[0]) - x[1]), l*delta))
+        # xdot[2, :] = alp[2] * sat(l*(sat(eta[1], R[1]) - x[2]), l*delta)
+
+        # etadot = np.zeros((2, 1))
+        # etadot[0, :] = (sat(eta[1], R[1]) + nu_sat
+        #                 + bet[0] * sat(l**2*(y - x[0]), l**2*delta))
+        # etadot[1, :] = bet[1] * sat(l**2*(sat(eta[0], R[0]) - x[1]), l**2*delta)
 
         lambdot = np.zeros((2, 1))
         lambdot[0] = - self.c[0]*lamb[0] + lamb[1]

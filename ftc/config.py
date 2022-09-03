@@ -124,7 +124,7 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([10, 10, 10]),
+            "eps": np.array([8, 8, 8]),
             # "eps": np.array([0.05, 0.05, 0.05]),
             "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([30, 90])),
@@ -133,30 +133,30 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        "Kxy": np.array([4, 15, .1]),
-        "Kz": np.array([4, 15, .1]),
-        "Kang": np.array([20, 25, .05]),
+        "Kxy": np.array([2, 30, .0]),
+        "Kz": np.array([2, 30, .0]),
+        "Kang": np.array([20, 25, .00]),
         "theta": 0.7,
 
         # --- peaking-free --- #
         "pf.oL": {
-            "l": 2,
-            "alp": np.array([3, 3, 2]),
+            "l": 5,
+            "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
-            "rho": np.array([5, 3.5]),
-            "rho_k": 0.3,
+            "rho": np.array([1, 0.5]),
+            "rho_k": 0.5,
             "R": np.array([5, 5]),
         },
         "pf.iL": {
             "l": 7,
-            "alp": np.array([3, 3, 2]),
+            "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([40, 80])),
+            "rho": np.deg2rad(np.array([30, 90])),
             "c": np.array([20, 20]),
             "dist_range": 5,  # disturbance saturation value
         },
-        "pf.K": np.array([10, 15, 10, 15, 20, 25]),
+        "pf.K": np.array([2, 30, 2, 30, 20, 25]),
         "pf.theta": 0.7,
 
     },
@@ -173,7 +173,7 @@ default_settings = fym.parser.parse({
         "groundEffect": False,
         "hub": False,
         "gyro": False,
-        "BLF": False,
+        "BLF": True,
     },
 
 

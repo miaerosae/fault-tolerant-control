@@ -49,7 +49,7 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF.pf
-        self.pos_ref = np.vstack([-0, 0, 2])
+        self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
                                    params.oL.R, Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
@@ -80,10 +80,10 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = self.pos_ref
-        # pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
-        #                      np.sin(t/2)*np.sin(np.pi*t/5),
-        #                      -t])
+        # pos_des = self.pos_ref
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
+                             np.sin(t/2)*np.sin(np.pi*t/5),
+                             -t])
         return pos_des
 
     def step(self):
