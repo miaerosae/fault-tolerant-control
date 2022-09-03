@@ -148,7 +148,7 @@ default_settings = fym.parser.parse({
             "R": np.array([5, 5]),
         },
         "pf.iL": {
-            "l": 7,
+            "l": 8,
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,
