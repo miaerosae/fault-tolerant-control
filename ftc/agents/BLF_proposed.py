@@ -55,8 +55,8 @@ class outerLoop(BaseEnv):
 
         etadot = np.zeros((2, 1))
         etadot[0, :] = (sat(eta[1], R[1]) + q
-                        + bet[0] * func_g(l**2*(e_real - e[0]), theta[0], delta))
-        etadot[1, :] = bet[1] * func_g(l**2*(sat(eta[0], R[0]) - e[1]), theta[1], delta)
+                        + bet[0] * l*func_g(l*(e_real - e[0]), theta[0], delta))
+        etadot[1, :] = bet[1] * l*func_g(l*(sat(eta[0], R[0]) - e[1]), theta[1], delta)
         # edot[0, :] = eta[0] + alp[0] * sat(l*(e_real - e[0]), l*delta)
         # edot[1, :] = (eta[1] + q
         #               + alp[1] * sat(l*(sat(eta[0], R[0]) - e[1]), l*delta))
@@ -139,8 +139,8 @@ class innerLoop(BaseEnv):
 
         etadot = np.zeros((2, 1))
         etadot[0, :] = (sat(eta[1], R[1]) + nu_sat
-                        + bet[0] * func_g(l**2*(y - x[0]), theta[0], delta))
-        etadot[1, :] = bet[1] * func_g(l**2*(sat(eta[0], R[0]) - x[1]), theta[1], delta)
+                        + bet[0] * l*func_g(l*(y - x[0]), theta[0], delta))
+        etadot[1, :] = bet[1] * l*func_g(l*(sat(eta[0], R[0]) - x[1]), theta[1], delta)
         # xdot[0, :] = eta[0] + alp[0] * sat(l*(y - x[0]), l*delta)
         # xdot[1, :] = (eta[1] + nu_sat
         #               + alp[1] * sat(l*(sat(eta[0], R[0]) - x[1]), l*delta))

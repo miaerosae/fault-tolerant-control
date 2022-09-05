@@ -9,9 +9,11 @@ from ftc.agents.param import get_sumOfDist
 cfg = ftc.config.load()
 
 
-def exp_plot(loggerpath1, loggerpath2):
+def exp_plot(loggerpath1, loggerpath2, loggerpath3, loggerpath4):
     data1, info = fym.load(loggerpath1, with_info=True)
     data2 = fym.load(loggerpath2)
+    data3 = fym.load(loggerpath3)
+    data4 = fym.load(loggerpath4)
     # detection_time = info["detection_time"]
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
@@ -26,6 +28,8 @@ def exp_plot(loggerpath1, loggerpath2):
         plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
         plt.plot(data1["t"], np.sqrt(data1["rotors"][:, i]), "k-", label="Response")
         plt.plot(data1["t"], np.sqrt(data2["rotors"][:, i]), "b--", label="Response")
+        plt.plot(data1["t"], np.sqrt(data3["rotors"][:, i]), "g--", label="Response")
+        plt.plot(data1["t"], np.sqrt(data4["rotors"][:, i]), "m--", label="Response")
         if i == 0:
             plt.legend(loc='upper right')
     plt.gcf().supxlabel("Time, sec")
@@ -43,6 +47,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["x"]["pos"][:, i, 0], "k-", label="Real")
         plt.plot(data1["t"], data2["x"]["pos"][:, i, 0], "b--", label="Real")
+        plt.plot(data1["t"], data3["x"]["pos"][:, i, 0], "g--", label="Real")
+        plt.plot(data1["t"], data4["x"]["pos"][:, i, 0], "m--", label="Real")
         plt.plot(data1["t"], data1["ref"][:, i, 0], "r-.", label="Desired")
         plt.ylabel(_label)
         if i == 0:
@@ -61,6 +67,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["x"]["vel"][:, i, 0], "k-", label=_label)
         plt.plot(data1["t"], data2["x"]["vel"][:, i, 0], "b--", label=_label)
+        plt.plot(data1["t"], data3["x"]["vel"][:, i, 0], "g--", label=_label)
+        plt.plot(data1["t"], data4["x"]["vel"][:, i, 0], "m--", label=_label)
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Velocity, m/s")
@@ -80,6 +88,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "k-", label="Estimated")
         plt.plot(data1["t"], data2["obs_pos"][:, i, 0], "b--", label="Estimated")
+        plt.plot(data1["t"], data3["obs_pos"][:, i, 0], "g--", label="Estimated")
+        plt.plot(data1["t"], data4["obs_pos"][:, i, 0], "m--", label="Estimated")
         plt.plot(data1["t"], pos_bounds, "c")
         plt.plot(data1["t"], -pos_bounds, "c")
         plt.ylabel(_label)
@@ -97,15 +107,20 @@ def exp_plot(loggerpath1, loggerpath2):
     ax = plt.subplot(311)
     angles1 = np.vstack([quat2angle(data1["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
     angles2 = np.vstack([quat2angle(data2["x"]["quat"][j, :, 0]) for j in range(len(data2["x"]["quat"][:, 0, 0]))])
+    angles3 = np.vstack([quat2angle(data3["x"]["quat"][j, :, 0]) for j in range(len(data2["x"]["quat"][:, 0, 0]))])
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], np.rad2deg(data1["obs_ang"][:, i, 0]), "k-", label="Estimated")
-        plt.plot(data1["t"], np.rad2deg(data1["eulerd"][:, i, 0]), "r-", label="Desired")
-        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k-.", label="Real")
+        # plt.plot(data1["t"], np.rad2deg(data1["eulerd"][:, i, 0]), "r-", label="Desired")
+        # plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k-.", label="Real")
         plt.plot(data1["t"], np.rad2deg(data2["obs_ang"][:, i, 0]), "b--", label="Estimated")
-        plt.plot(data1["t"], np.rad2deg(data2["eulerd"][:, i, 0]), "r--", label="Desired")
-        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b-.", label="Real")
+        # plt.plot(data1["t"], np.rad2deg(data2["eulerd"][:, i, 0]), "r--", label="Desired")
+        # plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b-.", label="Real")
+        plt.plot(data1["t"], np.rad2deg(data3["obs_ang"][:, i, 0]), "g-", label="Estimated")
+        # plt.plot(data1["t"], np.rad2deg(data3["eulerd"][:, i, 0]), "g-", label="Desired")
+        # plt.plot(data1["t"], np.rad2deg(angles3[:, 2-i]), "g-.", label="Real")
+        plt.plot(data1["t"], np.rad2deg(data4["obs_ang"][:, i, 0]), "m-", label="Estimated")
         plt.plot(data1["t"],
                  np.ones((np.size(data1["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "c")
         plt.plot(data1["t"],
@@ -126,6 +141,8 @@ def exp_plot(loggerpath1, loggerpath2):
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
         plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)
         plt.plot(data1["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b"+_ls, label=_label)
+        plt.plot(data1["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g"+_ls, label=_label)
+        plt.plot(data1["t"], np.rad2deg(data4["x"]["omega"][:, i, 0]), "m"+_ls, label=_label)
     plt.plot(data1["t"],
              np.ones((np.size(data1["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[1]), "c")
     plt.plot(data1["t"],
@@ -144,6 +161,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(411+i, sharex=ax)
         plt.plot(data1["t"], data1["virtual_u"][:, i], "k-", label=_label)
         plt.plot(data1["t"], data2["virtual_u"][:, i], "b--", label=_label)
+        plt.plot(data1["t"], data3["virtual_u"][:, i], "g--", label=_label)
+        plt.plot(data1["t"], data4["virtual_u"][:, i], "m--", label=_label)
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Generalized forces")
@@ -166,9 +185,9 @@ def exp_plot(loggerpath1, loggerpath2):
         plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
         plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
         plt.plot(data1["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
+        plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
+        plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
         plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc='upper right')
     plt.gcf().supylabel("dist")
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
@@ -182,6 +201,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["q"][:, i, 0], "k-")
         plt.plot(data1["t"], data2["q"][:, i, 0], "b--")
+        plt.plot(data1["t"], data3["q"][:, i, 0], "g--")
+        plt.plot(data1["t"], data4["q"][:, i, 0], "m--")
         plt.ylabel(_label)
     plt.gcf().supylabel("observer control input")
     plt.gcf().supxlabel("Time, sec")

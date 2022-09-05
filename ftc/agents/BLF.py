@@ -67,10 +67,10 @@ class innerLoop(BaseEnv):
         self.c, self.b, self.g = c, b, g
         self.noise = noise
 
-    def deriv(self, x, lamb, t, y, ref, f):
+    def deriv(self, x, lamb, t, y, ref):
         alp, eps = self.alp, self.eps
         nu = self.get_virtual(t, ref)
-        bound = f + self.b*self.xi
+        bound = self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
         if self.noise is True:
             y = y + np.deg2rad(0.001)*np.random.randn(1)
@@ -99,16 +99,16 @@ class innerLoop(BaseEnv):
             - (rho[1]**2 - z2**2)/(rho[0]**2 - z1**2)*z1 - x[2]
         return nu
 
-    def get_u(self, t, ref, f):
+    def get_u(self, t, ref):
         nu = self.get_virtual(t, ref)
-        bound = f + self.b*self.xi
+        bound = self.b*self.xi
         nu_sat = np.clip(nu, bound[0], bound[1])
-        u = (nu_sat - f) / self.b
+        u = nu_sat / self.b
         return u
 
-    def set_dot(self, t, y, ref, f):
+    def set_dot(self, t, y, ref):
         states = self.observe_list()
-        self.x.dot, self.lamb.dot = self.deriv(*states, t, y, ref, f)
+        self.x.dot, self.lamb.dot = self.deriv(*states, t, y, ref)
 
     def get_obs(self):
         return self.x.state[0]

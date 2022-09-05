@@ -115,8 +115,8 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([5, 5, 5]),
-            # "eps": np.array([0.5, 0.5, 0.5]),
+            # "eps": np.array([5, 5, 5]),
+            "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([1, 0.5]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -124,8 +124,8 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([8, 8, 8]),
-            # "eps": np.array([0.05, 0.05, 0.05]),
+            # "eps": np.array([8, 8, 8]),
+            "eps": np.array([1/8, 1/8, 1/8]),
             "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([30, 90])),
             "c": np.array([20, 20]),
@@ -148,7 +148,7 @@ default_settings = fym.parser.parse({
             "R": np.array([5, 5]),
         },
         "pf.iL": {
-            "l": 8,
+            "l": 16,
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,
@@ -156,7 +156,9 @@ default_settings = fym.parser.parse({
             "c": np.array([20, 20]),
             "dist_range": 5,  # disturbance saturation value
         },
-        "pf.K": np.array([2, 30, 2, 30, 20, 25]),
+        "pf.Kxy": np.array([2, 30]),
+        "pf.Kz": np.array([2, 30]),
+        "pf.Kang": np.array([20, 25]),
         "pf.theta": 0.7,
 
     },
@@ -166,7 +168,7 @@ default_settings = fym.parser.parse({
     "simul_condi": {
         "blade": False,
         # "ext_unc": True,
-        "ext_unc": False,
+        "ext_unc": True,
         "int_unc": False,
         "faultBias": False,
         "noise": False,  # Estimator real value noise
