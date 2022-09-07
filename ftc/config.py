@@ -115,8 +115,8 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([5, 5, 5]),
-            "eps": np.array([1/5, 1/5, 1/5]),
+            "eps": np.array([5, 5, 5]),
+            # "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([1, 0.5]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -124,10 +124,10 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([8, 8, 8]),
-            "eps": np.array([1/8, 1/8, 1/8]),
+            "eps": np.array([8, 8, 8]),
+            # "eps": np.array([1/8, 1/8, 1/8]),
             "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([30, 90])),
+            "rho": np.deg2rad(np.array([45, 100])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
@@ -135,7 +135,7 @@ default_settings = fym.parser.parse({
         "K": np.array([2, 30, 2, 30, 5, 100]),
         "Kxy": np.array([2, 30, .0]),
         "Kz": np.array([2, 30, .0]),
-        "Kang": np.array([20, 25, .00]),
+        "Kang": np.array([30, 16.4, 1.00]),
         "theta": 0.7,
 
         # --- peaking-free --- #
