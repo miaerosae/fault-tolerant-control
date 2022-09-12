@@ -158,8 +158,8 @@ class Env(BaseEnv):
         u4 = self.blf_psi.get_u(t, psid)
 
         # Saturation u1
-        # u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
-        u1 = u1_cmd
+        u1 = np.clip(u1_cmd, 0,
+                     self.plant.rotor_max**2*self.n*cfg.models.multicopter.physPropBy.OS4.b)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
@@ -289,4 +289,4 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
     main(args)
-    # comp.exp_plot("data1.h5", "data.h5")
+    # comp.exp_plot("integ.h5", "normal.h5")

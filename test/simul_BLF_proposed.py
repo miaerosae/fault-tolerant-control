@@ -263,6 +263,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("result_blf.h5", "result_blf_g.h5", "result_blf_pf.h5", "result_blf_proposed.h5")
+    main(args)
+    # comp.exp_plot("result_blf.h5", "result_blf_g.h5", "result_blf_pf.h5", "result_blf_proposed.h5")
     # exp_plot("result_blf_proposed.h5", True)

@@ -136,6 +136,23 @@ def exp_plot(loggerpath):
     plt.tight_layout()
     plt.savefig("angle.png", dpi=300)
 
+    # euler angles error time hist
+    plt.figure(figsize=(9, 7))
+    bound = cfg.agents.BLF.iL.rho[0]
+    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
+
+    ax = plt.subplot(311)
+    angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
+    ax = plt.subplot(311)
+    for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
+        plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0])-np.rad2deg(angles[:, 2-i]), "k-.")
+        plt.ylabel(_label)
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
+    plt.savefig("angle_error.png", dpi=300)
+
     # angular rates
     plt.figure(figsize=(9, 7))
     bound = cfg.agents.BLF.iL.rho[1]
