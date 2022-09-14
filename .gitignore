@@ -1,6 +1,7 @@
 # Custom
 data
 *.h5
+.png
 
 # Created by https://www.toptal.com/developers/gitignore/api/vim,macos,python,windows,visualstudiocode,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,macos,python,windows,visualstudiocode,linux
