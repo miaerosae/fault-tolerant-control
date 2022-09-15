@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W_hexa, get_faulty_input
+from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -130,8 +130,8 @@ class Env(BaseEnv):
     def set_dot(self, t):
         ref = self.get_ref(t)
         dref, ddref = self.get_dref(t)
-        W = get_W_hexa(t, self.fault)
-        What = get_W_hexa(t-self.delay, self.fault)
+        W = get_W(t, self.fault)
+        What = get_W(t-self.delay, self.fault)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
