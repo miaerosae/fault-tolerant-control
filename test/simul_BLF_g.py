@@ -56,19 +56,16 @@ class Env(BaseEnv):
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   cond.noise,
-                                   -self.pos_ref[0][0], params.theta,
-                                   cond.BLF)
+                                   params.oL.c, params.oL.xi, params.theta,
+                                   cond.noise, -self.pos_ref[0][0], cond.BLF)
         self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   cond.noise,
-                                   -self.pos_ref[1][0], params.theta,
-                                   cond.BLF)
-        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kz,
+                                   params.oL.c, params.oL.xi, params.theta,
+                                   cond.noise, -self.pos_ref[1][0], cond.BLF)
+        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   cond.noise,
-                                   -self.pos_ref[2][0], params.theta,
-                                   cond.BLF)
+                                   params.oL.c, params.oL.xi, params.theta,
+                                   cond.noise, -self.pos_ref[2][0], cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         # Kang = np.array([k31, k32, k33])
