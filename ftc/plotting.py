@@ -18,10 +18,10 @@ def exp_plot(loggerpath, pf):
     # FDI
     plt.figure()
 
-    ax = plt.subplot(221)
+    ax = plt.subplot(321)
     for i in range(data["W"].shape[1]):
         if i != 0:
-            plt.subplot(221+i, sharex=ax)
+            plt.subplot(321+i, sharex=ax)
         plt.ylim([0-0.1, 1+0.1])
         plt.plot(data["t"], data["W"][:, i, i], "r--", label="Actual")
         plt.plot(data["t"], data["What"][:, i, i], "k-", label="Estimated")
@@ -34,10 +34,10 @@ def exp_plot(loggerpath, pf):
     # Rotor
     plt.figure()
 
-    ax = plt.subplot(221)
+    ax = plt.subplot(321)
     for i in range(data["rotors"].shape[1]):
         if i != 0:
-            plt.subplot(221+i, sharex=ax)
+            plt.subplot(321+i, sharex=ax)
         plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
         plt.plot(data["t"], np.sqrt(data["rotors"][:, i]), "k-", label="Response")
         plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
