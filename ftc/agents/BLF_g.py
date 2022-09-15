@@ -13,7 +13,8 @@ def func_g(x, theta):
 
 
 class outerLoop(BaseEnv):
-    def __init__(self, alp, eps, K, rho, k, c, xi, theta, noise, init, BLF=True):
+    def __init__(self, alp, eps, K, rho, k, theta, noise, init, BLF=True):
+    # def __init__(self, alp, eps, K, rho, k, c, xi, theta, noise, init, BLF=True):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -21,7 +22,7 @@ class outerLoop(BaseEnv):
 
         self.alp, self.eps, self.K, self.k = alp, eps, K, k
         self.rho_0, self.rho_inf = rho.ravel()
-        self.c, self.xi = c, xi
+        # self.c, self.xi = c, xi
         # self.theta = np.ones((3,)) * theta
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
         self.noise = noise
@@ -38,20 +39,20 @@ class outerLoop(BaseEnv):
             e_real = e_real + 0.001*np.random.randn(1)
 
         q = self.get_virtual(t, ref, *args)
-        q_sat = np.clip(q, self.xi[0], self.xi[1])
+        # q_sat = np.clip(q, self.xi[0], self.xi[1])
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (e_real - e[0]), theta[0])
         edot[1, :] = e[2] + q + alp[1] * func_g(eps**2 * (e_real - e[0]), theta[1])
         edot[2, :] = alp[2] * eps * func_g(eps**2 * (e_real - e[0]), theta[2])
         lambdot = np.zeros((2, 1))
-        lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
-        lambdot[1] = - self.c[1]*lamb[1] + (q_sat - q)
+        # lambdot[0] = - self.c[0]*lamb[0] + lamb[1]
+        # lambdot[1] = - self.c[1]*lamb[1] + (q_sat - q)
         integ_edot = y - ref
         return edot, lambdot, integ_edot
 
     def get_virtual(self, t, ref, *args):
         e = self.e.state
-        lamb = self.lamb.state
+        # lamb = self.lamb.state
         integ_e = self.integ_e.state
         rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
 
