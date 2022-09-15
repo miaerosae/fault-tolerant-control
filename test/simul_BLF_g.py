@@ -13,7 +13,7 @@ import ftc.config
 from ftc.models.multicopter import Multicopter
 from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W, get_faulty_input
+from ftc.agents.param import get_b0, get_W_hexa, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -56,15 +56,15 @@ class Env(BaseEnv):
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   params.oL.c, params.oL.xi, params.theta,
+                                   params.theta,
                                    cond.noise, -self.pos_ref[0][0], cond.BLF)
         self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   params.oL.c, params.oL.xi, params.theta,
+                                   params.theta,
                                    cond.noise, -self.pos_ref[1][0], cond.BLF)
         self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   params.oL.c, params.oL.xi, params.theta,
+                                   params.theta,
                                    cond.noise, -self.pos_ref[2][0], cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
@@ -130,8 +130,8 @@ class Env(BaseEnv):
     def set_dot(self, t):
         ref = self.get_ref(t)
         dref, ddref = self.get_dref(t)
-        W = get_W(t, self.fault)
-        What = get_W(t-self.delay, self.fault)
+        W = get_W_hexa(t, self.fault)
+        What = get_W_hexa(t-self.delay, self.fault)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
