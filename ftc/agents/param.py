@@ -161,3 +161,14 @@ def get_W(t, fault):
 
 def get_faulty_input(W, rotors):
     return W.dot(rotors)
+
+
+def get_W_hexa(t, fault):
+    if fault is True:
+        if t > 10:
+            W1 = 0
+        else:
+            W1 = 1
+        return np.diag([W1, 1, 1, 1, 1, 1])
+    else:
+        return np.diag([1, 1, 1, 1, 1, 1])
