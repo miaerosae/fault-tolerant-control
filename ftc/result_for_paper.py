@@ -58,7 +58,36 @@ def exp_plot(loggerpath, pf):
     plt.tight_layout()
     # plt.savefig("dist.png", dpi=300)
 
-    # 1b) STD for observation error(ESO를 여러 개 비교한 경우)
+    # 1b) disturbance estimation error
+    plt.figure(figsize=(9, 7))
+    ax = plt.subplot(321)
+    for i, _label in enumerate([r"$\tilde{e}_{3x}$", r"$\tilde{e}_{3y}$", r"$\tilde{e}_{3z}$",
+                                r"$\tilde{e}_{3\phi}$", r"$\tilde{e}_{3\theta}$", r"$\tilde{e}_{3\psi}$"]):
+        if i != 0:
+            plt.subplot(321+i, sharex=ax)
+        plt.plot(data["t"], dist_error[i, :], "k", label="Proposed")
+
+        # TODO) ESO 비교군 추가
+
+        if i == 0:
+            plt.ylabel(_label, labelpad=15)
+        elif i == 1:
+            plt.ylabel(_label, labelpad=12)
+        elif i == 2:
+            plt.ylabel(_label, labelpad=20)
+        elif i == 3:
+            plt.ylabel(_label, labelpad=19)
+        elif i == 4:
+            plt.ylabel(_label, labelpad=12)
+        elif i == 5:
+            plt.ylabel(_label, labelpad=0)
+        if i == 0:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
+    # plt.savefig("dist_error.png", dpi=300)
+
+    # 1c) STD for observation error(ESO를 여러 개 비교한 경우)
     for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
                                 r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
         print("proposed controller: " + _label + str(statistics.stdev(dist_error[i, :])))
