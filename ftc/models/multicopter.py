@@ -102,7 +102,7 @@ class Multicopter(BaseEnv):
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
     def __init__(self, pos, vel, quat, omega, blade, ext_unc, int_unc,
-                 hub, gyro, dx=0.0, dy=0.0, dz=0.0, ):
+                 hub, gyro, uncertainty, ground, dx=0.0, dy=0.0, dz=0.0, ):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -126,6 +126,8 @@ class Multicopter(BaseEnv):
         self.int_unc = int_unc
         self.hub = hub
         self.gyro = gyro
+        self.uncertainty = uncertainty
+        self.ground = ground
 
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel, prev_rotors):
         if self.blade is False:
@@ -134,7 +136,13 @@ class Multicopter(BaseEnv):
         else:
             F, M = self.get_FM_wind(rotors, vel, omega, windvel)
 
+        if self.ground is True:
+            F = self.groundEffect(F)
+
         m, g, J = self.m, self.g, self.J
+        if self.uncertainty is True:
+            m = 0.8 * m
+            J = 1.2 * J
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty

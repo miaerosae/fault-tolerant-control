@@ -37,7 +37,8 @@ class Env(BaseEnv):
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
                                  blade=cond.blade, ext_unc=cond.ext_unc,
                                  int_unc=cond.int_unc, hub=cond.hub,
-                                 gyro=cond.gyro
+                                 gyro=cond.gyro, uncertainty=cond.uncertainty,
+                                 ground=cond.groundEffect
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -286,5 +287,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    main(args)
-    # comp.exp_plot("integ.h5", "normal.h5")
+    # main(args)
+    comp.exp_plot("uncert_08_12_g.h5", "uncert_08_12_proposed.h5")

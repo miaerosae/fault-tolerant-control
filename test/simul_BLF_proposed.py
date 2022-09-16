@@ -36,7 +36,8 @@ class Env(BaseEnv):
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
                                  blade=cond.blade, ext_unc=cond.ext_unc,
                                  int_unc=cond.int_unc, hub=cond.hub,
-                                 gyro=cond.gyro
+                                 gyro=cond.gyro, uncertainty=cond.uncertainty,
+                                 ground=cond.groundEffect
                                  )
         self.n = self.plant.mixer.B.shape[1]
 

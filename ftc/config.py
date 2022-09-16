@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.1,
+        "delay": 0.0,
         "threshold": 0.,
     },
 
@@ -171,6 +171,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
+        "uncertainty": True,
         # "ext_unc": True,
         "ext_unc": True,
         "int_unc": False,
