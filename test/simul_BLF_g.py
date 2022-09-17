@@ -35,10 +35,9 @@ class Env(BaseEnv):
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 blade=cond.blade, ext_unc=cond.ext_unc,
-                                 int_unc=cond.int_unc, hub=cond.hub,
-                                 gyro=cond.gyro, uncertainty=cond.uncertainty,
-                                 ground=cond.groundEffect
+                                 cond.blade, cond.ext_unc, cond.int_unc, cond.hub,
+                                 cond.gyro, cond.uncertainty,
+                                 cond.groundEffect, cond.drygen
                                  )
         self.n = self.plant.mixer.B.shape[1]
 

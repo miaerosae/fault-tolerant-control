@@ -3,7 +3,7 @@ import math
 
 import fym
 from fym.core import BaseEnv, BaseSystem
-from fym.utils.rot import dcm2quat, quat2dcm, angle2quat, quat2angle
+from fym.utils.rot import dcm2quat, quat2dcm, angle2quat, quat2angle, angle2dcm
 from ftc.agents.param import get_uncertainties
 
 import ftc.config
@@ -102,7 +102,7 @@ class Multicopter(BaseEnv):
         [1] M. Faessler, A. Franchi, and D. Scaramuzza, “Differential Flatness of Quadrotor Dynamics Subject to Rotor Drag for Accurate Tracking of High-Speed Trajectories,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp. 620–626, Apr. 2018, doi: 10.1109/LRA.2017.2776353.
     """
     def __init__(self, pos, vel, quat, omega, blade, ext_unc, int_unc,
-                 hub, gyro, uncertainty, ground, dx=0.0, dy=0.0, dz=0.0, ):
+                 hub, gyro, uncertainty, ground, drygen, dx=0.0, dy=0.0, dz=0.0, ):
         super().__init__()
         self.pos = BaseSystem(pos)
         self.vel = BaseSystem(vel)
@@ -119,7 +119,12 @@ class Multicopter(BaseEnv):
         self.A_drag = np.diag(np.zeros(3))  # currently ignored
         self.B_drag = np.diag(np.zeros(3))  # currently ignored
         self.D_drag = np.diag([dx, dy, dz])
-        self.mixer = Mixer(d=self.d, c=self.c, b=self.b)
+        if uncertainty is True:
+            c = cfg.model_uncert.del_c * self.c
+            b = cfg.model_uncert.del_b * self.b
+        else:
+            c, b = self.c, self.b
+        self.mixer = Mixer(d=self.d, c=c, b=b)
 
         self.blade = blade
         self.ext_unc = ext_unc
@@ -128,6 +133,7 @@ class Multicopter(BaseEnv):
         self.gyro = gyro
         self.uncertainty = uncertainty
         self.ground = ground
+        self.drygen = drygen
 
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel, prev_rotors):
         if self.blade is False:
@@ -141,21 +147,22 @@ class Multicopter(BaseEnv):
 
         m, g, J = self.m, self.g, self.J
         if self.uncertainty is True:
-            m = 0.8 * m
-            J = 1.2 * J
+            m = cfg.model_uncert.del_m * m
+            J = cfg.model_uncert.del_J * m
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
         ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
         int_pos, int_vel, int_euler, int_omega = self.get_int_uncertainties(t, vel)
         gyro = self.get_gyro(omega, rotors, prev_rotors)
+        drygen = self.get_drygen(t, pos[2], vel, quat)
 
         # wind: vel = vel - windvel
         dpos = vel + ext_pos + int_pos
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
-                + ext_vel + int_vel
+                + ext_vel + int_vel + drygen/m
                 )
         # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
@@ -242,57 +249,98 @@ class Multicopter(BaseEnv):
             u1_d = ratio * u1
         return u1_d
 
-    def get_d(self, W, rotors):
-        rotor_n = rotors.shape[0]
-        fault = W - np.eye(rotor_n)
-        return self.mixer.B.dot(fault.dot(rotors))
+    def get_drygen(self, t, z, vel, quat):
+        if self.drygen is True:
+            var = cfg.physProp
+            rho = self.get_rho(-z)
+            R_bar = abs(angle2dcm(quat2angle(quat)))
+            A = R_bar.dot(np.vstack([var.Au, var.Av, var.Aw]))
+            A = A.ravel()
+            Cd = np.vstack([var.Cdx, var.Cdy, var.Cdz])
+            v_w = self.get_v_w_bar(t) + self.get_v_w_hat()
 
-    def get_Omega(self, f):
-        f = np.clip(f, 0, self.rotor_max)
-        Omega = self.mixer.b_gyro.T.dot(np.sqrt(f / self.mixer.b))
-        return Omega
+            d = - 1 / 2 * rho * Cd * A * (vel-v_w)**2 * np.sign(vel-v_w)
+            return d
+        else:
+            return np.zeros((3,))
 
-    def get_FM_wind(self, f, vel, omega, windvel):
-        relvel = windvel - vel
+    def get_v_w_bar(self, t):
+        var = cfg.wind_dist
+        v1 = np.array([var.vx1, var.vy1, var.vz1])
+        v2 = np.array([var.vx2, var.vy2, var.vz2])
+        if t < var.t1:
+            v_w_bar = v1
+        elif t < var.t2:
+            v_w_bar = (v2+v1)/2 - (v2-v1)/2*np.cos(np.pi*(t-var.t1)/(var.t2-var.t1))
+        else:
+            v_w_bar = v2
+        return v_w_bar
 
-        f = np.clip(f, 0, self.rotor_max)
+    def get_v_w_hat(self, z):
+        sig_w = 0.1 * cfg.wind_dist.W20
+        sig_u = sig_w / (0.177 + 0.000823*(-z))**0.4
+        sig_v = sig_u
+        Lw = - z
+        Lu = - z / (0.177 + 0.000823*(-z))**1.2
+        Lv = Lu
+        return v_w_hat
 
-        # Frame drag
-        F_drag = 1/2 * self.rho * self.CdA * np.linalg.norm(relvel) * relvel
+    def get_rho(self, altitude):
+        pressure = 101325 * (1 - 2.25569e-5 * altitude)**5.25616
+        temperature = 288.14 - 0.00649 * altitude
+        return pressure / (287*temperature)
 
-        # Blade Flapping
-        F_blade = np.zeros((3, 1))
-        M_blade = np.zeros((3, 1))
-        for fi, di in zip(f, self.mixer.d_rotor):
-            di = di[:, None]
-            if fi != 0:
-                Omegai = np.sqrt(fi / self.mixer.b)
-                vr = relvel + np.cross(omega, di, axis=0)
-                mur = np.linalg.norm(vr[:2]) / (Omegai * self.R)
-                psir = np.arctan2(vr[1, 0], vr[0, 0])
-                lambdah = np.sqrt(self.CT / 2)
-                gamma = self.rho * self.a0 * self.ch * self.R**4 / self.Jr
-                v1s = 1 / (1 + mur**2 / 2) * 4 / 3 * (
-                    self.CT / self.sigma * 2 / 3 * mur * gamma / self.a0 + mur)
-                u1s = 1 / (1 - mur**2 / 2) * mur * (
-                    4 * self.thetat - 2 * lambdah**2)
-                alpha1s, beta1s = np.array([
-                    [np.cos(psir), -np.sin(psir)],
-                    [np.sin(psir), np.cos(psir)]
-                ]).dot(np.vstack((u1s, v1s)))
+    # def get_d(self, W, rotors):
+    #     rotor_n = rotors.shape[0]
+    #     fault = W - np.eye(rotor_n)
+    #     return self.mixer.B.dot(fault.dot(rotors))
 
-                ab = np.vstack((
-                    -np.sin(alpha1s),
-                    -np.cos(alpha1s) * np.sin(beta1s),
-                    np.cos(alpha1s) * np.cos(beta1s) - 1))
+    # def get_Omega(self, f):
+    #     f = np.clip(f, 0, self.rotor_max)
+    #     Omega = self.mixer.b_gyro.T.dot(np.sqrt(f / self.mixer.b))
+    #     return Omega
 
-                F_blade += self.mixer.b * Omegai**2 * ab
-                M_blade += np.cross(di, self.mixer.b * Omegai**2 * ab, axis=0)
+    # def get_FM_wind(self, f, vel, omega, windvel):
+    #     relvel = windvel - vel
 
-        F_wind = F_blade + F_drag
-        M_wind = M_blade
+    #     f = np.clip(f, 0, self.rotor_max)
 
-        return F_wind, M_wind
+    #     # Frame drag
+    #     F_drag = 1/2 * self.rho * self.CdA * np.linalg.norm(relvel) * relvel
+
+    #     # Blade Flapping
+    #     F_blade = np.zeros((3, 1))
+    #     M_blade = np.zeros((3, 1))
+    #     for fi, di in zip(f, self.mixer.d_rotor):
+    #         di = di[:, None]
+    #         if fi != 0:
+    #             Omegai = np.sqrt(fi / self.mixer.b)
+    #             vr = relvel + np.cross(omega, di, axis=0)
+    #             mur = np.linalg.norm(vr[:2]) / (Omegai * self.R)
+    #             psir = np.arctan2(vr[1, 0], vr[0, 0])
+    #             lambdah = np.sqrt(self.CT / 2)
+    #             gamma = self.rho * self.a0 * self.ch * self.R**4 / self.Jr
+    #             v1s = 1 / (1 + mur**2 / 2) * 4 / 3 * (
+    #                 self.CT / self.sigma * 2 / 3 * mur * gamma / self.a0 + mur)
+    #             u1s = 1 / (1 - mur**2 / 2) * mur * (
+    #                 4 * self.thetat - 2 * lambdah**2)
+    #             alpha1s, beta1s = np.array([
+    #                 [np.cos(psir), -np.sin(psir)],
+    #                 [np.sin(psir), np.cos(psir)]
+    #             ]).dot(np.vstack((u1s, v1s)))
+
+    #             ab = np.vstack((
+    #                 -np.sin(alpha1s),
+    #                 -np.cos(alpha1s) * np.sin(beta1s),
+    #                 np.cos(alpha1s) * np.cos(beta1s) - 1))
+
+    #             F_blade += self.mixer.b * Omegai**2 * ab
+    #             M_blade += np.cross(di, self.mixer.b * Omegai**2 * ab, axis=0)
+
+    #     F_wind = F_blade + F_drag
+    #     M_wind = M_blade
+
+    #     return F_wind, M_wind
 
 
 if __name__ == "__main__":

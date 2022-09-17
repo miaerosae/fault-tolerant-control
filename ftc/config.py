@@ -64,6 +64,14 @@ default_settings = fym.parser.parse({
             "w_max": 1000,  # max rotor speed
             "h": 2.56e-2,  # CoG to rot. plane
 
+            # for wind disturbances
+            "Au": (0.23/0.2)**2*0.1,
+            "Av": (0.23/0.2)**2*0.1,
+            "Aw": (0.23/0.2)**2*0.2,
+            "Cdx": 0.6,
+            "Cdy": 0.6,
+            "Cdz": 1,
+
             # Parameters from P. Pounds et al., 2010
             "sigma": 0.054,  # Solidity ratio [-]
             # "thetat": np.deg2rad(4.4),  # Blade tip angle [rad]
@@ -181,6 +189,25 @@ default_settings = fym.parser.parse({
         "hub": False,
         "gyro": False,
         "BLF": True,
+    },
+
+    "wind_dist": {
+        "t1": 10,
+        "t2": 20,
+        "vx1": -10,
+        "vx2": -10,
+        "vy1": -12,
+        "vy2": -12,
+        "vz1": -5,
+        "vz2": -8,
+        "W20": 15,
+    },
+
+    "model_uncert": {
+        "del_m": 0.8,
+        "del_J": np.diag([1.2, 1.1, 0.9]),
+        "del_c": 1.1,
+        "del_b": 0.9,
     },
 
 
