@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+import ftc.config
+
+
+cfg = ftc.config.load()
+
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
 plt.rc("axes", grid=True, labelsize=15, titlesize=12)
@@ -9,10 +14,10 @@ plt.rc("legend", fontsize=12)
 
 
 def gain_bound():
-    rho_0, rho_inf, rho_k = 1, 0.5, 0.5
-    rho1, rho2 = 0.7, 1.7
+    rho_inf, rho_k = cfg.agents.BLF.oL.rho[1], cfg.agents.BLF.oL.rho_k
+    rho1, rho2 = cfg.agents.BLF.iL.rho.ravel()
 
-    kI = 1
+    kI = 10
     k2 = np.linspace(1, 30, int(29/0.1))
 
     # outer loop, kD const
@@ -44,7 +49,7 @@ def gain_bound():
     plt.savefig("PID_gain_range_KD1.png", dpi=300)
 
     # outer loop, kP const
-    kP_2 = 60
+    kP_2 = 30
     k1_2 = np.zeros((np.size(k2),))
     k3_2 = np.zeros((np.size(k2),))
     kD_2 = np.zeros((np.size(k2),))

@@ -47,8 +47,8 @@ def exp_plot(loggerpath1, loggerpath2):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["x"]["pos"][:, i, 0], "k-", label="Real")
         plt.plot(data1["t"], data2["x"]["pos"][:, i, 0], "b--", label="Real")
-        # plt.plot(data1["t"], data3["x"]["pos"][:, i, 0], "g--", label="Real")
-        # plt.plot(data1["t"], data4["x"]["pos"][:, i, 0], "m--", label="Real")
+        plt.plot(data1["t"], data1["obs_pos"][:, i, 0]+data1["ref"][:, i, 0], "g--", label="Real")
+        plt.plot(data1["t"], data2["obs_pos"][:, i, 0]+data1["ref"][:, i, 0], "m--", label="Real")
         plt.plot(data1["t"], data1["ref"][:, i, 0], "r-.", label="Desired")
         plt.ylabel(_label)
         if i == 0:

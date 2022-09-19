@@ -260,9 +260,9 @@ class Multicopter(BaseEnv):
             v_w = self.get_v_w_bar(t) + self.get_v_w_hat()
 
             d = - 1 / 2 * rho * Cd * A * (vel-v_w)**2 * np.sign(vel-v_w)
-            return d
+            return d[:, None]
         else:
-            return np.zeros((3,))
+            return np.zeros((3, 1))
 
     def get_v_w_bar(self, t):
         var = cfg.wind_dist
