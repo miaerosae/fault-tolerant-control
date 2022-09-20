@@ -112,6 +112,12 @@ default_settings = fym.parser.parse({
                 "rotor_min": 0,
             },
         },
+        "model_uncert": {
+            "del_m": 0.8,
+            "del_J": np.diag([1.2, 1.1, 0.9]),
+            "del_c": 1.1,
+            "del_b": 0.9,
+        },
     },
 
     # :::::: BLF :::::: #
@@ -123,7 +129,7 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([5, 5, 5]),
+            "eps": np.array([5, 5, 10]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([0.5, 0.1]),
             "rho_k": 0.6,
@@ -179,7 +185,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
-        "uncertainty": True,
+        "uncertainty": False,
         # "ext_unc": True,
         "ext_unc": True,
         "int_unc": False,
@@ -188,6 +194,7 @@ default_settings = fym.parser.parse({
         "groundEffect": False,
         "hub": False,
         "gyro": False,
+        "drygen": False,
         "BLF": True,
     },
 
@@ -201,13 +208,6 @@ default_settings = fym.parser.parse({
         "vz1": -5,
         "vz2": -8,
         "W20": 15,
-    },
-
-    "model_uncert": {
-        "del_m": 0.8,
-        "del_J": np.diag([1.2, 1.1, 0.9]),
-        "del_c": 1.1,
-        "del_b": 0.9,
     },
 
 

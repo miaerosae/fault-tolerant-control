@@ -31,7 +31,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -143,9 +143,9 @@ class Env(BaseEnv):
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
         phid = np.clip(np.arcsin(q[1] * self.plant.m / u1_cmd),
-                       - np.deg2rad(40), np.deg2rad(40))
+                       - np.deg2rad(45), np.deg2rad(45))
         thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
-                         - np.deg2rad(40), np.deg2rad(40))
+                         - np.deg2rad(45), np.deg2rad(45))
         psid = 0
         # phid, thetad, psid = np.deg2rad([10, 0, 0]).ravel()
         eulerd = np.vstack([phid, thetad, psid])
@@ -202,9 +202,9 @@ class Env(BaseEnv):
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]
-        self.blf_x.set_dot(t, x, ref[0], dref[0], ddref[0])
-        self.blf_y.set_dot(t, y, ref[1], dref[1], ddref[1])
-        self.blf_z.set_dot(t, z, ref[2], dref[2], ddref[2])
+        self.blf_x.set_dot(t, x, ref[0], q[0], dref[0], ddref[0])
+        self.blf_y.set_dot(t, y, ref[1], q[1], dref[1], ddref[1])
+        self.blf_z.set_dot(t, z, ref[2], q[2], dref[2], ddref[2])
         self.blf_phi.set_dot(t, euler[0], phid)
         self.blf_theta.set_dot(t, euler[1], thetad)
         self.blf_psi.set_dot(t, euler[2], psid)
@@ -286,5 +286,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("uncert_08_12_g.h5", "uncert_08_12_proposed.h5")
+    main(args)
+    # comp.exp_plot("uncert_08_12_g.h5", "uncert_08_12_proposed.h5")

@@ -28,7 +28,7 @@ class outerLoop(BaseEnv):
         self.noise = noise
         self.BLF = BLF
 
-    def deriv(self, e, lamb, integ_e, y, ref, t, *args):
+    def deriv(self, e, lamb, integ_e, y, ref, t, q, *args):
         alp, eps, theta = self.alp, self.eps, self.theta
         if self.BLF is True:
             e_real = y - ref  # for error-subsystem estimation
@@ -38,7 +38,7 @@ class outerLoop(BaseEnv):
         if self.noise is True:
             e_real = e_real + 0.001*np.random.randn(1)
 
-        q = self.get_virtual(t, ref, *args)
+        # q = self.get_virtual(t, ref, *args)
         # q_sat = np.clip(q, self.xi[0], self.xi[1])
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (e_real - e[0]), theta[0])
@@ -81,9 +81,9 @@ class outerLoop(BaseEnv):
 
         return q
 
-    def set_dot(self, t, y, ref, *args):
+    def set_dot(self, t, y, ref, q, *args):
         states = self.observe_list()
-        dots = self.deriv(*states, y, ref, t, *args)
+        dots = self.deriv(*states, y, ref, t, q, *args)
         self.e.dot, self.lamb.dot, self.integ_e.dot = dots
 
     def get_err(self):
