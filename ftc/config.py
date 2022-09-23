@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.0,
+        "delay": 0.1,
         "threshold": 0.,
     },
 
@@ -131,7 +131,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([5, 5, 10]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "rho": np.array([0.5, 0.1]),
+            "rho": np.array([1.5, 0.5]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
         },
@@ -147,12 +147,12 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        # "Kxy": np.array([2, 30, 10/30/(0.2)**2]),
-        # "Kz": np.array([2, 30, 10/30/(0.2)**2]),
-        # "Kang": np.array([500/30, 30, 10/30/np.deg2rad(45)**2]),
-        "Kxy": np.array([2, 30, 0]),
-        "Kz": np.array([2, 30, 0]),
-        "Kang": np.array([500/30, 30, 0]),
+        "Kxy": np.array([2, 30, 5/30/(0.5)**2]),
+        "Kz": np.array([2, 30, 5/30/(0.5)**2]),
+        "Kang": np.array([500/30, 30, 5/30/np.deg2rad(45)**2]),
+        # "Kxy": np.array([2, 40, 0]),
+        # "Kz": np.array([2, 40, 0]),
+        # "Kang": np.array([500/40, 40, 0]),
         # "Kang": np.array([30, 16.4, 1.00]),
         "theta": 0.7,
 
