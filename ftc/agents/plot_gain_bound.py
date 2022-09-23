@@ -83,8 +83,8 @@ def gain_bound():
     kP_3 = np.zeros((np.size(k2),))
     for i in range(np.size(k2)):
         k1_3[i] = kD_3 - k2[i]
-        k3_3[i] = kI / k2[i] / rho1**2
-        kP_3[i] = 1 / k2[i] * (kI + kD_3*k2[i]**2-k2[i]**3) + rho2**2 / rho1**2
+        k3_3[i] = kI / k2[i]
+        kP_3[i] = (- k2[i]**3 + (kD_3)*k2[i]**2 + kI) / k2[i]
     fig, ax = plt.subplots()
     plt.xlim([0, max(kP_3)])
     ax.plot(kP_3, k1_3, "r-", label=r"$k_1$")
@@ -107,9 +107,9 @@ def gain_bound():
     k3_4 = np.zeros((np.size(k2),))
     kD_4 = np.zeros((np.size(k2),))
     for i in range(np.size(k2)):
-        kD_4[i] = 1 / k2[i]**2 * (k2[i]**3 + (kP_4-rho2**2/rho1**2)*k2[i] - kI)
+        kD_4[i] = ((k2[i]**3 + (kP_4)*k2[i] - kI) / k2[i]**2)
         k1_4[i] = kD_4[i] - k2[i]
-        k3_4[i] = kI / k2[i] / rho1**2
+        k3_4[i] = kI / k2[i]
     fig, ax = plt.subplots()
     plt.xlim([0, max(kD_4)])
     ax.plot(kD_4, k1_4, "r-", label=r"$k_1$")

@@ -104,7 +104,7 @@ class innerLoop(BaseEnv):
     '''
     xi: lower and upper bound of u (moments for my case), [lower, upper]
     rho: bound of state x, dx
-    virtual input nu = f + b*u
+    virtual input nu = b*u
     '''
     def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise, BLF=True):
         super().__init__()
@@ -155,7 +155,7 @@ class innerLoop(BaseEnv):
             ddrho1b = c[0]*dlamb[0] - dlamb[1]
 
             z1 = x[0] - ref - lamb[0]
-            dz1 = x[1] - dref - dlamb
+            dz1 = x[1] - dref - dlamb[0]
 
             xi_1a = z1 / rho1a
             dxi_1a = (dz1*rho1a-z1*drho1a) / (rho1a**2)
@@ -164,7 +164,7 @@ class innerLoop(BaseEnv):
             xi1 = q(z1)*xi_1b + (1-q(z1))*xi_1a
             dxi1 = q(z1)*dxi_1b + (1-q(z1))*dxi_1a
 
-            bar_k1 = ((drho1a/rho1a)**2 + (drho1b/rho1b)**2) ** (1/2)
+            bar_k1 = ((drho1a/rho1a)**2 + (drho1b/rho1b)**2 + 0.1) ** (1/2)
             alpha = - (K[0] + bar_k1)*z1 - c[0]*lamb[0] - K[2]*integ_e*(1-xi1**2)
 
             dbar_k1 = 1 / 2 / bar_k1 * (
@@ -183,7 +183,7 @@ class innerLoop(BaseEnv):
             z2 = x[1] - alpha - lamb[1]
 
             mu1 = q(z1)/(rho1b**2-z1**2) + (1-q(z1))/(rho1a**2-z1**2)
-            bar_k2 = ((drho2a/rho2a)**2 + (drho2b/rho2b)**2) ** (1/2)
+            bar_k2 = ((drho2a/rho2a)**2 + (drho2b/rho2b)**2 + 0.1) ** (1/2)
             nu = - (K[1] + bar_k2)*z2 + dalpha - x[2] - c[1]*lamb[1] - mu1*z1
 
         else:
