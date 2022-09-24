@@ -12,6 +12,13 @@ def func_g(x, theta):
         return np.sign(x) * abs(x)**theta
 
 
+def q(x):
+    if x > 0:
+        return 1
+    else:
+        return 0
+
+
 class outerLoop(BaseEnv):
     def __init__(self, alp, eps, K, rho, k, theta, noise, init, BLF=True):
     # def __init__(self, alp, eps, K, rho, k, c, xi, theta, noise, init, BLF=True):
