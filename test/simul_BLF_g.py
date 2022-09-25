@@ -85,9 +85,10 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
-                             np.sin(t/2)*np.sin(np.pi*t/5),
-                             -t])
+        pos_des = self.pos_ref
+        # pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
+        #                      np.sin(t/2)*np.sin(np.pi*t/5),
+        #                      -t])
         return pos_des
 
     def get_dref(self, t):
@@ -156,8 +157,7 @@ class Env(BaseEnv):
         u4 = self.blf_psi.get_u(t, psid)
 
         # Saturation u1
-        u1 = np.clip(u1_cmd, 0,
-                     self.plant.rotor_max**2*self.n*cfg.models.multicopter.physPropBy.OS4.b)
+        u1 = u1_cmd
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])

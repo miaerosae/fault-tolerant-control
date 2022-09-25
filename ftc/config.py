@@ -37,8 +37,8 @@ default_settings = fym.parser.parse({
         },
 
         # Mixer
-        "mixer.rtype": "quad",
-        # "mixer.rtype": "hexa-x",
+        # "mixer.rtype": "quad",
+        "mixer.rtype": "hexa-x",
 
         # Physical properties
         "physProp": {
@@ -71,7 +71,7 @@ default_settings = fym.parser.parse({
         },
 
         # Physical properties by several authors
-        "modelFrom": "OS4",
+        "modelFrom": "Taeyoung_Lee",
 
         "physPropBy": {
             # Prof. Taeyoung Lee's model for quadrotor UAV [1]
@@ -115,30 +115,30 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([5, 5, 5]),
+            "eps": np.array([5, 5, 10]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "rho": np.array([0.5, 0.1]),
+            "rho": np.array([5, 1]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([25, 25, 25]),
+            "eps": np.array([5, 5, 5])*2,
             # "eps": np.array([1/8, 1/8, 1/8]),
-            "xi": np.array([-1, 1]) * 0.15,
+            "xi": np.array([-100, 100]),
             "rho": np.deg2rad(np.array([45, 130])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "K": np.array([2, 30, 2, 30, 5, 100]),
-        # "Kxy": np.array([2, 30, 10/30/(0.2)**2]),
-        # "Kz": np.array([2, 30, 10/30/(0.2)**2]),
-        # "Kang": np.array([500/30, 30, 10/30/np.deg2rad(45)**2]),
-        "Kxy": np.array([2, 30, 0]),
-        "Kz": np.array([2, 30, 0]),
-        "Kang": np.array([500/30, 30, 0]),
+        "Kxy": np.array([2, 30, 5/30/(1)**2]),
+        "Kz": np.array([2, 30, 5/30/(1)**2]),
+        "Kang": np.array([400/30, 30, 5/30/np.deg2rad(45)**2]),
+        # "Kxy": np.array([2, 30, 0]),
+        # "Kz": np.array([2, 30, 0]),
+        # "Kang": np.array([500/40, 40, 0]),
         # "Kang": np.array([30, 16.4, 1.00]),
         "theta": 0.7,
 
@@ -172,7 +172,7 @@ default_settings = fym.parser.parse({
     "simul_condi": {
         "blade": False,
         # "ext_unc": True,
-        "ext_unc": True,
+        "ext_unc": False,
         "int_unc": False,
         "faultBias": False,
         "noise": False,  # Estimator real value noise
