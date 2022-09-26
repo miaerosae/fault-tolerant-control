@@ -115,8 +115,8 @@ default_settings = fym.parser.parse({
         "model_uncert": {
             "del_m": 1.1,
             "del_J": np.diag([0.9, 1.1, 0.9]),
-            "del_c": 1.1,
-            "del_b": 0.9,
+            "del_c": 1.0,
+            "del_b": 1.0,
         },
     },
 
