@@ -195,6 +195,9 @@ class Env(BaseEnv):
                       (J[2]-J[0]) / J[1] * p_ * r_,
                       (J[0]-J[1]) / J[2] * p_ * q_])
 
+        # get model uncertainty disturbance value
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel,
@@ -212,7 +215,9 @@ class Env(BaseEnv):
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q, f=f,
-                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
+                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
+                    model_uncert_vel=model_uncert_vel,
+                    model_uncert_omega=model_uncert_omega)
 
 
 def run_ray(Kxy, Kz, Kang):

@@ -15,6 +15,7 @@ from ftc.agents.CA import CA
 import ftc.agents.BLF as BLF
 from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
+import ftc.plotting_comp as comp
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -33,9 +34,9 @@ class Env(BaseEnv):
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 blade=cond.blade, ext_unc=cond.ext_unc,
-                                 int_unc=cond.int_unc, hub=cond.hub,
-                                 gyro=cond.gyro
+                                 cond.blade, cond.ext_unc, cond.int_unc, cond.hub,
+                                 cond.gyro, cond.uncertainty,
+                                 cond.groundEffect, cond.drygen
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -132,9 +133,9 @@ class Env(BaseEnv):
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
         phid = np.clip(np.arcsin(q[1] * self.plant.m / u1_cmd),
-                       - np.deg2rad(40), np.deg2rad(40))
+                       - np.deg2rad(45), np.deg2rad(45))
         thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
-                         - np.deg2rad(40), np.deg2rad(40))
+                         - np.deg2rad(45), np.deg2rad(45))
         psid = 0
         eulerd = np.vstack([phid, thetad, psid])
 
@@ -182,6 +183,9 @@ class Env(BaseEnv):
                       (J[2]-J[0]) / J[1] * p_ * r_,
                       (J[0]-J[1]) / J[2] * p_ * q_])
 
+        # get model uncertainty disturbance value
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel
@@ -199,7 +203,9 @@ class Env(BaseEnv):
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q, f=f,
-                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
+                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
+                    model_uncert_vel=model_uncert_vel,
+                    model_uncert_omega=model_uncert_omega)
 
 
 def run_ray(Kxy, Kz, Kang):

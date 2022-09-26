@@ -113,8 +113,8 @@ default_settings = fym.parser.parse({
             },
         },
         "model_uncert": {
-            "del_m": 0.8,
-            "del_J": np.diag([1.2, 1.1, 0.9]),
+            "del_m": 1.1,
+            "del_J": np.diag([0.9, 1.1, 0.9]),
             "del_c": 1.1,
             "del_b": 0.9,
         },
@@ -129,31 +129,26 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([5, 5, 10]),
-            # "eps": np.array([1/5, 1/5, 1/5]),
-            "rho": np.array([1.5, 0.5]),
-            "rho_k": 0.6,
+            # "eps": np.array([5, 5, 5]),
+            "eps": np.array([1/5, 1/5, 1/5]),
+            "rho": np.array([1.0, 0.5]),
+            "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([25, 25, 25]),
-            # "eps": np.array([1/8, 1/8, 1/8]),
+            # "eps": np.array([25, 25, 25]),
+            "eps": np.array([1/25, 1/25, 1/25]),
             "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([45, 130])),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "K": np.array([2, 30, 2, 30, 5, 100]),
         "Kxy": np.array([2, 30, 5/30/(0.5)**2]),
         "Kz": np.array([2, 30, 5/30/(0.5)**2]),
         "Kang": np.array([500/30, 30, 5/30/np.deg2rad(45)**2]),
-        # "Kxy": np.array([2, 40, 0]),
-        # "Kz": np.array([2, 40, 0]),
-        # "Kang": np.array([500/40, 40, 0]),
-        # "Kang": np.array([30, 16.4, 1.00]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -170,13 +165,13 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([45, 100])),
+            "rho": np.deg2rad(np.array([45, 130])),
             "c": np.array([20, 20]),
             "dist_range": 5,  # disturbance saturation value
         },
-        "pf.Kxy": np.array([2, 30]),
-        "pf.Kz": np.array([2, 30]),
-        "pf.Kang": np.array([500/30, 30]),
+        "pf.Kxy": np.array([2, 30, 5/30/(0.5)**2]),
+        "pf.Kz": np.array([2, 30, 5/30/(0.5)**2]),
+        "pf.Kang": np.array([500/30, 30, 5/30/np.deg2rad(45)**2]),
         "pf.theta": 0.7,
 
     },
@@ -185,7 +180,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
-        "uncertainty": False,
+        "uncertainty": True,
         # "ext_unc": True,
         "ext_unc": True,
         "int_unc": False,

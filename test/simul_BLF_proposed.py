@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -172,6 +172,9 @@ class Env(BaseEnv):
                       (J[2]-J[0]) / J[1] * p_ * r_,
                       (J[0]-J[1]) / J[2] * p_ * q_])
 
+        # get model uncertainty disturbance value
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel
@@ -189,7 +192,9 @@ class Env(BaseEnv):
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q, f=f,
-                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
+                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
+                    model_uncert_vel=model_uncert_vel,
+                    model_uncert_omega=model_uncert_omega)
 
 
 def run_ray(Kxy, Kz, Kang):
@@ -255,7 +260,7 @@ def main(args):
         Kxy = cfg.agents.BLF.pf.Kxy.ravel()
         Kz = cfg.agents.BLF.pf.Kz.ravel()
         Kang = cfg.agents.BLF.pf.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        # run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath, True)
 
 
@@ -264,5 +269,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
     main(args)
-    # comp.exp_plot4("result_blf.h5", "result_blf_g.h5", "result_blf_pf.h5", "result_blf_proposed.h5")
+    # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "data.h5")
+    # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "result_comp_ESO_blf_proposed.h5")
     # exp_plot("result_blf_proposed.h5", True)
+    # comp.exp_plot("data.h5", "data1.h5")

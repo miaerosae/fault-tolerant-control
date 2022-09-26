@@ -29,13 +29,13 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
-                                 blade=cond.blade, ext_unc=cond.ext_unc,
-                                 int_unc=cond.int_unc, hub=cond.hub,
-                                 gyro=cond.gyro
+                                 cond.blade, cond.ext_unc, cond.int_unc, cond.hub,
+                                 cond.gyro, cond.uncertainty,
+                                 cond.groundEffect, cond.drygen
                                  )
         self.n = self.plant.mixer.B.shape[1]
 
@@ -171,6 +171,9 @@ class Env(BaseEnv):
                       (J[2]-J[0]) / J[1] * p_ * r_,
                       (J[0]-J[1]) / J[2] * p_ * q_])
 
+        # get model uncertainty disturbance value
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel
@@ -188,7 +191,9 @@ class Env(BaseEnv):
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q, f=f,
-                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd)
+                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
+                    model_uncert_vel=model_uncert_vel,
+                    model_uncert_omega=model_uncert_omega)
 
 
 def run_ray(Kxy, Kz, Kang):
