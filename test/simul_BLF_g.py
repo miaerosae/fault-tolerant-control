@@ -287,7 +287,7 @@ def main(args):
         Kxy = cfg.agents.BLF.Kxy.ravel()
         Kz = cfg.agents.BLF.Kz.ravel()
         Kang = cfg.agents.BLF.Kang.ravel()
-        # run(loggerpath, Kxy, Kz, Kang)
+        run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath, False)
 
 

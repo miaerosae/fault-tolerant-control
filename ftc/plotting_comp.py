@@ -415,10 +415,10 @@ def exp_plot4(loggerpath1, loggerpath2, loggerpath3, loggerpath4):
     for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
                                 r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
         plt.figure()
-        plt.plot(data1["t"], real_dist1[i, :]-data1["dist"][:, i, 0], "r-", label="true")
-        plt.plot(data1["t"], real_dist2[i, :]-data2["dist"][:, i, 0], "r-", label="true")
-        plt.plot(data1["t"], real_dist3[i, :]-data3["dist"][:, i, 0], "r-", label="true")
-        plt.plot(data1["t"], real_dist4[i, :]-data4["dist"][:, i, 0], "r-", label="true")
+        plt.plot(data1["t"], real_dist1[i, :]-data1["dist"][:, i, 0], "k-", label="true")
+        plt.plot(data1["t"], real_dist2[i, :]-data2["dist"][:, i, 0], "b--", label="true")
+        plt.plot(data1["t"], real_dist3[i, :]-data3["dist"][:, i, 0], "g--", label="true")
+        plt.plot(data1["t"], real_dist4[i, :]-data4["dist"][:, i, 0], "m--", label="true")
         plt.ylabel("dist" + _label)
         plt.xlabel("time")
         plt.tight_layout()

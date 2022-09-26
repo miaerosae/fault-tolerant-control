@@ -115,8 +115,8 @@ default_settings = fym.parser.parse({
         "model_uncert": {
             "del_m": 1.1,
             "del_J": np.diag([0.9, 1.1, 0.9]),
-            "del_c": 1.2,
-            "del_b": 0.9,
+            "del_c": 1.0,
+            "del_b": 1.0,
         },
     },
 
@@ -161,7 +161,7 @@ default_settings = fym.parser.parse({
             "R": np.array([5, 5]),
         },
         "pf.iL": {
-            "l": 55,
+            "l": 25,
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,

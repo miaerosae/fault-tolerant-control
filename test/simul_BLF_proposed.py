@@ -270,6 +270,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # main(args)
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "data.h5")
-    # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "result_comp_ESO_blf_proposed.h5")
+    comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "result_comp_ESO_blf_proposed.h5")
     # exp_plot("result_blf_proposed.h5", True)
-    comp.exp_plot("data1.h5", "data.h5")
+    # comp.exp_plot("data1.h5", "data.h5")
