@@ -182,7 +182,6 @@ def exp_plot(loggerpath1, loggerpath2):
                                 r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
-        plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
         plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
         plt.plot(data1["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
         # plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")

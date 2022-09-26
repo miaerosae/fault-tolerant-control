@@ -76,26 +76,30 @@ def get_uncertainties(t, uncertainty):
     uomega = np.zeros((3, 1))
     if uncertainty is True:
         # upos와 ueuler가 어떤 의미가 있지..?
-        upos = np.vstack([
-            0.1*np.cos(0.2*t),
-            0.2*np.sin(0.5*np.pi*t),
-            0.3*np.cos(t),
-        ])
-        uvel = np.vstack([
-            0.1*np.sin(t),
-            0.2*np.sin(np.pi*t),
-            0.2*np.sin(3*t) - 0.1*np.sin(0.5*np.pi*t)
-        ])
-        ueuler = np.vstack([
-            0.2*np.sin(t),
-            0.1*np.cos(np.pi*t+np.pi/4),
-            0.2*np.sin(0.5*np.pi*t),
-        ])
-        uomega = np.vstack([
-            - 0.2*np.sin(0.5*np.pi*t),
-            0.1*np.cos(np.sqrt(2)*t),
-            0.1*np.cos(2*t+1)
-        ])
+        # upos = np.vstack([
+        #     0.1*np.cos(0.2*t),
+        #     0.2*np.sin(0.5*np.pi*t),
+        #     0.3*np.cos(t),
+        # ])
+        # uvel = np.vstack([
+        #     0.1*np.sin(t),
+        #     0.2*np.sin(np.pi*t),
+        #     0.2*np.sin(3*t) - 0.1*np.sin(0.5*np.pi*t)
+        # ])
+        # ueuler = np.vstack([
+        #     0.2*np.sin(t),
+        #     0.1*np.cos(np.pi*t+np.pi/4),
+        #     0.2*np.sin(0.5*np.pi*t),
+        # ])
+        # uomega = np.vstack([
+        #     - 0.2*np.sin(0.5*np.pi*t),
+        #     0.1*np.cos(np.sqrt(2)*t),
+        #     0.1*np.cos(2*t+1)
+        # ])
+        upos = np.ones((3, 1)) * 0.2
+        uvel = np.ones((3, 1)) * 0.1
+        ueuler = np.ones((3, 1)) * 0.1
+        uomega = np.ones((3, 1)) * 0.2
     return upos, uvel, ueuler, uomega
 
 
@@ -112,13 +116,13 @@ def get_sumOfDist(t, condi):
         m1, m2, m3, m4 = get_uncertainties(t, True)
         ext_dist[0:3] = m2
         ext_dist[3:6] = m4
-        int_dist = np.vstack([- 0.1*0.2*np.sin(0.2*t),
-                              0.2*0.5*pi*np.cos(0.5*pi*t),
-                              - 0.3*np.sin(t),
-                              0.2*np.cos(t),
-                              - 0.1*pi*np.sin(pi*t+pi/4),
-                              0.2*0.5*pi*np.cos(0.5*pi*t)])
-        ref_dist = ref_dist + ext_dist + int_dist
+        # int_dist = np.vstack([- 0.1*0.2*np.sin(0.2*t),
+        #                       0.2*0.5*pi*np.cos(0.5*pi*t),
+        #                       - 0.3*np.sin(t),
+        #                       0.2*np.cos(t),
+        #                       - 0.1*pi*np.sin(pi*t+pi/4),
+        #                       0.2*0.5*pi*np.cos(0.5*pi*t)])
+        ref_dist = ref_dist + ext_dist
     return ref_dist
 
 

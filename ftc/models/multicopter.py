@@ -152,7 +152,13 @@ class Multicopter(BaseEnv):
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
-        ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
+        if t > 5:
+            ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
+        else:
+            ext_pos = np.zeros((3, 1))
+            ext_vel = np.zeros((3, 1))
+            ext_euler = np.zeros((3, 1))
+            ext_omega = np.zeros((3, 1))
         int_pos, int_vel, int_euler, int_omega = self.get_int_uncertainties(t, vel)
         gyro = self.get_gyro(omega, rotors, prev_rotors)
         drygen = self.get_drygen(t, pos[2], vel, quat)

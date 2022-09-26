@@ -19,7 +19,7 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.1,
+        "delay": 0.0,
         "threshold": 0.,
     },
 
@@ -115,7 +115,7 @@ default_settings = fym.parser.parse({
         "model_uncert": {
             "del_m": 1.1,
             "del_J": np.diag([0.9, 1.1, 0.9]),
-            "del_c": 1.1,
+            "del_c": 1.2,
             "del_b": 0.9,
         },
     },
@@ -129,8 +129,8 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([5, 5, 5]),
-            "eps": np.array([1/5, 1/5, 1/5]),
+            "eps": np.array([5, 5, 5]),
+            # "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([1.0, 0.5]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -138,8 +138,8 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([25, 25, 25]),
-            "eps": np.array([1/25, 1/25, 1/25]),
+            "eps": np.array([25, 25, 25]),
+            # "eps": np.array([1/25, 1/25, 1/25]),
             "xi": np.array([-1, 1]) * 0.15,
             "rho": np.deg2rad(np.array([45, 130])),
             "c": np.array([20, 20]),
@@ -161,7 +161,7 @@ default_settings = fym.parser.parse({
             "R": np.array([5, 5]),
         },
         "pf.iL": {
-            "l": 25,
+            "l": 55,
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.15,
@@ -180,7 +180,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "blade": False,
-        "uncertainty": True,
+        "uncertainty": False,
         # "ext_unc": True,
         "ext_unc": True,
         "int_unc": False,
