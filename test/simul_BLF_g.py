@@ -20,11 +20,15 @@ from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
 
+# plt.rc("text", usetex=False)
+# plt.rc("lines", linewidth=1.5)
+# plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+# plt.rc("grid", linestyle="--", alpha=0.8)
+# plt.rc("legend", fontsize=15)
 plt.rc("text", usetex=False)
-plt.rc("lines", linewidth=1.5)
-plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+plt.rc("lines", linewidth=1)
+plt.rc("axes", grid=True)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=15)
 
 cfg = ftc.config.load()
 
@@ -283,7 +287,7 @@ def main(args):
         Kxy = cfg.agents.BLF.Kxy.ravel()
         Kz = cfg.agents.BLF.Kz.ravel()
         Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        # run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath, False)
 
 

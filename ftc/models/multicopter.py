@@ -198,31 +198,21 @@ class Multicopter(BaseEnv):
         return dpos, dvel, dquat, domega
 
     def get_model_uncertainty(self, rotors):
-        # calculate real and disturbance value of F, M
-        F_dist, M1, M2, M3 = self.mixer.inverse(rotors)
-        delc = cfg.model_uncert.del_c
-        delb = cfg.model_uncert.del_b
-
-        F_real = 1 / delb * F_dist
-        M1_real = 1 / delb * M1
-        M2_real = 1 / delb * M2
-        M3_real = 1 / delc * M3
-
-        M_real = np.vstack((M1_real, M2_real, M3_real))
-        M_dist = np.vstack((M1, M2, M3))
-
+        F, M1, M2, M3 = self.mixer.inverse(rotors)
+        M = np.vstack((M1, M2, M3))
         e3 = np.vstack((0, 0, 1))
         dcm = quat2dcm(self.quat.state)
         omega = self.omega.state
+
         Jinv_real = np.linalg.inv(self.J)
-        vel_real = (- F_real*dcm.T.dot(e3)/self.m)
-        omega_real = Jinv_real.dot(M_real - np.cross(omega, self.J.dot(omega), axis=0))
+        vel_real = (- F*dcm.T.dot(e3)/self.m)
+        omega_real = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
 
         delm = cfg.model_uncert.del_m
         delJ = cfg.model_uncert.del_J
         Jinv_dist = np.linalg.inv(self.J*delJ)
-        vel_dist = (- F_dist*dcm.T.dot(e3)/(self.m*delm))
-        omega_dist = Jinv_dist.dot(M_dist - np.cross(omega, (self.J*delJ).dot(omega), axis=0))
+        vel_dist = (- F*dcm.T.dot(e3)/(self.m*delm))
+        omega_dist = Jinv_dist.dot(M - np.cross(omega, (self.J*delJ).dot(omega), axis=0))
 
         return vel_dist-vel_real, omega_dist-omega_real
 
