@@ -114,7 +114,6 @@ class Multicopter(BaseEnv):
         for k, v in fym.parser.decode(cfg.physProp).items():
             self.__setattr__(k, v)
 
-        self.Jinv = np.linalg.inv(self.J)
         self.M_gyroscopic = np.zeros((3, 1))
         self.A_drag = np.diag(np.zeros(3))  # currently ignored
         self.B_drag = np.diag(np.zeros(3))  # currently ignored
@@ -148,7 +147,8 @@ class Multicopter(BaseEnv):
         m, g, J = self.m, self.g, self.J
         if self.uncertainty is True:
             m = cfg.model_uncert.del_m * m
-            J = cfg.model_uncert.del_J * m
+            J = cfg.model_uncert.del_J * J
+        Jinv = np.linalg.inv(J)
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
@@ -178,7 +178,7 @@ class Multicopter(BaseEnv):
                  + angle2quat(ext_euler[2]+int_euler[2],
                               ext_euler[1]+int_euler[1],
                               ext_euler[0]+int_euler[0]))
-        domega = self.Jinv.dot(
+        domega = Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)
             + gyro
@@ -190,6 +190,35 @@ class Multicopter(BaseEnv):
             + ext_omega + int_omega
 
         return dpos, dvel, dquat, domega
+
+    def get_model_uncertainty(self, rotors):
+        # calculate real and disturbance value of F, M
+        F_dist, M1, M2, M3 = self.mixer.inverse(rotors)
+        delc = cfg.model_uncert.del_c
+        delb = cfg.model_uncert.del_b
+
+        F_real = 1 / delb * F_dist
+        M1_real = 1 / delb * M1
+        M2_real = 1 / delb * M2
+        M3_real = 1 / delc * M3
+
+        M_real = np.vstack((M1_real, M2_real, M3_real))
+        M_dist = np.vstack((M1, M2, M3))
+
+        e3 = np.vstack((0, 0, 1))
+        dcm = quat2dcm(self.quat.state)
+        omega = self.omega.state
+        Jinv_real = np.linalg.inv(self.J)
+        vel_real = (- F_real*dcm.T.dot(e3)/self.m)
+        omega_real = Jinv_real.dot(M_real - np.cross(omega, self.J.dot(omega), axis=0))
+
+        delm = cfg.model_uncert.del_m
+        delJ = cfg.model_uncert.del_J
+        Jinv_dist = np.linalg.inv(self.J*delJ)
+        vel_dist = (- F_dist*dcm.T.dot(e3)/(self.m*delm))
+        omega_dist = Jinv_dist.dot(M_dist - np.cross(omega, (self.J*delJ).dot(omega), axis=0))
+
+        return vel_dist-vel_real, omega_dist-omega_real
 
     def set_dot(self, t, rotors, windvel=np.zeros((3, 1)),
                 prev_rotors=np.zeros((4, 1))):

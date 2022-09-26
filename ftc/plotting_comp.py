@@ -307,8 +307,8 @@ def exp_plot4(loggerpath1, loggerpath2, loggerpath3, loggerpath4):
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     ax = plt.subplot(311)
-    angles1 = np.vstack([quat2angle(data1["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
-    angles2 = np.vstack([quat2angle(data2["x"]["quat"][j, :, 0]) for j in range(len(data2["x"]["quat"][:, 0, 0]))])
+    # angles1 = np.vstack([quat2angle(data1["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
+    # angles2 = np.vstack([quat2angle(data2["x"]["quat"][j, :, 0]) for j in range(len(data2["x"]["quat"][:, 0, 0]))])
     # angles3 = np.vstack([quat2angle(data3["x"]["quat"][j, :, 0]) for j in range(len(data2["x"]["quat"][:, 0, 0]))])
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
@@ -371,21 +371,55 @@ def exp_plot4(loggerpath1, loggerpath2, loggerpath3, loggerpath4):
     plt.tight_layout()
 
     # disturbance
-    real_dist = np.zeros((6, np.size(data1["t"])))
-    ext_dist = cfg.simul_condi.ext_unc
+    real_dist1 = np.zeros((6, np.size(data1["t"])))
+    ext_dist1 = cfg.simul_condi.ext_unc
     for i in range(np.size(data1["t"])):
         t = data1["t"][i]
-        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+        real_dist1[:, i] = get_sumOfDist(t, ext_dist1).ravel()
+    for i in range(3):
+        real_dist1[i, :] = real_dist1[i, :] + data1["model_uncert_vel"][:, i, 0]
+    for i in range(3):
+        real_dist1[i+3, :] = real_dist1[i+3, :] + data1["f"][:, i, 0] \
+            + data1["model_uncert_omega"][:, i, 0]
+    real_dist2 = np.zeros((6, np.size(data2["t"])))
+    ext_dist2 = cfg.simul_condi.ext_unc
+    for i in range(np.size(data2["t"])):
+        t = data2["t"][i]
+        real_dist2[:, i] = get_sumOfDist(t, ext_dist2).ravel()
+    for i in range(3):
+        real_dist2[i, :] = real_dist2[i, :] + data2["model_uncert_vel"][:, i, 0]
+    for i in range(3):
+        real_dist2[i+3, :] = real_dist2[i+3, :] + data2["f"][:, i, 0] \
+            + data2["model_uncert_omega"][:, i, 0]
+    real_dist3 = np.zeros((6, np.size(data3["t"])))
+    ext_dist3 = cfg.simul_condi.ext_unc
+    for i in range(np.size(data3["t"])):
+        t = data3["t"][i]
+        real_dist3[:, i] = get_sumOfDist(t, ext_dist3).ravel()
+    for i in range(3):
+        real_dist3[i, :] = real_dist3[i, :] + data3["model_uncert_vel"][:, i, 0]
+    for i in range(3):
+        real_dist3[i+3, :] = real_dist3[i+3, :] + data3["f"][:, i, 0] \
+            + data3["model_uncert_omega"][:, i, 0]
+    real_dist4 = np.zeros((6, np.size(data1["t"])))
+    ext_dist4 = cfg.simul_condi.ext_unc
+    for i in range(np.size(data1["t"])):
+        t = data4["t"][i]
+        real_dist4[:, i] = get_sumOfDist(t, ext_dist4).ravel()
+    for i in range(3):
+        real_dist4[i, :] = real_dist4[i, :] + data4["model_uncert_vel"][:, i, 0]
+    for i in range(3):
+        real_dist4[i+3, :] = real_dist4[i+3, :] + data4["f"][:, i, 0] \
+            + data4["model_uncert_omega"][:, i, 0]
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
                                 r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
         plt.figure()
-        plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
-        plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
-        plt.plot(data1["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
-        plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
-        plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
+        plt.plot(data1["t"], real_dist1[i, :]-data1["dist"][:, i, 0], "r-", label="true")
+        plt.plot(data1["t"], real_dist2[i, :]-data2["dist"][:, i, 0], "r-", label="true")
+        plt.plot(data1["t"], real_dist3[i, :]-data3["dist"][:, i, 0], "r-", label="true")
+        plt.plot(data1["t"], real_dist4[i, :]-data4["dist"][:, i, 0], "r-", label="true")
         plt.ylabel("dist" + _label)
         plt.xlabel("time")
         plt.tight_layout()
