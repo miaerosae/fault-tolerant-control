@@ -133,7 +133,10 @@ class innerLoop(BaseEnv):
         K, c, rho = self.K, self.c, self.rho
         x = self.x.state
         lamb = self.lamb.state
-        dlamb = self.lamb.dot
+        if t == 0:
+            dlamb = np.zeros((2, 1))
+        else:
+            dlamb = self.lamb.dot
         integ_e = self.integ_e.state
         dref = 0
 

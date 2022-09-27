@@ -176,7 +176,10 @@ class innerLoop(BaseEnv):
         x = self.x.state
         integ_e = self.integ_e.state
         lamb = self.lamb.state
-        dlamb = self.lamb.dot
+        if t == 0:
+            dlamb = np.zeros((2, 1))
+        else:
+            dlamb = self.lamb.dot
         dref = 0
 
         rho1a = ref + lamb[0] + rho[0]
