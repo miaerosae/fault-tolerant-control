@@ -143,9 +143,12 @@ class Env(BaseEnv):
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
-        phid = np.clip(np.arcsin(q[1] * self.plant.m / u1_cmd),
-                       - np.deg2rad(40), np.deg2rad(40))
-        thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
+        euler = quat2angle(self.plant.quat.state)[::-1]
+        phid = np.clip(np.arcsin((q[1]*np.cos(euler[2]) - q[2]*np.sin(euler[2]))
+                                 * self.plant.m/u1_cmd),
+                       - np.deg2rad(45), np.deg2rad(45))
+        thetad = np.clip(np.arctan((q[0]*np.cos(euler[2]) + q[1]*np.sin(euler[2]))
+                                   / (q[2] - self.plant.g)),
                          - np.deg2rad(40), np.deg2rad(40))
         psid = 0
         # phid, thetad, psid = np.deg2rad([10, 0, 0]).ravel()
@@ -201,7 +204,6 @@ class Env(BaseEnv):
                            prev_rotors=self.prev_rotors
                            )
         x, y, z = self.plant.pos.state.ravel()
-        euler = quat2angle(self.plant.quat.state)[::-1]
         self.blf_x.set_dot(t, x, ref[0], dref[0], ddref[0])
         self.blf_y.set_dot(t, y, ref[1], dref[1], ddref[1])
         self.blf_z.set_dot(t, z, ref[2], dref[2], ddref[2])
