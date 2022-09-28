@@ -129,8 +129,8 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([5, 5, 5]),
-            "eps": np.array([1/5, 1/5, 1/5]),
+            "eps": np.array([5, 5, 5]),
+            # "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([1.0, 0.5]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -138,10 +138,12 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            # "eps": np.array([25, 25, 25]),
-            "eps": np.array([1/25, 1/25, 1/25]),
-            "xi": np.array([-1, 1]) * 0.15,
+            "eps": np.array([25, 25, 25]),
+            # "eps": np.array([1/25, 1/25, 1/25]),
+            "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
+            "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 130])),
+            "rho_psi": np.array([2*np.pi, 2*np.pi]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },

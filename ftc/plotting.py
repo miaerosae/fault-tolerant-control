@@ -120,8 +120,10 @@ def exp_plot(loggerpath, pf):
     plt.figure()
     if pf is True:
         bound = cfg.agents.BLF.pf.iL.rho[0]
+        bound_psi = cfg.agents.BLF.pf.iL.rho_psi[0]
     else:
         bound = cfg.agents.BLF.iL.rho[0]
+        bound_psi = cfg.agents.BLF.iL.rho_psi[0]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     ax = plt.subplot(311)
@@ -133,10 +135,16 @@ def exp_plot(loggerpath, pf):
         plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b-", label="Estimated")
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k-.", label="Real")
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r--", label="Desired")
-        plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
-        plt.plot(data["t"],
-                 -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+        if i != 2:
+            plt.plot(data["t"],
+                     np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+            plt.plot(data["t"],
+                     -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+        else:
+            plt.plot(data["t"],
+                     np.ones((np.size(data["t"])))*np.rad2deg(bound_psi), "c")
+            plt.plot(data["t"],
+                     -np.ones((np.size(data["t"])))*np.rad2deg(bound_psi), "c")
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc='upper right')
@@ -149,16 +157,30 @@ def exp_plot(loggerpath, pf):
     plt.figure()
     if pf is True:
         bound = cfg.agents.BLF.pf.iL.rho[1]
+        bound_psi = cfg.agents.BLF.pf.iL.rho_psi[1]
     else:
         bound = cfg.agents.BLF.iL.rho[1]
+        bound_psi = cfg.agents.BLF.iL.rho_psi[1]
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
+    ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
+        if i != 0:
+            plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k"+_ls, label=_label)
-    plt.plot(data["t"],
-             np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
-    plt.plot(data["t"],
-             -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+        if i != 2:
+            plt.plot(data["t"],
+                     np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+            plt.plot(data["t"],
+                     -np.ones((np.size(data["t"])))*np.rad2deg(bound), "c")
+        else:
+            plt.plot(data["t"],
+                     np.ones((np.size(data["t"])))*np.rad2deg(bound_psi), "c")
+            plt.plot(data["t"],
+                     -np.ones((np.size(data["t"])))*np.rad2deg(bound_psi), "c")
+        plt.ylabel(_label)
+        if i == 0:
+            plt.legend(loc='upper right')
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Angular rates, deg/s")
     plt.tight_layout()
