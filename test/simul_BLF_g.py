@@ -31,7 +31,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -78,7 +78,7 @@ class Env(BaseEnv):
                                        params.iL.c, b[1], self.plant.g, params.theta,
                                        cond.noise, cond.BLF)
         self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
-                                     params.iL.xi, params.iL.rho,
+                                     params.iL.xi_psi, params.iL.rho_psi,
                                      params.iL.c, b[2], self.plant.g, params.theta,
                                      cond.noise, cond.BLF)
 
@@ -147,7 +147,16 @@ class Env(BaseEnv):
         thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
                          - np.deg2rad(45), np.deg2rad(45))
         psid = 0
-        # phid, thetad, psid = np.deg2rad([10, 0, 0]).ravel()
+
+        # m = self.plant.m
+        # u1_cmd = m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
+        # euler = quat2angle(self.plant.quat.state)[::-1]
+        # psid = euler[2]
+        # phid = np.clip(np.arcsin(- m / u1_cmd * (q[2]*np.sin(psid)-q[1]*np.cos(psid))),
+        #                - np.deg2rad(45), np.deg2rad(45))
+        # thetad = np.clip(np.arctan(1 / (q[2] - self.plant.g) * (q[0]*np.cos(psid)+q[1]*np.sin(psid))),
+        #                  - np.deg2rad(45), np.deg2rad(45))
+
         eulerd = np.vstack([phid, thetad, psid])
 
         # Inner-Loop
@@ -244,20 +253,23 @@ def run(loggerpath, Kxy, Kz, Kang):
 
     env.reset()
 
-    while True:
-        env.render()
-        done = env.step()
-
-        if done:
+    try:
+        while True:
+            env.render()
+            done = env.step()
             env_info = {
                 # "detection_time": env.detection_time,
                 "rotor_min": env.plant.rotor_min,
                 "rotor_max": env.plant.rotor_max,
             }
             env.logger.set_info(**env_info)
-            break
 
-    env.close()
+            if done:
+                break
+
+    finally:
+        env.close()
+        exp_plot(loggerpath, False)
 
 
 def main(args):
@@ -277,6 +289,10 @@ def main(args):
             tune.report(score=score)
         tune.run(trainable, config=configs, num_samples=10)
 
+    elif args.with_plot:
+        loggerpath = "data.h5"
+        exp_plot(loggerpath, False)
+
     else:
         loggerpath = "data.h5"
 
@@ -284,12 +300,12 @@ def main(args):
         Kz = cfg.agents.BLF.Kz.ravel()
         Kang = cfg.agents.BLF.Kang.ravel()
         run(loggerpath, Kxy, Kz, Kang)
-        exp_plot(loggerpath, False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
+    parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
     main(args)
     # comp.exp_plot("uncert_08_12_g.h5", "uncert_08_12_proposed.h5")

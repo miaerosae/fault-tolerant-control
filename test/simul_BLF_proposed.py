@@ -30,7 +30,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -121,10 +121,20 @@ class Env(BaseEnv):
         q[2] = self.blf_z.get_virtual(t)
 
         # Inverse solution
-        u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
-        phid = np.arcsin(q[1] * self.plant.m / u1_cmd)
-        thetad = np.arctan(q[0] / (q[2] - self.plant.g))
-        psid = 0
+        # u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
+        # phid = np.arcsin(q[1] * self.plant.m / u1_cmd)
+        # thetad = np.arctan(q[0] / (q[2] - self.plant.g))
+        # psid = 0
+
+        m = self.plant.m
+        u1_cmd = m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
+        euler = quat2angle(self.plant.quat.state)[::-1]
+        psid = euler[2]
+        phid = np.clip(np.arcsin(- m / u1_cmd * (q[2]*np.sin(psid)-q[1]*np.cos(psid))),
+                       - np.deg2rad(45), np.deg2rad(45))
+        thetad = np.clip(np.arctan(1 / (q[2] - self.plant.g) * (q[0]*np.cos(psid)+q[1]*np.sin(psid))),
+                         - np.deg2rad(45), np.deg2rad(45))
+
         eulerd = np.vstack([phid, thetad, psid])
 
         # Inner-Loop
@@ -260,7 +270,7 @@ def main(args):
         Kxy = cfg.agents.BLF.pf.Kxy.ravel()
         Kz = cfg.agents.BLF.pf.Kz.ravel()
         Kang = cfg.agents.BLF.pf.Kang.ravel()
-        # run(loggerpath, Kxy, Kz, Kang)
+        run(loggerpath, Kxy, Kz, Kang)
         exp_plot(loggerpath, True)
 
 
