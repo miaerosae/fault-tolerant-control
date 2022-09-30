@@ -143,14 +143,14 @@ default_settings = fym.parser.parse({
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 130])),
-            "rho_psi": np.array([2*np.pi, 2*np.pi]),
+            "rho_psi": np.array([-np.inf, np.inf]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "Kxy": np.array([2, 30, 5/30/(0.5)**2]),
         "Kz": np.array([2, 30, 5/30/(0.5)**2]),
-        "Kang": np.array([500/30, 30, 5/30/np.deg2rad(45)**2]),
+        "Kang": np.array([900/30, 30, 5/30/np.deg2rad(45)**2]),
         "theta": 0.7,
 
         # --- peaking-free --- #

@@ -125,7 +125,7 @@ def get_sumOfDist(t, condi):
 def get_W(t, fault):
     if fault is True:
         if t > 10:
-            W1 = 0.5
+            W1 = 0.0
         # elif t > 3:
         #     W1 = (- 40/17**2 * (t+14) * (t-20) + 40) * 0.01
         else:
