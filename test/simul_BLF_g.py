@@ -1,5 +1,8 @@
-import ray
 from ray import tune
+import os
+import json
+from ray.air import CheckpointConfig, RunConfig
+from ray.tune.search.hyperopt import HyperOptSearch
 import argparse
 import numpy as np
 from numpy import sin, cos
@@ -30,7 +33,7 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self, Kxy, Kz, Kang):
+    def __init__(self, config):
         super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
@@ -51,33 +54,38 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
-        # Kxy = np.array([k11, k12, k13])
-        # Kz = np.array([k21, k22, k23])
+        k11 = config["k11"]
+        k12 = config["k12"]
+        k13 = config["k13"]
+        k21 = config["k21"]
+        k22 = config["k22"]
+        k23 = config["k23"]
+        Kxy = np.array([k11, k12, k13])
         self.pos_ref = np.vstack([-0, 0, 0])
-        self.blf_x = BLF.outerLoop(params.oL.alp, params.oL.eps[0], Kxy,
+        self.blf_x = BLF.outerLoop(params.oL.alp, config["eps11"], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    params.theta,
                                    cond.noise, -self.pos_ref[0][0], cond.BLF)
-        self.blf_y = BLF.outerLoop(params.oL.alp, params.oL.eps[1], Kxy,
+        self.blf_y = BLF.outerLoop(params.oL.alp, config["eps12"], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    params.theta,
                                    cond.noise, -self.pos_ref[1][0], cond.BLF)
-        self.blf_z = BLF.outerLoop(params.oL.alp, params.oL.eps[2], Kxy,
+        self.blf_z = BLF.outerLoop(params.oL.alp, config["eps13"], Kxy,
                                    params.oL.rho, params.oL.rho_k,
                                    params.theta,
                                    cond.noise, -self.pos_ref[2][0], cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        # Kang = np.array([k31, k32, k33])
-        self.blf_phi = BLF.innerLoop(params.iL.alp, params.iL.eps[0], Kang,
+        Kang = np.array([k21, k22, k23])
+        self.blf_phi = BLF.innerLoop(params.iL.alp, config["eps21"], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g, params.theta,
                                      cond.noise, cond.BLF)
-        self.blf_theta = BLF.innerLoop(params.iL.alp, params.iL.eps[1], Kang,
+        self.blf_theta = BLF.innerLoop(params.iL.alp, config["eps22"], Kang,
                                        params.iL.xi, params.iL.rho,
                                        params.iL.c, b[1], self.plant.g, params.theta,
                                        cond.noise, cond.BLF)
-        self.blf_psi = BLF.innerLoop(params.iL.alp, params.iL.eps[2], Kang,
+        self.blf_psi = BLF.innerLoop(params.iL.alp, config["eps23"], Kang,
                                      params.iL.xi_psi, params.iL.rho_psi,
                                      params.iL.c, b[2], self.plant.g, params.theta,
                                      cond.noise, cond.BLF)
@@ -103,7 +111,9 @@ class Env(BaseEnv):
         return dref, ddref
 
     def step(self):
-        *_, done = self.update()
+        env_info, done = self.update()
+        return done, env_info
+        # *_, done = self.update()
 
         # Stop condition
         # omega = self.plant.omega.state
@@ -121,7 +131,7 @@ class Env(BaseEnv):
         #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
         #         done = True
 
-        return done
+        # return done
 
     def get_windvel(self, t):
         pi = np.pi
@@ -229,25 +239,8 @@ class Env(BaseEnv):
                     model_uncert_omega=model_uncert_omega)
 
 
-def run_ray(Kxy, Kz, Kang):
-    env = Env(Kxy, Kz, Kang)
-    env.reset()
-
-    while True:
-        env.render()
-        done = env.step()
-
-        if done:
-            break
-
-    time = env.clock.get()
-    env.close()
-
-    return time
-
-
-def run(loggerpath, Kxy, Kz, Kang):
-    env = Env(Kxy, Kz, Kang)
+def run(loggerpath, params):
+    env = Env(params)
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
 
@@ -256,38 +249,102 @@ def run(loggerpath, Kxy, Kz, Kang):
     try:
         while True:
             env.render()
-            done = env.step()
-            env_info = {
-                # "detection_time": env.detection_time,
-                "rotor_min": env.plant.rotor_min,
-                "rotor_max": env.plant.rotor_max,
-            }
-            env.logger.set_info(**env_info)
+            done, env_info = env.step()
+            env.logger.record(env=env_info)
+            # env_info = {
+            #     # "detection_time": env.detection_time,
+            #     "rotor_min": env.plant.rotor_min,
+            #     "rotor_max": env.plant.rotor_max,
+            # }
+            # env.logger.set_info(**env_info)
 
             if done:
                 break
 
     finally:
         env.close()
-        exp_plot(loggerpath, False)
+        return
 
 
 def main(args):
     if args.with_ray:
-        configs = {
-            "k11": tune.uniform(1, 10),
-            "k12": tune.uniform(1, 10),
-            "k21": tune.uniform(1, 20),
-            "k22": tune.uniform(1, 20),
-            "k31": tune.uniform(1, 20),
-            "k32": tune.uniform(1, 20),
-        }
+        def objective(config):
+            np.seterr(all="raise")
+            env = Env(config)
 
-        def trainable(configs):
-            score = run_ray(configs["k11"], configs["k12"], configs["k21"],
-                            configs["k22"], configs["k31"], configs["k32"])
-            tune.report(score=score)
-        tune.run(trainable, config=configs, num_samples=10)
+            env.reset()
+            tf = 0
+            try:
+                while True:
+                    done, env_info = env.step()
+                    tf = env.info["t"]
+
+                    if done:
+                        break
+
+            finally:
+                return {"tf": tf}
+
+        config = {
+            "k11": tune.uniform(1.01, 5),
+            "k12": tune.uniform(20, 40),
+            "k13": tune.uniform(0, 2),
+            "k21": tune.uniform(10, 30),
+            "k22": tune.uniform(10, 30),
+            "k23": tune.uniform(0, 2),
+            "eps11": tune.uniform(1.01, 5),
+            "eps12": tune.uniform(1.01, 5),
+            "eps13": tune.uniform(1.01, 5),
+            "eps21": tune.uniform(15, 35),
+            "eps22": tune.uniform(15, 35),
+            "eps23": tune.uniform(15, 35),
+        }
+        current_best_params = [{
+            "k11": 2,
+            "k12": 30,
+            "k13": 5/30/(0.5)**2,
+            "k21": 500/30,
+            "k22": 30,
+            "k23": 5/30/np.deg2rad(45)**2,
+            "eps11": 5,
+            "eps12": 5,
+            "eps13": 10,
+            "eps21": 25,
+            "eps22": 25,
+            "eps23": 25,
+        }]
+        search = HyperOptSearch(
+            metric="tf",
+            mode="max",
+            points_to_evaluate=current_best_params,
+        )
+        tuner = tune.Tuner(
+            tune.with_resources(
+                objective,
+                # resources={"cpu": os.cpu_count()},
+                resources={"cpu": 12},
+            ),
+            param_space=config,
+            tune_config=tune.TuneConfig(
+                num_samples=1000,
+                search_alg=search,
+            ),
+            run_config=RunConfig(
+                name="train_run",
+                local_dir="data/ray_results",
+                verbose=1,
+                checkpoint_config=CheckpointConfig(
+                    num_to_keep=5,
+                    checkpoint_score_attribute="tf",
+                    checkpoint_score_order="max",
+                ),
+            ),
+        )
+        results = tuner.fit()
+        config = results.get_best_result(metric="tf", mode="max").config
+        with open("data/ray_results/train_run/best_config.json", "w") as f:
+            json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
+        return
 
     elif args.with_plot:
         loggerpath = "data.h5"
@@ -295,11 +352,23 @@ def main(args):
 
     else:
         loggerpath = "data.h5"
+        params = {
+            "k11": cfg.agents.BLF.Kxy[0],
+            "k12": cfg.agents.BLF.Kxy[1],
+            "k13": cfg.agents.BLF.Kxy[2],
+            "k21": cfg.agents.BLF.Kang[0],
+            "k22": cfg.agents.BLF.Kang[1],
+            "k23": cfg.agents.BLF.Kang[2],
+            "eps11": cfg.agents.BLF.oL.eps[0],
+            "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
+        }
 
-        Kxy = cfg.agents.BLF.Kxy.ravel()
-        Kz = cfg.agents.BLF.Kz.ravel()
-        Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        run(loggerpath, params)
+        exp_plot(loggerpath, False)
 
 
 if __name__ == "__main__":
