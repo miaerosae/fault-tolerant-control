@@ -34,7 +34,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, config):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -48,7 +48,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = True
+        self.fault = False
         self.delay = cfg.faults.manager.delay
 
         # Define agents
@@ -95,9 +95,13 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
+        if t < 10:
+            z = -t
+        else:
+            z = t
         pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5)*np.cos(np.pi/4),
                              np.sin(t/2)*np.sin(np.pi*t/5)*np.cos(np.pi/4),
-                             -t])
+                             z])
         return pos_des
 
     def get_dref(self, t):
