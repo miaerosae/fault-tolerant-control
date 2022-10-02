@@ -143,7 +143,7 @@ default_settings = fym.parser.parse({
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 130])),
-            "rho_psi": np.array([-np.inf, np.inf]),
+            "rho_psi": np.array([45, 130]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },

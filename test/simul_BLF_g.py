@@ -34,7 +34,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, config):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -54,6 +54,8 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
+        self.rho_pos = params.oL.rho[1]
+        self.rho_ang = params.iL.rho
         k11 = config["k11"]
         k12 = config["k12"]
         k13 = config["k13"]
@@ -93,8 +95,8 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
-                             np.sin(t/2)*np.sin(np.pi*t/5),
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5)*np.cos(np.pi/4),
+                             np.sin(t/2)*np.sin(np.pi*t/5)*np.cos(np.pi/4),
                              -t])
         return pos_des
 
@@ -112,24 +114,24 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        return done, env_info
         # *_, done = self.update()
 
         # Stop condition
-        # omega = self.plant.omega.state
-        # for dang in omega:
-        #     if abs(dang) > np.deg2rad(80):
-        #         done = True
-        # err_pos = np.array([self.blf_x.e.state[0],
-        #                     self.blf_y.e.state[0],
-        #                     self.blf_z.e.state[0]])
-        # for err in err_pos:
-        #     if abs(err) > 10:
-        #         done = True
-
-        # for rotor in self.rotors_cmd:
-        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
-        #         done = True
+        euler = quat2angle(self.plant.quat.state)
+        for de in euler:
+            if abs(de) > self.rho_ang[0]:
+                done = True
+        omega = self.plant.omega.state
+        for dang in omega:
+            if abs(dang) > self.rho_ang[1]:
+                done = True
+        err_pos = np.array([self.blf_x.e.state[0],
+                            self.blf_y.e.state[0],
+                            self.blf_z.e.state[0]])
+        for err in err_pos:
+            if abs(err) > self.rho_pos:
+                done = True
+        return done, env_info
 
         # return done
 
@@ -250,13 +252,13 @@ def run(loggerpath, params):
         while True:
             env.render()
             done, env_info = env.step()
-            env.logger.record(env=env_info)
-            # env_info = {
-            #     # "detection_time": env.detection_time,
-            #     "rotor_min": env.plant.rotor_min,
-            #     "rotor_max": env.plant.rotor_max,
-            # }
-            # env.logger.set_info(**env_info)
+            # env.logger.record(env=env_info)
+            env_info = {
+                # "detection_time": env.detection_time,
+                "rotor_min": env.plant.rotor_min,
+                "rotor_max": env.plant.rotor_max,
+            }
+            env.logger.set_info(**env_info)
 
             if done:
                 break
@@ -286,15 +288,15 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": tune.uniform(1.01, 5),
-            "k12": tune.uniform(20, 40),
-            "k13": tune.uniform(0, 2),
-            "k21": tune.uniform(10, 30),
-            "k22": tune.uniform(10, 30),
-            "k23": tune.uniform(0, 2),
-            "eps11": tune.uniform(1.01, 5),
-            "eps12": tune.uniform(1.01, 5),
-            "eps13": tune.uniform(1.01, 5),
+            "k11": tune.uniform(0.1, 40),
+            "k12": tune.uniform(0.1, 40),
+            "k13": tune.uniform(0.1, 40),
+            "k21": tune.uniform(0.1, 40),
+            "k22": tune.uniform(0.1, 40),
+            "k23": tune.uniform(0.1, 40),
+            "eps11": tune.uniform(1.1, 7),
+            "eps12": tune.uniform(1.1, 7),
+            "eps13": tune.uniform(1.1, 10),
             "eps21": tune.uniform(15, 35),
             "eps22": tune.uniform(15, 35),
             "eps23": tune.uniform(15, 35),
@@ -321,8 +323,8 @@ def main(args):
         tuner = tune.Tuner(
             tune.with_resources(
                 objective,
-                # resources={"cpu": os.cpu_count()},
-                resources={"cpu": 12},
+                resources={"cpu": os.cpu_count()},
+                # resources={"cpu": 12},
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
