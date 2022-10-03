@@ -160,7 +160,7 @@ default_settings = fym.parser.parse({
             "bet": np.array([3.98, 0.993]),
             "rho": np.array([1, 0.5]),
             "rho_k": 0.5,
-            "R": np.array([5, 5]),
+            "R": np.array([1, 0.5]),
         },
         "pf.iL": {
             "l": 25,
