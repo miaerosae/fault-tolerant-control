@@ -129,7 +129,7 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([5, 5, 5]),
+            "eps": np.array([5, 5, 5])*2,
             # "eps": np.array([1/5, 1/5, 1/5]),
             "rho": np.array([1.0, 0.5]),
             "rho_k": 0.5,
@@ -148,7 +148,7 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([2, 30, 5/30/(0.5)**2]),
+        "Kxy": np.array([2, 30, 5/30/(0.5)**2])/2,
         "Kz": np.array([2, 30, 5/30/(0.5)**2]),
         "Kang": np.array([900/30, 30, 5/30/np.deg2rad(45)**2]),
         "theta": 0.7,
