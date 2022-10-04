@@ -34,7 +34,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, config):
-        super().__init__(dt=0.01, max_t=15)
+        super().__init__(dt=0.01, max_t=10)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -48,7 +48,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
 
         # Define agents
@@ -117,20 +117,20 @@ class Env(BaseEnv):
         # *_, done = self.update()
 
         # Stop condition
-        euler = quat2angle(self.plant.quat.state)
-        for de in euler:
-            if abs(de) > self.rho_ang[0]:
-                done = True
-        omega = self.plant.omega.state
-        for dang in omega:
-            if abs(dang) > self.rho_ang[1]:
-                done = True
-        err_pos = np.array([self.blf_x.e.state[0],
-                            self.blf_y.e.state[0],
-                            self.blf_z.e.state[0]])
-        for err in err_pos:
-            if abs(err) > self.rho_pos:
-                done = True
+        # euler = quat2angle(self.plant.quat.state)
+        # for de in euler:
+        #     if abs(de) > self.rho_ang[0]:
+        #         done = True
+        # omega = self.plant.omega.state
+        # for dang in omega:
+        #     if abs(dang) > self.rho_ang[1]:
+        #         done = True
+        # err_pos = np.array([self.blf_x.e.state[0],
+        #                     self.blf_y.e.state[0],
+        #                     self.blf_z.e.state[0]])
+        # for err in err_pos:
+        #     if abs(err) > self.rho_pos:
+        #         done = True
         return done, env_info
 
         # return done
@@ -379,4 +379,4 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
     main(args)
-    # comp.exp_plot("uncert_08_12_g.h5", "uncert_08_12_proposed.h5")
+    # comp.exp_plot("data.h5", "data1.h5")
