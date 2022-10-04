@@ -136,18 +136,18 @@ def get_W(t, fault):
         else:
             W2 = 1
 
-        # if t > 11:
-        #     W3 = 0.3
-        # elif t > 6:
-        #     W3 = 0.7/25*(t-11)**2 + 0.3
-        # else:
-        #     W3 = 1
+        if t > 11:
+            W3 = 0.3
+        elif t > 6:
+            W3 = 0.7/25*(t-11)**2 + 0.3
+        else:
+            W3 = 1
 
         # if t > 25:
         #     W4 = 0.5
         # else:
         #     W4 = 1
-        W = np.diag([W1, W2, 1, 1])
+        W = np.diag([W1, W2, W3, 1])
 
     # else:
     #     if t > 3:
