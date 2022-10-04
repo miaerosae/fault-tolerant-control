@@ -131,7 +131,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             "eps": np.array([20, 20, 20]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "rho": np.array([1.0, 0.5]),
+            "rho": np.array([1.0, 0.3]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
