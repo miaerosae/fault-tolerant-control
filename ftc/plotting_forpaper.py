@@ -4,7 +4,7 @@ import fym
 from fym.utils.rot import angle2quat, quat2angle
 from ftc.agents.param import get_uncertainties
 import ftc.config
-from ftc.agents.param import get_sumOfDist
+from ftc.agents.param import get_sumOfDist, get_W
 
 cfg = ftc.config.load()
 
@@ -18,10 +18,14 @@ def exp_plot(loggerpath):
     # FDI
     plt.figure(figsize=(6, 4.5))
 
+    W = np.zeros((np.size(data["t"]), 4, 4))
+    for i in range(np.size(data["t"])):
+        t = data["t"][i]
+        W[i, :, :] = get_W(t, True)
     name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
     for i in range(data["W"].shape[1]):
         plt.ylim([0-0.1, 1+0.1])
-        plt.plot(data["t"], data["W"][:, i, i], "--", label=name[i])
+        plt.plot(data["t"], W[:, i, i], "--", label=name[i])
     plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
     plt.ylabel(r"$\lambda_i$, i=1, 2, 3, 4")
     plt.xlabel("Time, sec")
@@ -151,7 +155,7 @@ def exp_plot(loggerpath):
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
-    plt.savefig("angle_error.png", dpi=300)
+    # plt.savefig("angle_error.png", dpi=300)
 
     # angular rates
     plt.figure(figsize=(9, 7))
@@ -204,7 +208,7 @@ def exp_plot(loggerpath):
             plt.ylabel(_label, labelpad=0)
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
-    plt.savefig("forces.png", dpi=300)
+    # plt.savefig("forces.png", dpi=300)
 
     # disturbance
     plt.figure(figsize=(9, 7))
@@ -214,6 +218,10 @@ def exp_plot(loggerpath):
     for i in range(np.size(data["t"])):
         t = data["t"][i]
         real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    for i in range(3):
+        real_dist[i, :] = real_dist[i, :] + data["model_uncert_vel"][:, i, 0]
+    for i in range(3):
+        real_dist[i+3, :] = real_dist[i+3, :] + data["model_uncert_omega"][:, i, 0]
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
