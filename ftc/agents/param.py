@@ -161,3 +161,16 @@ def get_W(t, fault):
 
 def get_faulty_input(W, rotors):
     return W.dot(rotors)
+
+
+def get_PID_gain(param):
+    kpos = param.Kxy
+    kang = param.Kang
+    rhoinf = param.oL.rho[1]
+    kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 - 1/rhoinf**2
+    kD1 = kpos[0] + kpos[1]
+    kI1 = kpos[1]*kpos[2]*rhoinf**2
+    kP2 = kang[0]*kang[1] + kang[2]
+    kD2 = kang[0] + kang[1]
+    kI2 = kang[1]*kang[2]
+    return np.array([kP1, kD1, kI1]), np.array([kP2, kD2, kI2])
