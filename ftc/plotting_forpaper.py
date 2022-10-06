@@ -18,14 +18,10 @@ def exp_plot(loggerpath):
     # FDI
     plt.figure(figsize=(6, 4.5))
 
-    W = np.zeros((np.size(data["t"]), 4, 4))
-    for i in range(np.size(data["t"])):
-        t = data["t"][i]
-        W[i, :, :] = get_W(t, True)
     name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
     for i in range(data["W"].shape[1]):
         plt.ylim([0-0.1, 1+0.1])
-        plt.plot(data["t"], W[:, i, i], "--", label=name[i])
+        plt.plot(data["t"], data["W"][:, i, i], "--", label=name[i])
     plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
     plt.ylabel(r"$\lambda_i$, i=1, 2, 3, 4")
     plt.xlabel("Time, sec")
