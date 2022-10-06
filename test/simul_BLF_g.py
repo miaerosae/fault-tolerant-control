@@ -3,6 +3,7 @@ import os
 import json
 from ray.air import CheckpointConfig, RunConfig
 from ray.tune.search.hyperopt import HyperOptSearch
+from ray.tune import CLIReporter
 import argparse
 import numpy as np
 from numpy import sin, cos
@@ -19,6 +20,7 @@ import ftc.agents.BLF_g as BLF
 from ftc.agents.param import get_b0, get_W, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
+import ftc.plotting_forpaper as pfp
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -34,7 +36,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, config):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -117,20 +119,20 @@ class Env(BaseEnv):
         # *_, done = self.update()
 
         # Stop condition
-        # euler = quat2angle(self.plant.quat.state)
-        # for de in euler:
-        #     if abs(de) > self.rho_ang[0]:
-        #         done = True
-        # omega = self.plant.omega.state
-        # for dang in omega:
-        #     if abs(dang) > self.rho_ang[1]:
-        #         done = True
-        # err_pos = np.array([self.blf_x.e.state[0],
-        #                     self.blf_y.e.state[0],
-        #                     self.blf_z.e.state[0]])
-        # for err in err_pos:
-        #     if abs(err) > self.rho_pos:
-        #         done = True
+        euler = quat2angle(self.plant.quat.state)
+        for de in euler:
+            if abs(de) > self.rho_ang[0]:
+                done = True
+        omega = self.plant.omega.state
+        for dang in omega:
+            if abs(dang) > self.rho_ang[1]:
+                done = True
+        err_pos = np.array([self.blf_x.e.state[0],
+                            self.blf_y.e.state[0],
+                            self.blf_z.e.state[0]])
+        for err in err_pos:
+            if abs(err) > self.rho_pos:
+                done = True
         return done, env_info
 
         # return done
@@ -335,6 +337,13 @@ def main(args):
                 name="train_run",
                 local_dir="data/ray_results",
                 verbose=1,
+                progress_reporter=CLIReporter(
+                    parameter_columns=list(config.keys())[:3],
+                    max_progress_rows=3,
+                    metric="tf",
+                    mode="max",
+                    sort_by_metric=True,
+                ),
                 checkpoint_config=CheckpointConfig(
                     num_to_keep=5,
                     checkpoint_score_attribute="tf",
@@ -380,3 +389,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args)
     # comp.exp_plot("data.h5", "data1.h5")
+    # pfp.exp_plot("data.h5")
