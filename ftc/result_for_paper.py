@@ -340,7 +340,7 @@ def exp_plot(loggerpath, pf):
     # 6a) rotor input comparison
     plt.figure(figsize=(7, 5))
 
-    name = [r"$\omega_1$", r"$\omega_2$", r"$\omega_3$", r"$\omega_4$"]
+    name = [r"$\Omega_1$", r"$\Omega_2$", r"$\Omega_3$", r"$\Omega_4$"]
     ax = plt.subplot(221)
     for i in range(data["rotors"].shape[1]):
         if i != 0:
