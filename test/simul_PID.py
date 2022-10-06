@@ -16,9 +16,8 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-from ftc.agents.CA import CA
 import ftc.agents.PID as PID
-from ftc.agents.param import get_b0, get_W, get_faulty_input, get_PID_gain
+from ftc.agents.param import get_b0, get_faulty_input, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -34,8 +33,8 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self, kpos, kang):
-        super().__init__(dt=0.01, max_t=20)
+    def __init__(self, config):
+        super().__init__(dt=cfg.simul_condi.dt, max_t=cfg.simul_condi.max_t)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -51,55 +50,66 @@ class Env(BaseEnv):
         # Define faults
         self.fault = False
         self.delay = cfg.faults.manager.delay
+        self.fault_time = cfg.faults.manager.fault_time
+        self.fault_index = cfg.faults.manager.fault_index
+        self.LoE = cfg.faults.manager.LoE
 
         # Define agents
-        self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
         self.pos_ref = np.vstack([-0, 0, 0])
+        kpos = np.array([config["k11"], config["k12"], config["k13"]])
+        kang = np.array([config["k21"], config["k22"], config["k23"]])
+        self.kpos, self.kang = kpos, kang
+        # kpos, kang = get_PID_gain(params)
         kP, kD, kI = kpos.ravel()
-        self.blf_x = PID.PIDController(params.oL.alp, params.oL.eps[0], params.theta,
+        self.blf_x = PID.PIDController(params.oL.alp, config["eps11"], params.theta,
                                        -self.pos_ref[0][0], kP, kD, kI, "pos")
-        self.blf_y = PID.PIDController(params.oL.alp, params.oL.eps[1], params.theta,
+        self.blf_y = PID.PIDController(params.oL.alp, config["eps12"], params.theta,
                                        -self.pos_ref[1][0], kP, kD, kI, "pos")
-        self.blf_z = PID.PIDController(params.oL.alp, params.oL.eps[2], params.theta,
+        self.blf_z = PID.PIDController(params.oL.alp, config["eps13"], params.theta,
                                        -self.pos_ref[2][0], kP, kD, kI, "pos")
         kP, kD, kI = kang.ravel()
-        self.blf_phi = PID.PIDController(params.oL.alp, params.iL.eps[0], params.theta,
+        self.blf_phi = PID.PIDController(params.oL.alp, config["eps21"], params.theta,
                                          0, kP, kD, kI, "ang")
-        self.blf_theta = PID.PIDController(params.oL.alp, params.iL.eps[1], params.theta,
+        self.blf_theta = PID.PIDController(params.oL.alp, config["eps22"], params.theta,
                                            0, kP, kD, kI, "ang")
-        self.blf_psi = PID.PIDController(params.oL.alp, params.iL.eps[2], params.theta,
+        self.blf_psi = PID.PIDController(params.oL.alp, config["eps23"], params.theta,
                                          0, kP, kD, kI, "ang")
 
+        self.integ_epos = BaseSystem(shape=(3, 1))
+        self.integ_eang = BaseSystem(shape=(3, 1))
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = self.pos_ref
-        # pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
-        #                      np.sin(t/2)*np.sin(np.pi*t/5),
-        #                      -t])
-        return pos_des
+        # pos_des = self.pos_ref
+        # posd_des = np.zeros((3, 1))
+        pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
+                             np.sin(t/2)*np.sin(np.pi*t/5),
+                             -t])
+        pi = np.pi
+        dref = np.vstack([1/2*np.cos(t/2)*np.cos(pi*t/5)-pi/5*np.sin(t/2)*np.sin(pi*t/5),
+                          1/2*np.cos(t/2)*np.sin(pi*t/5)+pi/5*np.sin(t/2)*np.cos(pi*t/5),
+                          -1])
+        return pos_des, dref
 
     def step(self):
-        *_, done = self.update()
+        env_info, done = self.update()
 
         # Stop condition
-        # omega = self.plant.omega.state
-        # for dang in omega:
-        #     if abs(dang) > np.deg2rad(80):
-        #         done = True
-        # err_pos = np.array([self.blf_x.e.state[0],
-        #                     self.blf_y.e.state[0],
-        #                     self.blf_z.e.state[0]])
-        # for err in err_pos:
-        #     if abs(err) > 10:
-        #         done = True
-
-        for rotor in self.prev_rotors:
-            if rotor > self.plant.rotor_max + 5:
+        ang = np.array(quat2angle(self.plant.quat.state))
+        for ai in ang:
+            if abs(ai) > np.deg2rad(45):
+                done = True
+        omega = self.plant.omega.state
+        for dang in omega:
+            if abs(dang) > np.deg2rad(150):
                 done = True
 
-        return done
+        # for rotor in self.prev_rotors:
+        #     if rotor > self.plant.rotor_max + 5:
+        #         done = True
+
+        return done, env_info
 
     def get_faultBias(self, t):
         if self.fault_bias is True:
@@ -111,17 +121,30 @@ class Env(BaseEnv):
             delta = np.zeros((4, 4))
         return delta
 
+    def get_W(self, t):
+        W = np.diag([1., 1., 1., 1.])
+        if self.fault is True:
+            index = self.fault_index
+            for i in range(np.size(self.fault_time)):
+                if t > self.fault_time[i]:
+                    W[index[i], index[i]] = self.LoE[i]
+        return W
+
     def set_dot(self, t):
-        ref = self.get_ref(t)
-        W = get_W(t, self.fault)
-        What = get_W(t-self.delay, self.fault)
+        ref, dref = self.get_ref(t)
+        W = self.get_W(t)
+        What = self.get_W(t-self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
-        q = np.zeros((3, 1))
-        q[0] = self.blf_x.get_control(0)
-        q[1] = self.blf_y.get_control(0)
-        q[2] = self.blf_z.get_control(0)
+        epos = self.plant.pos.state - ref
+        eposd = self.plant.vel.state - dref
+        eposi = self.integ_epos.state
+        q = - (self.kpos[0]*epos + self.kpos[1]*eposd + self.kpos[2]*eposi)
+        # q = np.zeros((3, 1))
+        # q[0] = self.blf_x.get_control(ref[0], dref[0])
+        # q[1] = self.blf_y.get_control(ref[1], dref[1])
+        # q[2] = self.blf_z.get_control(ref[2], dref[2])
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -133,17 +156,20 @@ class Env(BaseEnv):
         eulerd = np.vstack([phid, thetad, psid])
 
         # Inner-Loop
-        u2 = self.blf_phi.get_control(phid)
-        u3 = self.blf_theta.get_control(thetad)
-        u4 = self.blf_psi.get_control(psid)
+        eang = np.vstack(quat2angle(self.plant.quat.state)[::-1]) - eulerd
+        eangd = self.plant.omega.state - np.zeros((3, 1))
+        eangi = self.integ_eang.state
+        u2, u3, u4 = - (self.kang[1]*eang + self.kang[1]*eangd + self.kang[2]*eangi).ravel()
+        # u2 = self.blf_phi.get_control(phid, 0)
+        # u3 = self.blf_theta.get_control(thetad, 0)
+        # u4 = self.blf_psi.get_control(psid, 0)
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
-        rotors_cmd = self.CA.get(What).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
@@ -186,19 +212,36 @@ class Env(BaseEnv):
                            )
         x, y, z = self.plant.pos.state.ravel()
         euler = quat2angle(self.plant.quat.state)[::-1]
-        self.blf_x.set_dot(t, x, ref[0])
-        self.blf_y.set_dot(t, y, ref[1])
-        self.blf_z.set_dot(t, z, ref[2])
-        self.blf_phi.set_dot(t, euler[0], phid)
-        self.blf_theta.set_dot(t, euler[1], thetad)
-        self.blf_psi.set_dot(t, euler[2], psid)
+        self.blf_x.set_dot(t, x, ref[0], dref[0])
+        self.blf_y.set_dot(t, y, ref[1], dref[1])
+        self.blf_z.set_dot(t, z, ref[2], dref[2])
+        self.blf_phi.set_dot(t, euler[0], phid, 0)
+        self.blf_theta.set_dot(t, euler[1], thetad, 0)
+        self.blf_psi.set_dot(t, euler[2], psid, 0)
+        self.integ_epos.dot = epos
+        self.integ_eang.dot = eang
 
-        return dict(t=t, x=self.plant.observe_dict(), What=What,
-                    rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist, q=q, f=f,
-                    obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
-                    model_uncert_vel=model_uncert_vel,
-                    model_uncert_omega=model_uncert_omega)
+        env_info = {
+            "t": t,
+            "x": self.plant.observe_dict(),
+            "What": What,
+            "rotors": rotors,
+            "rotors_cmd": rotors_cmd,
+            "W": W,
+            "ref": ref,
+            "virtual_u": forces,
+            "dist": dist,
+            "q": q,
+            "f": f,
+            "obs_pos": obs_pos,
+            "obs_ang": obs_ang,
+            "eulerd": eulerd,
+            "model_uncert_vel": model_uncert_vel,
+            "model_uncert_omega": model_uncert_omega
+        }
+        return env_info
+
+        return dict()
 
 
 def run_ray(Kxy, Kz, Kang):
@@ -218,8 +261,8 @@ def run_ray(Kxy, Kz, Kang):
     return time
 
 
-def run(loggerpath, Kxy, Kz, Kang):
-    env = Env(Kxy, Kz, Kang)
+def run(loggerpath, config):
+    env = Env(config)
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
 
@@ -227,15 +270,15 @@ def run(loggerpath, Kxy, Kz, Kang):
 
     while True:
         env.render()
-        done = env.step()
+        done, env_info = env.step()
+        env_info = {
+            # "detection_time": env.detection_time,
+            "rotor_min": env.plant.rotor_min,
+            "rotor_max": env.plant.rotor_max,
+        }
+        env.logger.set_info(**env_info)
 
         if done:
-            env_info = {
-                # "detection_time": env.detection_time,
-                "rotor_min": env.plant.rotor_min,
-                "rotor_max": env.plant.rotor_max,
-            }
-            env.logger.set_info(**env_info)
             break
 
     env.close()
@@ -253,7 +296,7 @@ def main(args):
             try:
                 while True:
                     done, env_info = env.step()
-                    tf = env.info["t"]
+                    tf = env_info["t"]
 
                     if done:
                         break
@@ -264,10 +307,16 @@ def main(args):
         config = {
             "k11": tune.uniform(1, 400),
             "k12": tune.uniform(1, 400),
-            "k13": tune.uniform(1, 400),
+            "k13": tune.uniform(1, 100),
             "k21": tune.uniform(1, 400),
             "k22": tune.uniform(1, 400),
-            "k23": tune.uniform(1, 400),
+            "k23": tune.uniform(1, 100),
+            "eps11": tune.uniform(1.1, 20),
+            "eps12": tune.uniform(1.1, 20),
+            "eps13": tune.uniform(1.1, 20),
+            "eps21": tune.uniform(5, 40),
+            "eps22": tune.uniform(5, 40),
+            "eps23": tune.uniform(5, 40),
         }
         current_best_params = [{
             "k11": 2,
@@ -276,6 +325,12 @@ def main(args):
             "k21": 500/30,
             "k22": 30,
             "k23": 5/30/np.deg2rad(45)**2,
+            "eps11": 5,
+            "eps12": 5,
+            "eps13": 5,
+            "eps21": 25,
+            "eps22": 25,
+            "eps23": 25,
         }]
         search = HyperOptSearch(
             metric="tf",
@@ -290,7 +345,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=1000,
+                num_samples=10000,
                 search_alg=search,
             ),
             run_config=RunConfig(
@@ -320,16 +375,23 @@ def main(args):
     elif args.with_plot:
         exp_plot(loggerpath, False)
     else:
+
+        kpos, kang = get_PID_gain(cfg.agents.BLF)
         params = {
-            "k11": cfg.agents.BLF.Kxy[0],
-            "k12": cfg.agents.BLF.Kxy[1],
-            "k13": cfg.agents.BLF.Kxy[2],
-            "k21": cfg.agents.BLF.Kang[0],
-            "k22": cfg.agents.BLF.Kang[1],
-            "k23": cfg.agents.BLF.Kang[2],
+            "k11": kpos[0],
+            "k12": kpos[1],
+            "k13": kpos[2],
+            "k21": kang[0],
+            "k22": kang[1],
+            "k23": kang[2],
+            "eps11": cfg.agents.BLF.oL.eps[0],
+            "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
         }
-        kpos, kang = get_PID_gain(params)
-        run(loggerpath, kpos, kang)
+        run(loggerpath, params)
         exp_plot(loggerpath, False)
 
 

@@ -108,7 +108,7 @@ class innerLoop(BaseEnv):
     '''
     def __init__(self, alp, eps, K, xi, rho, c, b, g, theta, noise, BLF=True):
         super().__init__()
-        self.x = BaseSystem(np.zeros((3, 1)))
+        self.x = BaseSystem(shape=(3, 1))
         self.lamb = BaseSystem(np.zeros((2, 1)))
         self.integ_e = BaseSystem(np.zeros((1,)))
 

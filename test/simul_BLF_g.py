@@ -15,9 +15,8 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-from ftc.agents.CA import CA
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_W, get_faulty_input
+from ftc.agents.param import get_b0, get_faulty_input
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -36,7 +35,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, config):
-        super().__init__(dt=0.01, max_t=20)
+        super().__init__(dt=cfg.simul_condi.dt, max_t=cfg.simul_condi.max_t)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -52,9 +51,11 @@ class Env(BaseEnv):
         # Define faults
         self.fault = True
         self.delay = cfg.faults.manager.delay
+        self.fault_time = cfg.faults.manager.fault_time
+        self.fault_index = cfg.faults.manager.fault_index
+        self.LoE = cfg.faults.manager.LoE
 
         # Define agents
-        self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
         self.rho_pos = params.oL.rho[1]
         self.rho_ang = params.iL.rho
@@ -116,36 +117,22 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        # *_, done = self.update()
-
-        # Stop condition
-        euler = quat2angle(self.plant.quat.state)
-        for de in euler:
-            if abs(de) > self.rho_ang[0]:
-                done = True
-        omega = self.plant.omega.state
-        for dang in omega:
-            if abs(dang) > self.rho_ang[1]:
-                done = True
-        err_pos = np.array([self.blf_x.e.state[0],
-                            self.blf_y.e.state[0],
-                            self.blf_z.e.state[0]])
-        for err in err_pos:
-            if abs(err) > self.rho_pos:
-                done = True
         return done, env_info
 
-        # return done
-
-    def get_windvel(self, t):
-        pi = np.pi
-        return 0.5*np.sin(pi*t+1)
+    def get_W(self, t):
+        W = np.diag([1., 1., 1., 1.])
+        if self.fault is True:
+            index = self.fault_index
+            for i in range(np.size(self.fault_time)):
+                if t > self.fault_time[i]:
+                    W[index[i], index[i]] = self.LoE[i]
+        return W
 
     def set_dot(self, t):
         ref = self.get_ref(t)
         dref, ddref = self.get_dref(t)
-        W = get_W(t, self.fault)
-        What = get_W(t-self.delay, self.fault)
+        W = self.get_W(t)
+        What = self.get_W(t-self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -184,8 +171,7 @@ class Env(BaseEnv):
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
-        rotors_cmd = self.CA.get(What).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
@@ -281,7 +267,7 @@ def main(args):
             try:
                 while True:
                     done, env_info = env.step()
-                    tf = env.info["t"]
+                    tf = env_info["t"]
 
                     if done:
                         break

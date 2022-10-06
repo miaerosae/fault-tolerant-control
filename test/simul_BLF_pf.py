@@ -11,9 +11,8 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-from ftc.agents.CA import CA
 import ftc.agents.BLF_pf as BLF
-from ftc.agents.param import get_b0, get_W, get_faulty_input
+from ftc.agents.param import get_b0, get_faulty_input
 from ftc.plotting import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
@@ -29,7 +28,7 @@ cfg = ftc.config.load()
 
 class Env(BaseEnv):
     def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=10)
+        super().__init__(dt=cfg.simul_condi.dt, max_t=cfg.simul_condi.max_t)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -45,9 +44,11 @@ class Env(BaseEnv):
         # Define faults
         self.fault = True
         self.delay = cfg.faults.manager.delay
+        self.fault_time = cfg.faults.manager.fault_time
+        self.fault_index = cfg.faults.manager.fault_index
+        self.LoE = cfg.faults.manager.LoE
 
         # Define agents
-        self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF.pf
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
@@ -107,10 +108,19 @@ class Env(BaseEnv):
 
         return done
 
+    def get_W(self, t):
+        W = np.diag([1., 1., 1., 1.])
+        if self.fault is True:
+            index = self.fault_index
+            for i in range(np.size(self.fault_time)):
+                if t > self.fault_time[i]:
+                    W[index[i], index[i]] = self.LoE[i]
+        return W
+
     def set_dot(self, t):
         ref = self.get_ref(t)
-        W = get_W(t, self.fault)
-        What = get_W(t-self.delay, self.fault)
+        W = self.get_W(t)
+        What = self.get_W(t-self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -137,8 +147,7 @@ class Env(BaseEnv):
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
-        # rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
-        rotors_cmd = self.CA.get(What).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
