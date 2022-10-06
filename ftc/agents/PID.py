@@ -51,7 +51,7 @@ class PIDController(BaseEnv):
             ed = e - self.e_record
             self.e_record = e
         ei = self.ei.state
-        return - (self.kP*e + self.kD*ed + self.kI*ei)
+        return - (self.kP*e + self.kD*ed + self.kI*ei) - self.e.state[2]
 
     def get_obs(self):
         return self.e.state[0]

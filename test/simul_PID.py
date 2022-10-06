@@ -1,3 +1,10 @@
+from ray import tune
+import os
+import json
+from ray.air import CheckpointConfig, RunConfig
+from ray.tune.search.hyperopt import HyperOptSearch
+from ray.tune import CLIReporter
+
 import argparse
 import numpy as np
 from numpy import sin, cos
@@ -27,8 +34,8 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self, Kxy, Kz, Kang):
-        super().__init__(dt=0.01, max_t=5)
+    def __init__(self, kpos, kang):
+        super().__init__(dt=0.01, max_t=20)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
         self.plant = Multicopter(init.pos, init.vel, init.quat, init.omega,
@@ -48,10 +55,8 @@ class Env(BaseEnv):
         # Define agents
         self.CA = CA(self.plant.mixer.B)
         params = cfg.agents.BLF
-        kpos, kang = get_PID_gain(params)
-        kP, kD, kI = kpos.ravel()
-        # kP, kD, kI = 1, 0, 0
         self.pos_ref = np.vstack([-0, 0, 0])
+        kP, kD, kI = kpos.ravel()
         self.blf_x = PID.PIDController(params.oL.alp, params.oL.eps[0], params.theta,
                                        -self.pos_ref[0][0], kP, kD, kI, "pos")
         self.blf_y = PID.PIDController(params.oL.alp, params.oL.eps[1], params.theta,
@@ -90,9 +95,9 @@ class Env(BaseEnv):
         #     if abs(err) > 10:
         #         done = True
 
-        # for rotor in self.rotors_cmd:
-        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
-        #         done = True
+        for rotor in self.prev_rotors:
+            if rotor > self.plant.rotor_max + 5:
+                done = True
 
         return done
 
@@ -238,18 +243,99 @@ def run(loggerpath, Kxy, Kz, Kang):
 
 def main(args):
     loggerpath = "data.h5"
-    if args.with_plot:
+    if args.with_ray:
+        def objective(config):
+            np.seterr(all="raise")
+            env = Env(config)
+
+            env.reset()
+            tf = 0
+            try:
+                while True:
+                    done, env_info = env.step()
+                    tf = env.info["t"]
+
+                    if done:
+                        break
+
+            finally:
+                return {"tf": tf}
+
+        config = {
+            "k11": tune.uniform(1, 400),
+            "k12": tune.uniform(1, 400),
+            "k13": tune.uniform(1, 400),
+            "k21": tune.uniform(1, 400),
+            "k22": tune.uniform(1, 400),
+            "k23": tune.uniform(1, 400),
+        }
+        current_best_params = [{
+            "k11": 2,
+            "k12": 30,
+            "k13": 5/30/(0.5)**2,
+            "k21": 500/30,
+            "k22": 30,
+            "k23": 5/30/np.deg2rad(45)**2,
+        }]
+        search = HyperOptSearch(
+            metric="tf",
+            mode="max",
+            points_to_evaluate=current_best_params,
+        )
+        tuner = tune.Tuner(
+            tune.with_resources(
+                objective,
+                # resources={"cpu": os.cpu_count()},
+                resources={"cpu": 12},
+            ),
+            param_space=config,
+            tune_config=tune.TuneConfig(
+                num_samples=1000,
+                search_alg=search,
+            ),
+            run_config=RunConfig(
+                name="train_run",
+                local_dir="data/ray_results",
+                verbose=1,
+                progress_reporter=CLIReporter(
+                    parameter_columns=list(config.keys())[:3],
+                    max_progress_rows=3,
+                    metric="tf",
+                    mode="max",
+                    sort_by_metric=True,
+                ),
+                checkpoint_config=CheckpointConfig(
+                    num_to_keep=5,
+                    checkpoint_score_attribute="tf",
+                    checkpoint_score_order="max",
+                ),
+            ),
+        )
+        results = tuner.fit()
+        config = results.get_best_result(metric="tf", mode="max").config
+        with open("data/ray_results/train_run/best_config.json", "w") as f:
+            json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
+        return
+
+    elif args.with_plot:
         exp_plot(loggerpath, False)
     else:
-        Kxy = cfg.agents.BLF.Kxy.ravel()
-        Kz = cfg.agents.BLF.Kz.ravel()
-        Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        params = {
+            "k11": cfg.agents.BLF.Kxy[0],
+            "k12": cfg.agents.BLF.Kxy[1],
+            "k13": cfg.agents.BLF.Kxy[2],
+            "k21": cfg.agents.BLF.Kang[0],
+            "k22": cfg.agents.BLF.Kang[1],
+            "k23": cfg.agents.BLF.Kang[2],
+        }
+        kpos, kang = get_PID_gain(params)
+        run(loggerpath, kpos, kang)
         exp_plot(loggerpath, False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--with-plot", action="store_true")
+    parser.add_argument("-r", "--with-ray", action="store_true")
     args = parser.parse_args()
     main(args)
