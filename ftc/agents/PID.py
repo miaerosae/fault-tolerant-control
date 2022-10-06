@@ -23,13 +23,13 @@ class PIDController(BaseEnv):
         self.ctype = ctype
         self.e_record = 0
 
-    def set_dot(self, t, y, ref):
+    def set_dot(self, t, y, ref, dref):
         alp, eps, theta = self.alp, self.eps, self.theta
         if self.ctype == "pos":
             real = y - ref
         elif self.ctype == "ang":
             real = y
-        q = self.get_control(ref)
+        q = self.get_control(ref, dref)
         e, _ = self.observe_list()
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (real - e[0]), theta[0])
@@ -41,14 +41,14 @@ class PIDController(BaseEnv):
         elif self.ctype == "ang":
             self.ei.dot = e[0] - ref
 
-    def get_control(self, ref):
+    def get_control(self, ref, dref):
         if self.ctype == "pos":
             e = self.e.state[0]
-            ed = e - self.e_record
+            ed = self.e.state[1]
             self.e_record = e
         elif self.ctype == "ang":
             e = self.e.state[0] - ref
-            ed = e - self.e_record
+            ed = self.e.state[1] - dref
             self.e_record = e
         ei = self.ei.state
         return - (self.kP*e + self.kD*ed + self.kI*ei) - self.e.state[2]
