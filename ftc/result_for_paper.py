@@ -16,6 +16,9 @@ def exp_plot(loggerpath, pf):
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
 
+    fault_time = cfg.faults.manager.fault_time
+    dt = cfg.simul_condi.dt
+
     ''' comparing ESOs '''
     ''' 1. disturbance '''
     # 1a) estimation graph
@@ -221,14 +224,18 @@ def exp_plot(loggerpath, pf):
 
     # 4e) STD of tracking error
     for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        print("proposed controller: " + _label + str(statistics.stdev(data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0])))
+        print("STD of proposed controller: " + _label + str(statistics.stdev(data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0])))
 
         # TODO: add compare controller data here
 
     # 4f) comparison on x, y, z axis respectively (max, mean)
     for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        print("proposed controller: " + _label + str(max(abs(data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0]))))
-        print("proposed controller: " + _label + str(np.mean(abs(data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0]))))
+        for j in range(np.size(fault_time)):
+            overshoot1 = max(abs(data["x"]["pos"][fault_time[j]/dt:fault_time[j]/dt+1/dt, i, 0]))
+            index = data["x"]["pos"][:, i, 0].index(overshoot1)
+            overshoot2 = np.sign(data["x"]["pos"][index, i, 0]) * overshoot1
+            print("overshoot(maximum value) after " + i + "-th fault: " + _label + str(overshoot2))
+        print("absolute mean error of proposed controller: " + _label + str(np.mean(abs(data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0]))))
 
         # TODO: add compare controller data here
 
@@ -308,9 +315,24 @@ def exp_plot(loggerpath, pf):
         # TODO: add compare controller data here
 
     # 5e) comparison on phi, theta, psi respectively (max, mean)
-    for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        print("proposed controller: " + _label + str(max(abs(np.rad2deg(angles[:, 2-i])-np.rad2deg(data["eulerd"][:, i, 0])))))
-        print("proposed controller: " + _label + str(np.mean(abs(np.rad2deg(angles[:, 2-i])-np.rad2deg(data["eulerd"][:, i, 0])))))
+    for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
+        for j in range(np.size(fault_time)):
+            overshoot1 = max(abs(angles[fault_time[j]/dt:fault_time[j]/dt+1/dt, 2-i]))
+            index = angles[:, 2-i].index(overshoot1)
+            overshoot2 = np.sign(angles[index, 2-i]) * overshoot1
+            print("overshoot(maximum value) after " + i + "-th fault of proposed controller: " + _label + str(np.rad2deg(overshoot2)))
+        print("absoulte mean error of proposed controller: " + _label + str(np.mean(abs(np.rad2deg(angles[:, 2-i])-np.rad2deg(data["eulerd"][:, i, 0])))))
+
+        # TODO: add compare controller data here
+
+    # 5f) comparison on p, q, r respectively (max, mean)
+    for i, _label in enumerate([r"$p$", r"$q$", r"$r$"]):
+        for j in range(np.size(fault_time)):
+            overshoot1 = max(abs(data["x"]["omega"][fault_time[j]/dt:fault_time[j]/dt+1/dt, i, 0]))
+            index = data["x"]["omega"][:, i, 0].index(overshoot1)
+            overshoot2 = np.sign(data["x"]["omega"][index, i, 0]) * overshoot1
+            print("overshoot(maximum value) after " + i + "-th fault: " + _label + str(np.rad2deg(overshoot2)))
+        print("absolute mean error of proposed controller: " + _label + str(np.mean(abs(np.rad2deg(data["x"]["omega"][:, i, 0])-np.zeros((np.shape(data["x"]["omega"][:, i, 0])))))))
 
         # TODO: add compare controller data here
 
