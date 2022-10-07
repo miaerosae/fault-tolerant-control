@@ -164,6 +164,9 @@ def get_faulty_input(W, rotors):
 
 
 def get_PID_gain(param):
+    '''
+    convert BLF parameter(k1, k2, k3) to PID gain
+    '''
     kpos = param.Kxy
     kang = param.Kang
     rhoinf = param.oL.rho[1]
@@ -174,3 +177,24 @@ def get_PID_gain(param):
     kD2 = kang[0] + kang[1]
     kI2 = kang[1]*kang[2]
     return np.array([kP1, kD1, kI1]), np.array([kP2, kD2, kI2])
+
+
+def get_PID_gain_reverse(config, param):
+    '''
+    change PID gain to BLF parameter
+    '''
+    kP1, kD1, kI1 = config["k11"], config["k12"], config["k13"]
+    kP2, kD2, kI2 = config["k21"], config["k22"], config["k23"]
+    # position
+    rhoinf = param.oL.rho[1]
+    k2pos = np.roots([1, -kD1, kP1+1/rhoinf**2, -kI1])
+    k1pos = k3pos = []
+    for i in k2pos:
+        k1pos.append(kD1 - k2pos[i])
+        k3pos.append(kI1 / k2pos[i] / rhoinf**2)
+    k2ang = np.roots([1, -kD2, kP2, -kI2])
+    k1ang = k3ang = []
+    for i in k2ang:
+        k1ang.append(kD2 - k2ang[i])
+        k3ang.append(kI2 / k2ang[i])
+    return k1pos, k2pos, k3pos, k1ang, k2ang, k3ang
