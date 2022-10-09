@@ -207,6 +207,14 @@ class Env(BaseEnv):
         # get model uncertainty disturbance value
         model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
 
+        # get gain
+        kpos_x = self.blf_x.get_gain(t, ref[0])
+        kpos_y = self.blf_y.get_gain(t, ref[1])
+        kpos_z = self.blf_z.get_gain(t, ref[2])
+        kang_phi = self.blf_phi.get_gain(t, eulerd[0])
+        kang_theta = self.blf_theta.get_gain(t, eulerd[1])
+        kang_psi = self.blf_psi.get_gain(t, eulerd[2])
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel,
@@ -226,7 +234,9 @@ class Env(BaseEnv):
                     virtual_u=forces, dist=dist, q=q, f=f,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
                     model_uncert_vel=model_uncert_vel,
-                    model_uncert_omega=model_uncert_omega)
+                    model_uncert_omega=model_uncert_omega,
+                    kpos1=kpos_x, kpos2=kpos_y, kpos3=kpos_z,
+                    kang1=kang_phi, kang2=kang_theta, kang3=kang_psi)
 
 
 def run(loggerpath, params):
