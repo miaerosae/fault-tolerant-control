@@ -174,7 +174,7 @@ class innerLoop(BaseEnv):
                 2*drho1a*(ddrho1a*rho1a-drho1a**2)/(rho1a**3)
                 + 2*drho1b*(ddrho1b*rho1b-drho1b**2)/(rho1b**3)
             )
-            dalpha = (- dbar_k1*z1 - bar_k1*dz1 - c[0]*dlamb[0]
+            dalpha = (- dbar_k1*z1 - (K[0] + bar_k1)*dz1 - c[0]*dlamb[0]
                       - K[2]*(x[0]-ref)*(1-xi1**2)
                       - K[2]*integ_e*(-2*xi1*dxi1))
 
