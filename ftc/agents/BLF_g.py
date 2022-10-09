@@ -21,7 +21,6 @@ def q(x):
 
 class outerLoop(BaseEnv):
     def __init__(self, alp, eps, K, rho, k, theta, noise, init, BLF=True):
-    # def __init__(self, alp, eps, K, rho, k, c, xi, theta, noise, init, BLF=True):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
         self.lamb = BaseSystem(np.zeros((2, 1)))
@@ -92,6 +91,17 @@ class outerLoop(BaseEnv):
         states = self.observe_list()
         dots = self.deriv(*states, y, ref, t, q, *args)
         self.e.dot, self.lamb.dot, self.integ_e.dot = dots
+
+    def get_gain(self, t, ref):
+        rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
+        rho = (rho_0-rho_inf) * np.exp(-k*t) + rho_inf
+        drho = - k * (rho_0-rho_inf) * np.exp(-k*t)
+        ddrho = k**2 * (rho_0-rho_inf) * np.exp(-k*t)
+        e1 = self.e.state[0]
+        kP = - (ddrho/rho - (drho/rho)**2 - 1/(rho**2-e1**2)
+                + K[1]*drho/rho) + K[0]*K[1]
+        kD = - drho/rho + K[0] + K[1]
+        return np.vstack([kP, kD, 0])
 
     def get_err(self):
         return self.e.state[0]
@@ -207,6 +217,57 @@ class innerLoop(BaseEnv):
         states = self.observe_list()
         dots = self.deriv(*states, t, y, ref)
         self.x.dot, self.lamb.dot, self.integ_e.dot = dots
+
+    def get_gain(self, t, ref):
+        K, c, rho = self.K, self.c, self.rho
+        x = self.x.state
+        lamb = self.lamb.state
+        if t == 0:
+            dlamb = np.zeros((2, 1))
+        else:
+            dlamb = self.lamb.dot
+        integ_e = self.integ_e.state
+        dref = 0
+        rho1a = ref + lamb[0] + rho[0]
+        rho1b = rho[0] - ref - lamb[0]
+        drho1a = dlamb[0]
+        drho1b = - dlamb[0]
+        ddrho1a = - c[0]*dlamb[0] + dlamb[1]
+        ddrho1b = c[0]*dlamb[0] - dlamb[1]
+
+        z1 = x[0] - ref - lamb[0]
+        dz1 = x[1] - dref - dlamb[0]
+
+        xi_1a = z1 / rho1a
+        dxi_1a = (dz1*rho1a-z1*drho1a) / (rho1a**2)
+        xi_1b = z1 / rho1b
+        dxi_1b = (dz1*rho1b-z1*drho1b) / (rho1b**2)
+        xi1 = q(z1)*xi_1b + (1-q(z1))*xi_1a
+        dxi1 = q(z1)*dxi_1b + (1-q(z1))*dxi_1a
+
+        bar_k1 = ((drho1a/rho1a)**2 + (drho1b/rho1b)**2 + 0.1) ** (1/2)
+        alpha = - (K[0] + bar_k1)*z1 - c[0]*lamb[0] - K[2]*integ_e*(1-xi1**2)
+
+        dbar_k1 = 1 / 2 / bar_k1 * (
+            2*drho1a*(ddrho1a*rho1a-drho1a**2)/(rho1a**3)
+            + 2*drho1b*(ddrho1b*rho1b-drho1b**2)/(rho1b**3)
+        )
+        dalpha = (- dbar_k1*z1 - (K[0] + bar_k1)*dz1 - c[0]*dlamb[0]
+                  - K[2]*(x[0]-ref)*(1-xi1**2)
+                  - K[2]*integ_e*(-2*xi1*dxi1))
+
+        rho2a = alpha + lamb[1] + rho[1]
+        rho2b = rho[1] - alpha - lamb[1]
+        drho2a = dalpha + dlamb[1]
+        drho2b = - dalpha - dlamb[1]
+
+        mu1 = q(z1)/(rho1b**2-z1**2) + (1-q(z1))/(rho1a**2-z1**2)
+        bar_k2 = ((drho2a/rho2a)**2 + (drho2b/rho2b)**2 + 0.1) ** (1/2)
+
+        kP = dbar_k1 + mu1 + (K[0]+bar_k1)*(K[1]+bar_k2) + K[2]*(1-xi1**2)
+        kD = (K[0]+bar_k1) + (K[1]+bar_k2)
+        kI = (K[1]+bar_k2)*K[2]*(1-xi1**2)
+        return np.vstack([kP, kD, kI])
 
     def get_obs(self):
         return self.x.state[0]

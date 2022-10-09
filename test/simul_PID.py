@@ -50,7 +50,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -58,10 +58,18 @@ class Env(BaseEnv):
 
         # Define agents
         self.pos_ref = np.vstack([-0, 0, 0])
-        kpos = np.array([config["k11"], config["k12"], config["k13"]])
-        kang = np.array([config["k21"], config["k22"], config["k23"]])
-        self.kpos, self.kang = kpos, kang
+        # kpos = np.array([config["k11"], config["k12"], config["k13"]])
+        # kang = np.array([config["k21"], config["k22"], config["k23"]])
+        # self.kpos, self.kang = kpos, kang
         # kpos, kang = get_PID_gain(params)
+        data = fym.load("Scenario3_BLF.h5")
+        self.kpos_x = data["kpos1"]
+        self.kpos_y = data["kpos2"]
+        self.kpos_z = data["kpos3"]
+        self.kang_phi = data["kang1"]
+        self.kang_theta = data["kang2"]
+        self.kang_psi = data["kang3"]
+        self.ti = 0
 
         self.integ_epos = BaseSystem(shape=(3, 1))
         self.integ_eang = BaseSystem(shape=(3, 1))
@@ -117,7 +125,16 @@ class Env(BaseEnv):
         epos = self.plant.pos.state - ref
         eposd = self.plant.vel.state - dref
         eposi = self.integ_epos.state
-        q = - (self.kpos[0]*epos + self.kpos[1]*eposd + self.kpos[2]*eposi)
+        qx = - (self.kpos_x[self.ti, 0, 0]*epos[0]
+                + self.kpos_x[self.ti, 1, 0]*eposd[0]
+                + self.kpos_x[self.ti, 2, 0]*eposi[0])
+        qy = - (self.kpos_y[self.ti, 0, 0]*epos[1]
+                + self.kpos_y[self.ti, 1, 0]*eposd[1]
+                + self.kpos_y[self.ti, 2, 0]*eposi[1])
+        qz = - (self.kpos_z[self.ti, 0, 0]*epos[2]
+                + self.kpos_z[self.ti, 1, 0]*eposd[2]
+                + self.kpos_z[self.ti, 2, 0]*eposi[2])
+        q = np.vstack([qx, qy, qz])
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -132,7 +149,15 @@ class Env(BaseEnv):
         eang = np.vstack(quat2angle(self.plant.quat.state)[::-1]) - eulerd
         eangd = self.plant.omega.state - np.zeros((3, 1))
         eangi = self.integ_eang.state
-        u2, u3, u4 = - (self.kang[0]*eang + self.kang[1]*eangd + self.kang[2]*eangi).ravel()
+        u2 = - (self.kang_phi[self.ti, 0, 0]*eang[0]
+                + self.kang_phi[self.ti, 1, 0]*eangd[0]
+                + self.kang_phi[self.ti, 2, 0]*eangi[0])
+        u3 = - (self.kang_theta[self.ti, 0, 0]*eang[1]
+                + self.kang_theta[self.ti, 1, 0]*eangd[1]
+                + self.kang_theta[self.ti, 2, 0]*eangi[1])
+        u4 = - (self.kang_psi[self.ti, 0, 0]*eang[2]
+                + self.kang_psi[self.ti, 1, 0]*eangd[2]
+                + self.kang_psi[self.ti, 2, 0]*eangi[2])
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
@@ -156,6 +181,8 @@ class Env(BaseEnv):
         self.integ_epos.dot = epos
         self.integ_eang.dot = eang
 
+        self.ti = self.ti + 1
+
         env_info = {
             "t": t,
             "x": self.plant.observe_dict(),
@@ -171,8 +198,6 @@ class Env(BaseEnv):
             "model_uncert_omega": model_uncert_omega
         }
         return env_info
-
-        return dict()
 
 
 def run_ray(Kxy, Kz, Kang):

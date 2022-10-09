@@ -4,6 +4,10 @@ define b0 of hexacopter used for low-power ESO
 import numpy as np
 import math
 from numpy import sin, cos
+import fym
+import ftc.config
+
+cfg = ftc.config.load()
 
 
 def get_b0(m, g, J):
