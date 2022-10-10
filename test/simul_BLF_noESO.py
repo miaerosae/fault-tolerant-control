@@ -16,7 +16,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_noESO as BLF
-from ftc.agents.param import get_b0, get_faulty_input
+from ftc.agents.param import get_b0, get_faulty_input, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -92,12 +92,18 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([0, 0, -t])
-        dref = np.vstack([0, 0, -1])
+        pos_des = np.vstack([0, 0, 0])
+        dref = np.vstack([0, 0, 0])
         return pos_des, dref
 
     def step(self):
         env_info, done = self.update()
+        # for i in range(2):
+        #     if abs(self.plant.pos.state[i]) > 2:
+        #         done = True
+        # for dang in self.plant.omega.state:
+        #     if abs(dang) > np.deg2rad(150):
+        #         done = True
         return done, env_info
 
     def set_dot(self, t):
@@ -216,11 +222,11 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": tune.uniform(0.1, 20),
-            "k12": tune.uniform(0.1, 20),
+            "k11": tune.uniform(0.1, 500),
+            "k12": tune.uniform(0.1, 500),
             "k13": tune.uniform(0.1, 20),
-            "k21": tune.uniform(0.1, 20),
-            "k22": tune.uniform(0.1, 20),
+            "k21": tune.uniform(0.1, 500),
+            "k22": tune.uniform(0.1, 500),
             "k23": tune.uniform(0.1, 20),
         }
         current_best_params = [{
@@ -239,8 +245,8 @@ def main(args):
         tuner = tune.Tuner(
             tune.with_resources(
                 objective,
-                # resources={"cpu": os.cpu_count()},
-                resources={"cpu": 12},
+                resources={"cpu": os.cpu_count()},
+                # resources={"cpu": 12},
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
@@ -285,6 +291,8 @@ def main(args):
             "k22": cfg.agents.BLF.Kang[1],
             "k23": cfg.agents.BLF.Kang[2],
         }
+        kpos, kang = get_PID_gain(cfg.agents.BLF)
+        breakpoint()
 
         run(loggerpath, params)
         exp_plot(loggerpath, False)
