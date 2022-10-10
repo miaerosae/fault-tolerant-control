@@ -56,7 +56,7 @@ def exp_plot(loggerpath, pf):
     for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        # plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
+        plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label="Real")
         plt.plot(data["t"], data["ref"][:, i, 0], "r--", label="Desired")
         plt.ylabel(_label)
@@ -105,7 +105,7 @@ def exp_plot(loggerpath, pf):
     for i, (_label, _ls) in enumerate(zip(["ex", "ey", "ez"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        # plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
+        plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k-.", label="Real")
         plt.plot(data["t"], pos_bounds, "c")
         plt.plot(data["t"], -pos_bounds, "c")
@@ -132,7 +132,7 @@ def exp_plot(loggerpath, pf):
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        # plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b-", label="Estimated")
+        plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b-", label="Estimated")
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k-.", label="Real")
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r--", label="Desired")
         if i != 2:
@@ -230,8 +230,9 @@ def exp_plot(loggerpath, pf):
                            + data["model_uncert_vel"][:, i, 0]
                            + data["int_uncert_vel"][:, i, 0])
     for i in range(3):
-        real_dist[i+3, :] = real_dist[i+3, :] + data["f"][:, i, 0] \
-            + data["model_uncert_omega"][:, i, 0]
+        real_dist[i+3, :] = (real_dist[i+3, :]
+                             # + data["f"][:, i, 0]
+                             + data["model_uncert_omega"][:, i, 0])
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
@@ -276,17 +277,26 @@ def exp_plot(loggerpath, pf):
     # plt.savefig("Figure_6.png")
 
     # fdi
-    # plt.figure()
+    plt.figure()
 
-    # ax = plt.subplot(411)
-    # for i, _label in enumerate([r"$fa_{1}$", r"$fa_{2}$", r"$fa_{3}$", r"$fa_{4}$"]):
-    #     if i != 0:
-    #         plt.subplot(411+i, sharex=ax)
-    #     plt.plot(data["t"], data["tfa"][:, i], "r", label=_label)
-    #     plt.plot(data["t"], data["fa"][:, i], "k--", label=_label)
-    #     plt.legend(loc="upper right")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.gcf().supylabel("FDI information")
-    # plt.tight_layout()
+    ax = plt.subplot(331)
+    for i in range(9):
+        if i != 0:
+            plt.subplot(331+i, sharex=ax)
+        plt.plot(data["t"], data["gain"][:, i, 0], "r", label=_label)
+    plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel("position Real gain value")
+    plt.tight_layout()
+
+    plt.figure()
+
+    ax = plt.subplot(331)
+    for i in range(9):
+        if i != 0:
+            plt.subplot(331+i, sharex=ax)
+        plt.plot(data["t"], data["gain"][:, i+9, 0], "r", label=_label)
+    plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel("angle Real gain value")
+    plt.tight_layout()
 
     plt.show()
