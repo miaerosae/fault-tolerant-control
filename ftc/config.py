@@ -21,9 +21,11 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.1,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10, 13, 15]),
-        "fault_index": np.array([0, 1, 2, 2, 1]),
-        "LoE": np.array([0.5, 0.6, 0.8, 0.4, 1]),
+        # "fault_time": np.array([5, 7, 10, 13, 15]),
+        # "fault_index": np.array([0, 1, 2, 2, 1]),
+        "fault_time": np.array([5]),
+        "fault_index": np.array([0]),
+        "LoE": np.array([0.8]),
     },
 
     # ====== ftc.plants ====== #
@@ -132,8 +134,9 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([10, 10, 25]),
+            # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
+            "eps": np.array([8, 8, 10]),
             "rho": np.array([0.5, 0.3]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -141,20 +144,21 @@ default_settings = fym.parser.parse({
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([25, 25, 25]),
+            # "eps": np.array([22.410639417323583, 24.612756991001415, 25.243363441674145]),
             # "eps": np.array([1/25, 1/25, 1/25]),
+            "eps": np.array([25, 25, 25]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
-            "rho": np.deg2rad(np.array([45, 150])),
+            "rho": np.deg2rad(np.array([45, 120])),
             "rho_psi": np.deg2rad([45, 180]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([1, 5, 0/30/(0.5)**2]),
-        "Kz": np.array([1, 15, 0/30/(0.5)**2]),
-        "Kang": np.array([400/15, 15, 0/30/np.deg2rad(45)**2]),
-        # "Kxy": np.array([30, 2, 0]),
+        "Kxy": np.array([1, 12, 0]),
+        "Kang": np.array([1, 150, 0]),
+        # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
+        # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
         "theta": 0.7,
 
@@ -189,9 +193,6 @@ default_settings = fym.parser.parse({
         "dt": 0.01,
         "max_t": 20,
         "blade": False,
-        "uncertainty": True,
-        "ext_unc": True,
-        "int_unc": True,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
         "groundEffect": False,
@@ -199,6 +200,12 @@ default_settings = fym.parser.parse({
         "gyro": False,
         "drygen": False,  # not use
         "BLF": True,
+        # "uncertainty": True,
+        # "ext_unc": True,
+        # "int_unc": True,
+        "uncertainty": False,
+        "ext_unc": False,
+        "int_unc": False,
     },
 
     "wind_dist": {
