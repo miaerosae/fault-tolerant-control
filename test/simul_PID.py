@@ -50,7 +50,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = True
+        self.fault = False
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -58,26 +58,37 @@ class Env(BaseEnv):
 
         # Define agents
         self.pos_ref = np.vstack([-0, 0, 0])
-        # kpos = np.array([config["k11"], config["k12"], config["k13"]])
-        # kang = np.array([config["k21"], config["k22"], config["k23"]])
-        # self.kpos, self.kang = kpos, kang
+        kpos = np.array([config["k11"], config["k12"], config["k13"]])
+        kang = np.array([config["k21"], config["k22"], config["k23"]])
+        self.kpos, self.kang = kpos, kang
         # kpos, kang = get_PID_gain(params)
-        data = fym.load("Scenario3_BLF.h5")
-        self.kpos_x = data["kpos1"]
-        self.kpos_y = data["kpos2"]
-        self.kpos_z = data["kpos3"]
-        self.kang_phi = data["kang1"]
-        self.kang_theta = data["kang2"]
-        self.kang_psi = data["kang3"]
-        self.ti = 0
+        params = cfg.agents.BLF
+        self.blf_x = PID.PIDController(params.oL.alp, params.oL.eps[0],
+                                       params.theta, -self.pos_ref[0][0],
+                                       kpos, "pos")
+        self.blf_y = PID.PIDController(params.oL.alp, params.oL.eps[1],
+                                       params.theta, -self.pos_ref[1][0],
+                                       kpos, "pos")
+        self.blf_z = PID.PIDController(params.oL.alp, params.oL.eps[2],
+                                       params.theta, -self.pos_ref[2][0],
+                                       kpos, "pos")
+        J = np.diag(self.plant.J)
+        b = np.array([1/J[0], 1/J[1], 1/J[2]])
+        self.blf_phi = PID.PIDController(params.iL.alp, params.iL.eps[0],
+                                         params.theta, 0,
+                                         kpos, "ang", b[0])
+        self.blf_theta = PID.PIDController(params.iL.alp, params.iL.eps[1],
+                                           params.theta, 0,
+                                           kpos, "ang", b[1])
+        self.blf_psi = PID.PIDController(params.iL.alp, params.iL.eps[2],
+                                         params.theta, 0,
+                                         kpos, "ang", b[2])
 
-        self.integ_epos = BaseSystem(shape=(3, 1))
-        self.integ_eang = BaseSystem(shape=(3, 1))
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
         # pos_des = self.pos_ref
-        # posd_des = np.zeros((3, 1))
+        # dref = np.zeros((3, 1))
         pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5),
                              np.sin(t/2)*np.sin(np.pi*t/5),
                              -t])
@@ -122,19 +133,11 @@ class Env(BaseEnv):
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
-        epos = self.plant.pos.state - ref
-        eposd = self.plant.vel.state - dref
-        eposi = self.integ_epos.state
-        qx = - (self.kpos_x[self.ti, 0, 0]*epos[0]
-                + self.kpos_x[self.ti, 1, 0]*eposd[0]
-                + self.kpos_x[self.ti, 2, 0]*eposi[0])
-        qy = - (self.kpos_y[self.ti, 0, 0]*epos[1]
-                + self.kpos_y[self.ti, 1, 0]*eposd[1]
-                + self.kpos_y[self.ti, 2, 0]*eposi[1])
-        qz = - (self.kpos_z[self.ti, 0, 0]*epos[2]
-                + self.kpos_z[self.ti, 1, 0]*eposd[2]
-                + self.kpos_z[self.ti, 2, 0]*eposi[2])
-        q = np.vstack([qx, qy, qz])
+        q = np.vstack([
+            self.blf_x.get_control(ref[0], dref[0]),
+            self.blf_y.get_control(ref[1], dref[1]),
+            self.blf_z.get_control(ref[2], dref[2])
+        ])
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -142,22 +145,17 @@ class Env(BaseEnv):
                        - np.deg2rad(45), np.deg2rad(45))
         thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
                          - np.deg2rad(45), np.deg2rad(45))
+        # phid = thetad = 0
         psid = 0
         eulerd = np.vstack([phid, thetad, psid])
 
+        pos = self.plant.pos.state
+        ang = quat2angle(self.plant.quat.state)[::-1]
+
         # Inner-Loop
-        eang = np.vstack(quat2angle(self.plant.quat.state)[::-1]) - eulerd
-        eangd = self.plant.omega.state - np.zeros((3, 1))
-        eangi = self.integ_eang.state
-        u2 = - (self.kang_phi[self.ti, 0, 0]*eang[0]
-                + self.kang_phi[self.ti, 1, 0]*eangd[0]
-                + self.kang_phi[self.ti, 2, 0]*eangi[0])
-        u3 = - (self.kang_theta[self.ti, 0, 0]*eang[1]
-                + self.kang_theta[self.ti, 1, 0]*eangd[1]
-                + self.kang_theta[self.ti, 2, 0]*eangi[1])
-        u4 = - (self.kang_psi[self.ti, 0, 0]*eang[2]
-                + self.kang_psi[self.ti, 1, 0]*eangd[2]
-                + self.kang_psi[self.ti, 2, 0]*eangi[2])
+        u2 = self.blf_phi.get_control(eulerd[0], 0)
+        u3 = self.blf_theta.get_control(eulerd[1], 0)
+        u4 = self.blf_psi.get_control(eulerd[2], 0)
 
         # Saturation u1
         u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
@@ -172,16 +170,45 @@ class Env(BaseEnv):
         self.prev_rotors = rotors
 
         # get model uncertainty disturbance value
-        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors, t)
+        int_vel = self.plant.get_int_uncertainties(t, self.plant.vel.state)
+
+        obs_pos = np.vstack([
+            self.blf_x.get_obs(),
+            self.blf_y.get_obs(),
+            self.blf_z.get_obs(),
+        ])
+        obs_ang = np.vstack([
+            self.blf_phi.get_obs(),
+            self.blf_theta.get_obs(),
+            self.blf_psi.get_obs()
+        ])
+        dist = np.vstack([
+            self.blf_x.get_dist(),
+            self.blf_y.get_dist(),
+            self.blf_z.get_dist(),
+            self.blf_phi.get_dist(),
+            self.blf_theta.get_dist(),
+            self.blf_psi.get_dist(),
+        ])
+
+        # caculate f
+        J = np.diag(self.plant.J)
+        p_, q_, r_ = self.plant.omega.state
+        f = np.array([(J[1]-J[2]) / J[0] * q_ * r_,
+                      (J[2]-J[0]) / J[1] * p_ * r_,
+                      (J[0]-J[1]) / J[2] * p_ * q_])
 
         # set_dot
         self.plant.set_dot(t, rotors,
                            prev_rotors=self.prev_rotors
                            )
-        self.integ_epos.dot = epos
-        self.integ_eang.dot = eang
-
-        self.ti = self.ti + 1
+        self.blf_x.set_dot(t, pos[0], ref[0], dref[0])
+        self.blf_y.set_dot(t, pos[1], ref[1], dref[1])
+        self.blf_z.set_dot(t, pos[2], ref[2], dref[2])
+        self.blf_phi.set_dot(t, ang[0], eulerd[0], 0)
+        self.blf_theta.set_dot(t, ang[1], eulerd[1], 0)
+        self.blf_psi.set_dot(t, ang[2], eulerd[2], 0)
 
         env_info = {
             "t": t,
@@ -195,7 +222,12 @@ class Env(BaseEnv):
             "q": q,
             "eulerd": eulerd,
             "model_uncert_vel": model_uncert_vel,
-            "model_uncert_omega": model_uncert_omega
+            "model_uncert_omega": model_uncert_omega,
+            "int_uncert_vel": int_vel,
+            "dist": dist,
+            "f": f,
+            "obs_pos": obs_pos,
+            "obs_ang": obs_ang,
         }
         return env_info
 
@@ -332,14 +364,13 @@ def main(args):
             "k23": kang[2],
         }
         # params = {
-        #     "k11": 10,
-        #     "k12": 0.5,
+        #     "k11": 1,
+        #     "k12": 1,
         #     "k13": 0,
-        #     "k21": 400,
-        #     "k22": 100,
+        #     "k21": 10,
+        #     "k22": 10,
         #     "k23": 0,
         # }
-        # k1, k2, k3, k4, k5, k6 = get_PID_gain_reverse(params, cfg.agents.BLF)
         run(loggerpath, params)
 
 

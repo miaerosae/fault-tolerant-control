@@ -13,23 +13,24 @@ def func_g(x, theta):
 
 
 class PIDController(BaseEnv):
-    def __init__(self, alp, eps, theta, init, kP, kD, kI, ctype):
+    def __init__(self, alp, eps, theta, init, K, ctype, b=1):
         super().__init__()
         self.e = BaseSystem(np.vstack([init, 0, 0]))
         self.ei = BaseSystem(np.zeros((1,)))
         self.alp, self.eps = alp, eps
         self.theta = np.array([theta, 2*theta-1, 3*theta-2])
-        self.kP, self.kD, self.kI = kP, kD, kI
+        self.kP, self.kD, self.kI = K.ravel()
         self.ctype = ctype
         self.e_record = 0
+        self.b = b
 
     def set_dot(self, t, y, ref, dref):
         alp, eps, theta = self.alp, self.eps, self.theta
+        q = self.get_control(ref, dref)
         if self.ctype == "pos":
             real = y - ref
         elif self.ctype == "ang":
             real = y
-        q = self.get_control(ref, dref)
         e, _ = self.observe_list()
         edot = np.zeros((3, 1))
         edot[0, :] = e[1] + (alp[0]/eps) * func_g(eps**2 * (real - e[0]), theta[0])
@@ -51,7 +52,10 @@ class PIDController(BaseEnv):
             ed = self.e.state[1] - dref
             self.e_record = e
         ei = self.ei.state
-        return - (self.kP*e + self.kD*ed + self.kI*ei) - self.e.state[2]
+        u = - (self.kP*e + self.kD*ed + self.kI*ei) - self.e.state[2]
+        if self.ctype == "ang":
+            u = u / self.b
+        return u
 
     def get_obs(self):
         return self.e.state[0]
