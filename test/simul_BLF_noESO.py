@@ -156,6 +156,10 @@ class Env(BaseEnv):
         rotors = get_faulty_input(W, rotors)
         self.prev_rotors = rotors
 
+        # get model uncertainty disturbance value
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors, t)
+        int_vel = self.plant.get_int_uncertainties(t, self.plant.vel.state)
+
         # set_dot
         self.plant.set_dot(t, rotors,
                            prev_rotors=self.prev_rotors
@@ -172,6 +176,9 @@ class Env(BaseEnv):
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, q=q, f=f,
+                    model_uncert_vel=model_uncert_vel,
+                    model_uncert_omega=model_uncert_omega,
+                    int_uncert_vel=int_vel,
                     eulerd=eulerd)
 
 
@@ -222,12 +229,12 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": tune.uniform(0.1, 500),
-            "k12": tune.uniform(0.1, 500),
-            "k13": tune.uniform(0.1, 20),
+            "k11": 1,
+            "k12": 12,
+            "k13": 0,
             "k21": tune.uniform(0.1, 500),
             "k22": tune.uniform(0.1, 500),
-            "k23": tune.uniform(0.1, 20),
+            "k23": 0,
         }
         current_best_params = [{
             "k11": 2,
@@ -291,8 +298,6 @@ def main(args):
             "k22": cfg.agents.BLF.Kang[1],
             "k23": cfg.agents.BLF.Kang[2],
         }
-        kpos, kang = get_PID_gain(cfg.agents.BLF)
-        breakpoint()
 
         run(loggerpath, params)
         exp_plot(loggerpath, False)

@@ -117,6 +117,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
+        if abs(self.blf_x.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_y.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_z.e.state[0]) > 0.5:
+            done = True
+        ang = quat2angle(self.plant.quat.state)
+        for i in range(3):
+            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+                done = True
+        dang = self.plant.omega.state
+        for i in range(3):
+            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+                done = True
         return done, env_info
 
     def get_W(self, t):
@@ -209,12 +223,14 @@ class Env(BaseEnv):
         int_vel = self.plant.get_int_uncertainties(t, self.plant.vel.state)
 
         # get gain
-        kpos_x = self.blf_x.get_gain(t, ref[0])
-        kpos_y = self.blf_y.get_gain(t, ref[1])
-        kpos_z = self.blf_z.get_gain(t, ref[2])
-        kang_phi = self.blf_phi.get_gain(t, eulerd[0])
-        kang_theta = self.blf_theta.get_gain(t, eulerd[1])
-        kang_psi = self.blf_psi.get_gain(t, eulerd[2])
+        k = np.vstack([
+            self.blf_x.get_gain(t, ref[0]),
+            self.blf_y.get_gain(t, ref[1]),
+            self.blf_z.get_gain(t, ref[2]),
+            self.blf_phi.get_gain(t, eulerd[0]),
+            self.blf_theta.get_gain(t, eulerd[1]),
+            self.blf_psi.get_gain(t, eulerd[2]),
+        ])
 
         # set_dot
         self.plant.set_dot(t, rotors,
@@ -237,8 +253,7 @@ class Env(BaseEnv):
                     model_uncert_vel=model_uncert_vel,
                     model_uncert_omega=model_uncert_omega,
                     int_uncert_vel=int_vel,
-                    kpos1=kpos_x, kpos2=kpos_y, kpos3=kpos_z,
-                    kang1=kang_phi, kang2=kang_theta, kang3=kang_psi)
+                    gain=k)
 
 
 def run(loggerpath, params):
@@ -288,29 +303,29 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": tune.uniform(0.1, 40),
-            "k12": tune.uniform(0.1, 40),
-            "k13": tune.uniform(0.1, 40),
-            "k21": tune.uniform(0.1, 40),
-            "k22": tune.uniform(0.1, 40),
-            "k23": tune.uniform(0.1, 40),
-            "eps11": tune.uniform(1.1, 7),
-            "eps12": tune.uniform(1.1, 7),
-            "eps13": tune.uniform(1.1, 10),
-            "eps21": tune.uniform(15, 35),
-            "eps22": tune.uniform(15, 35),
-            "eps23": tune.uniform(15, 35),
+            "k11": 1,
+            "k12": 12,
+            "k13": 0,
+            "k21": 1,
+            "k22": tune.uniform(0.1, 800),
+            "k23": 0,
+            "eps11": 8,
+            "eps12": 8,
+            "eps13": 10,
+            "eps21": tune.uniform(20, 40),
+            "eps22": tune.uniform(20, 40),
+            "eps23": tune.uniform(20, 40),
         }
         current_best_params = [{
-            "k11": 2,
-            "k12": 30,
-            "k13": 5/30/(0.5)**2,
-            "k21": 500/30,
-            "k22": 30,
-            "k23": 5/30/np.deg2rad(45)**2,
-            "eps11": 5,
-            "eps12": 5,
-            "eps13": 10,
+            "k11": 1,
+            "k12": 12,
+            "k13": 0,
+            "k21": 1,
+            "k22": 15,
+            "k23": 0,
+            "eps11": 8,
+            "eps12": 8,
+            "eps13": 25,
             "eps21": 25,
             "eps22": 25,
             "eps23": 25,
@@ -328,7 +343,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=1000,
+                num_samples=10000,
                 search_alg=search,
             ),
             run_config=RunConfig(
