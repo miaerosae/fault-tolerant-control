@@ -205,7 +205,8 @@ class Env(BaseEnv):
                       (J[0]-J[1]) / J[2] * p_ * q_])
 
         # get model uncertainty disturbance value
-        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
+        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors, t)
+        int_vel = self.plant.get_int_uncertainties(t, self.plant.vel.state)
 
         # get gain
         kpos_x = self.blf_x.get_gain(t, ref[0])
@@ -235,6 +236,7 @@ class Env(BaseEnv):
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
                     model_uncert_vel=model_uncert_vel,
                     model_uncert_omega=model_uncert_omega,
+                    int_uncert_vel=int_vel,
                     kpos1=kpos_x, kpos2=kpos_y, kpos3=kpos_z,
                     kang1=kang_phi, kang2=kang_theta, kang3=kang_psi)
 

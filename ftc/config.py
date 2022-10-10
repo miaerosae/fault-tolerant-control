@@ -116,10 +116,10 @@ default_settings = fym.parser.parse({
             },
         },
         "model_uncert": {
-            "del_m": 1.1,
-            "del_J": np.diag([0.9, 1.1, 0.9]),
-            "del_c": 1.0,
-            "del_b": 1.0,
+            "del_m": 0.1,
+            "del_J": np.diag([-0.1, 0.1, 0.05]),
+            "del_c": -0.05,
+            "del_b": 0.05,
         },
     },
 
@@ -132,9 +132,9 @@ default_settings = fym.parser.parse({
         # --- outerLoop --- #
         "oL": {
             "alp": np.array([3, 3, 1]),
-            "eps": np.array([8, 8, 10]),
+            "eps": np.array([10, 10, 25]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "rho": np.array([1, 0.3]),
+            "rho": np.array([0.5, 0.3]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
@@ -146,12 +146,12 @@ default_settings = fym.parser.parse({
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
-            "rho_psi": np.array([45, 150]),
+            "rho_psi": np.deg2rad([45, 180]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([1, 15, 0/30/(0.5)**2]),
+        "Kxy": np.array([1, 5, 0/30/(0.5)**2]),
         "Kz": np.array([1, 15, 0/30/(0.5)**2]),
         "Kang": np.array([400/15, 15, 0/30/np.deg2rad(45)**2]),
         # "Kxy": np.array([30, 2, 0]),
@@ -189,15 +189,15 @@ default_settings = fym.parser.parse({
         "dt": 0.01,
         "max_t": 20,
         "blade": False,
-        "uncertainty": False,
-        "ext_unc": False,
-        "int_unc": False,
-        "faultBias": False,
+        "uncertainty": True,
+        "ext_unc": True,
+        "int_unc": True,
+        "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
         "groundEffect": False,
-        "hub": False,
+        "hub": False,  # not use
         "gyro": False,
-        "drygen": False,
+        "drygen": False,  # not use
         "BLF": True,
     },
 
