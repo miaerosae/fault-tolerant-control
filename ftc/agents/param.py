@@ -10,6 +10,10 @@ import ftc.config
 cfg = ftc.config.load()
 
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
 def get_b0(m, g, J):
     b0 = np.array([-g/J[1, 1], g/J[0, 0], -1/m, 1/J[2, 2]])
     return b0

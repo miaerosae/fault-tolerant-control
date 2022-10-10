@@ -119,8 +119,8 @@ class Multicopter(BaseEnv):
         self.B_drag = np.diag(np.zeros(3))  # currently ignored
         self.D_drag = np.diag([dx, dy, dz])
         if uncertainty is True:
-            c = cfg.model_uncert.del_c * self.c
-            b = cfg.model_uncert.del_b * self.b
+            c = (cfg.model_uncert.del_c + 1) * self.c
+            b = (cfg.model_uncert.del_b + 1) * self.b
         else:
             c, b = self.c, self.b
         self.mixer = Mixer(d=self.d, c=c, b=b)
@@ -134,6 +134,8 @@ class Multicopter(BaseEnv):
         self.ground = ground
         self.drygen = drygen
 
+        self.J_rand = 0
+
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel, prev_rotors):
         if self.blade is False:
             F, M1, M2, M3 = self.mixer.inverse(rotors)
@@ -146,23 +148,23 @@ class Multicopter(BaseEnv):
 
         m, g, J = self.m, self.g, self.J
         if self.uncertainty is True:
-            m = cfg.model_uncert.del_m * m
-            J = cfg.model_uncert.del_J * J
+            self.J_rand = np.random.randn(1)
+            m = (cfg.model_uncert.del_m*np.sin(t) + 1) * m
+            J = (cfg.model_uncert.del_J*self.J_rand + 1) * J
         Jinv = np.linalg.inv(J)
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
         ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
-        int_pos, int_vel, int_euler, int_omega = self.get_int_uncertainties(t, vel)
+        int_vel = self.get_int_uncertainties(t, vel)
         gyro = self.get_gyro(omega, rotors, prev_rotors)
-        drygen = self.get_drygen(t, pos[2], vel, quat)
 
         # wind: vel = vel - windvel
-        dpos = vel + ext_pos + int_pos
+        dpos = vel + ext_pos
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
-                + ext_vel + int_vel + drygen/m
+                + ext_vel + int_vel
                 )
         # wind: 바람 추가
         # DCM integration (Note: dcm; I to B) [1]
@@ -175,9 +177,9 @@ class Multicopter(BaseEnv):
         eps = 1 - (quat[0]**2+quat[1]**2+quat[2]**2+quat[3]**2)
         k = 1
         dquat = (dquat + k*eps*quat
-                 + angle2quat(ext_euler[2]+int_euler[2],
-                              ext_euler[1]+int_euler[1],
-                              ext_euler[0]+int_euler[0]))
+                 + angle2quat(ext_euler[2],
+                              ext_euler[1],
+                              ext_euler[0]))
         domega = Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)
@@ -187,29 +189,31 @@ class Multicopter(BaseEnv):
             - self.B_drag.dot(omega)
             + windvel
         ) \
-            + ext_omega + int_omega
+            + ext_omega
 
         return dpos, dvel, dquat, domega
 
-    def get_model_uncertainty(self, rotors):
+    def get_model_uncertainty(self, rotors, t):
         # calculate real and disturbance value of F, M
-        F, M1, M2, M3 = self.mixer.inverse(rotors)
-        M = np.vstack((M1, M2, M3))
-        e3 = np.vstack((0, 0, 1))
-        dcm = quat2dcm(self.quat.state)
-        omega = self.omega.state
+        if self.uncertainty is True:
+            F, M1, M2, M3 = self.mixer.inverse(rotors)
+            M = np.vstack((M1, M2, M3))
+            e3 = np.vstack((0, 0, 1))
+            dcm = quat2dcm(self.quat.state)
+            omega = self.omega.state
 
-        Jinv_real = np.linalg.inv(self.J)
-        vel_real = (- F*dcm.T.dot(e3)/self.m)
-        omega_real = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
+            Jinv_real = np.linalg.inv(self.J)
+            vel_real = (- F*dcm.T.dot(e3)/self.m)
+            omega_real = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
 
-        delm = cfg.model_uncert.del_m
-        delJ = cfg.model_uncert.del_J
-        Jinv_dist = np.linalg.inv(self.J*delJ)
-        vel_dist = (- F*dcm.T.dot(e3)/(self.m*delm))
-        omega_dist = Jinv_dist.dot(M - np.cross(omega, (self.J*delJ).dot(omega), axis=0))
-
-        return vel_dist-vel_real, omega_dist-omega_real
+            delm = cfg.model_uncert.del_m
+            J = (cfg.model_uncert.del_J*self.J_rand + 1) * self.J
+            Jinv_dist = np.linalg.inv(J)
+            vel_dist = (- F*dcm.T.dot(e3)/(self.m*(delm*np.sin(t) + 1)))
+            omega_dist = Jinv_dist.dot(M - np.cross(omega, J.dot(omega), axis=0))
+            return vel_dist-vel_real, omega_dist-omega_real
+        else:
+            return np.zeros((3, 1)), np.zeros((3, 1))
 
     def set_dot(self, t, rotors, windvel=np.zeros((3, 1)),
                 prev_rotors=np.zeros((4, 1))):
@@ -219,25 +223,14 @@ class Multicopter(BaseEnv):
 
     def get_int_uncertainties(self, t, vel):
         if self.int_unc is True:
-            int_pos = np.zeros((3, 1))
-            # int_vel = np.vstack([
-            #     vel[0]*vel[1] + (1+np.sin(vel[0]))*vel[1] + 2*vel[0] + 2 + np.sin(t),
-            #     -vel[0]*vel[2] + (1+np.sin(vel[1]))*vel[2] + 2*vel[1] + np.cos(2*t),
-            #     vel[2] + np.exp(-t)*np.sin(t+np.pi/4)
-            # ])
             int_vel = np.vstack([
-                np.sin(vel[0])*vel[1],
-                np.sin(vel[1])*vel[2],
+                vel[0]*vel[1],
+                vel[1]*vel[2],
                 np.exp(-t)*np.sin(t+np.pi/4)
             ])
-            int_euler = np.zeros((3, 1))
-            int_omega = np.zeros((3, 1))
         else:
-            int_pos = np.zeros((3, 1))
             int_vel = np.zeros((3, 1))
-            int_euler = np.zeros((3, 1))
-            int_omega = np.zeros((3, 1))
-        return int_pos, int_vel, int_euler, int_omega
+        return int_vel
 
     def get_gyro(self, omega, rotors, prev_rotors):
         # propeller gyro effect
@@ -261,7 +254,7 @@ class Multicopter(BaseEnv):
         if h == 0:
             ratio = 2
         else:
-            ratio = 1 / (1 - (self.R/4/self.pos.state[2])**2)
+            ratio = 1 / (1 - (self.Rrad/4/self.pos.state[2])**2)
 
         if ratio > self.max_IGE_ratio:
             u1_d = self.max_IGE_ratio * u1
@@ -269,46 +262,46 @@ class Multicopter(BaseEnv):
             u1_d = ratio * u1
         return u1_d
 
-    def get_drygen(self, t, z, vel, quat):
-        if self.drygen is True:
-            var = cfg.physProp
-            rho = self.get_rho(-z)
-            R_bar = abs(angle2dcm(quat2angle(quat)))
-            A = R_bar.dot(np.vstack([var.Au, var.Av, var.Aw]))
-            A = A.ravel()
-            Cd = np.vstack([var.Cdx, var.Cdy, var.Cdz])
-            v_w = self.get_v_w_bar(t) + self.get_v_w_hat()
+    # def get_drygen(self, t, z, vel, quat):
+    #     if self.drygen is True:
+    #         var = cfg.physProp
+    #         rho = self.get_rho(-z)
+    #         R_bar = abs(angle2dcm(quat2angle(quat)))
+    #         A = R_bar.dot(np.vstack([var.Au, var.Av, var.Aw]))
+    #         A = A.ravel()
+    #         Cd = np.vstack([var.Cdx, var.Cdy, var.Cdz])
+    #         v_w = self.get_v_w_bar(t) + self.get_v_w_hat()
 
-            d = - 1 / 2 * rho * Cd * A * (vel-v_w)**2 * np.sign(vel-v_w)
-            return d[:, None]
-        else:
-            return np.zeros((3, 1))
+    #         d = - 1 / 2 * rho * Cd * A * (vel-v_w)**2 * np.sign(vel-v_w)
+    #         return d[:, None]
+    #     else:
+    #         return np.zeros((3, 1))
 
-    def get_v_w_bar(self, t):
-        var = cfg.wind_dist
-        v1 = np.array([var.vx1, var.vy1, var.vz1])
-        v2 = np.array([var.vx2, var.vy2, var.vz2])
-        if t < var.t1:
-            v_w_bar = v1
-        elif t < var.t2:
-            v_w_bar = (v2+v1)/2 - (v2-v1)/2*np.cos(np.pi*(t-var.t1)/(var.t2-var.t1))
-        else:
-            v_w_bar = v2
-        return v_w_bar
+    # def get_v_w_bar(self, t):
+    #     var = cfg.wind_dist
+    #     v1 = np.array([var.vx1, var.vy1, var.vz1])
+    #     v2 = np.array([var.vx2, var.vy2, var.vz2])
+    #     if t < var.t1:
+    #         v_w_bar = v1
+    #     elif t < var.t2:
+    #         v_w_bar = (v2+v1)/2 - (v2-v1)/2*np.cos(np.pi*(t-var.t1)/(var.t2-var.t1))
+    #     else:
+    #         v_w_bar = v2
+    #     return v_w_bar
 
-    def get_v_w_hat(self, z):
-        sig_w = 0.1 * cfg.wind_dist.W20
-        sig_u = sig_w / (0.177 + 0.000823*(-z))**0.4
-        sig_v = sig_u
-        Lw = - z
-        Lu = - z / (0.177 + 0.000823*(-z))**1.2
-        Lv = Lu
-        return v_w_hat
+    # def get_v_w_hat(self, z):
+    #     sig_w = 0.1 * cfg.wind_dist.W20
+    #     sig_u = sig_w / (0.177 + 0.000823*(-z))**0.4
+    #     sig_v = sig_u
+    #     Lw = - z
+    #     Lu = - z / (0.177 + 0.000823*(-z))**1.2
+    #     Lv = Lu
+    #     return v_w_hat
 
-    def get_rho(self, altitude):
-        pressure = 101325 * (1 - 2.25569e-5 * altitude)**5.25616
-        temperature = 288.14 - 0.00649 * altitude
-        return pressure / (287*temperature)
+    # def get_rho(self, altitude):
+    #     pressure = 101325 * (1 - 2.25569e-5 * altitude)**5.25616
+    #     temperature = 288.14 - 0.00649 * altitude
+    #     return pressure / (287*temperature)
 
     # def get_d(self, W, rotors):
     #     rotor_n = rotors.shape[0]
