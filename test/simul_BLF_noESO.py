@@ -69,56 +69,72 @@ class Env(BaseEnv):
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[0][0])
+                                   -self.pos_ref[0][0], cond.BLF)
         self.blf_y = BLF.outerLoop(Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[1][0])
+                                   -self.pos_ref[1][0], cond.BLF)
         self.blf_z = BLF.outerLoop(Kxy,
                                    params.oL.rho, params.oL.rho_k,
-                                   -self.pos_ref[2][0])
+                                   -self.pos_ref[2][0], cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
         self.blf_phi = BLF.innerLoop(Kang,
                                      params.iL.rho,
-                                     b[0])
+                                     b[0], cond.BLF)
         self.blf_theta = BLF.innerLoop(Kang,
                                        params.iL.rho,
-                                       b[1])
+                                       b[1], cond.BLF)
         self.blf_psi = BLF.innerLoop(Kang,
                                      params.iL.rho_psi,
-                                     b[2])
+                                     b[2], cond.BLF)
 
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([0, 0, 0])
-        dref = np.vstack([0, 0, 0])
-        return pos_des, dref
+        pos_des = np.vstack([t/10, -t/15, -t])
+        dref = np.vstack([1/10, -1/15, -1])
+        ddref = np.vstack([0, 0, 0])
+        return pos_des, dref, ddref
 
     def step(self):
         env_info, done = self.update()
-        # for i in range(2):
-        #     if abs(self.plant.pos.state[i]) > 2:
+        # pos = self.plant.pos.state
+        # ang = quat2angle(self.plant.quat.state)
+        # dang = self.plant.omega.state
+        # for i in range(3):
+        #     if abs(pos[i]) > 1:
         #         done = True
-        # for dang in self.plant.omega.state:
-        #     if abs(dang) > np.deg2rad(150):
+        #     if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+        #         done = True
+        #     if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
         #         done = True
         return done, env_info
 
+    def get_W(self, t):
+        W = np.diag([1., 1., 1., 1.])
+        if self.fault is True:
+            index = self.fault_index
+            for i in range(np.size(self.fault_time)):
+                if t > self.fault_time[i]:
+                    W[index[i], index[i]] = self.LoE[i]
+        return W
+
     def set_dot(self, t):
-        ref, dref = self.get_ref(t)
-        W = What = np.diag([1, 1, 1, 1])
+        ref, dref, ddref = self.get_ref(t)
+        W = self.get_W(t)
+        What = self.get_W(t-self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
         epos = self.plant.pos.state - ref
         eposd = self.plant.vel.state - dref
+        vel = self.plant.vel.state
         e_ = np.hstack((epos, eposd))
         q = np.zeros((3, 1))
-        q[0] = self.blf_x.get_virtual(t, e_[0])
-        q[1] = self.blf_y.get_virtual(t, e_[1])
-        q[2] = self.blf_z.get_virtual(t, e_[2])
+        q[0] = self.blf_x.get_virtual(t, e_[0], vel[0], dref[0], ddref[0])
+        q[1] = self.blf_y.get_virtual(t, e_[1], vel[1], dref[1], ddref[1])
+        q[2] = self.blf_z.get_virtual(t, e_[2], vel[2], dref[2], ddref[2])
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
@@ -130,7 +146,7 @@ class Env(BaseEnv):
         eulerd = np.vstack([phid, thetad, psid])
 
         # Inner-Loop
-        ang = np.array(quat2angle(self.plant.quat.state[::-1]))[:, None]
+        ang = np.array(quat2angle(self.plant.quat.state))[::-1][:, None]
         dang = self.plant.omega.state
         x_ = np.hstack((ang, dang))
         # caculate f
@@ -179,7 +195,8 @@ class Env(BaseEnv):
                     model_uncert_vel=model_uncert_vel,
                     model_uncert_omega=model_uncert_omega,
                     int_uncert_vel=int_vel,
-                    eulerd=eulerd)
+                    eulerd=eulerd,
+                    obs_pos=np.zeros((3, 1)), obs_ang=np.zeros((3, 1)))
 
 
 def run(loggerpath, params):
@@ -229,8 +246,8 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": 1,
-            "k12": 12,
+            "k11": tune.uniform(0.1, 500),
+            "k12": tune.uniform(0.1, 500),
             "k13": 0,
             "k21": tune.uniform(0.1, 500),
             "k22": tune.uniform(0.1, 500),
@@ -239,10 +256,10 @@ def main(args):
         current_best_params = [{
             "k11": 2,
             "k12": 30,
-            "k13": 5/30/(0.5)**2,
+            "k13": 0,
             "k21": 500/30,
             "k22": 30,
-            "k23": 5/30/np.deg2rad(45)**2,
+            "k23": 0,
         }]
         search = HyperOptSearch(
             metric="tf",
@@ -257,7 +274,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=10000,
+                num_samples=1000,
                 search_alg=search,
             ),
             run_config=RunConfig(
@@ -308,6 +325,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    main(args)
-    # comp.exp_plot("data.h5", "data1.h5")
+    # main(args)
+    comp.exp_plot("data.h5", "data1.h5")
     # pfp.exp_plot("data.h5")
