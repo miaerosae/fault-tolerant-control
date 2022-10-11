@@ -99,9 +99,11 @@ class outerLoop(BaseEnv):
         ddrho = k**2 * (rho_0-rho_inf) * np.exp(-k*t)
         e1 = self.e.state[0]
         kP = - (ddrho/rho - (drho/rho)**2 - 1/(rho**2-e1**2)
-                + K[1]*drho/rho) + K[0]*K[1]
+                + K[1]*drho/rho) + K[0]*K[1] + K[2]*(1-(e1/rho)**2)*rho**2
         kD = - drho/rho + K[0] + K[1]
-        return np.vstack([kP, kD, 0])
+        kI = (2*K[2]*(e1**2)*drho/rho + 2*K[2]*(1-(e1/rho)**2)*rho*drho
+              + (1-(e1/rho)**2)*K[1]*K[2]*rho**2)
+        return np.vstack([kP, kD, kI])
 
     def get_err(self):
         return self.e.state[0]

@@ -178,7 +178,7 @@ def get_PID_gain(param):
     kpos = param.Kxy
     kang = param.Kang
     rhoinf = param.oL.rho[1]
-    kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 - 1/rhoinf**2
+    kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]
     kI1 = kpos[1]*kpos[2]*rhoinf**2
     kP2 = kang[0]*kang[1] + kang[2]
