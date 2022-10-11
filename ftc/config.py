@@ -21,7 +21,7 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.1,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10, 13, 15]),
+        "fault_time": np.array([5, 7, 10, 14, 15]),
         "fault_index": np.array([0, 1, 2, 2, 1]),
         "LoE": np.array([0.5, 0.6, 0.8, 0.4, 1]),
         # "fault_time": np.array([5]),
@@ -149,7 +149,7 @@ default_settings = fym.parser.parse({
             "eps": np.array([80, 45, 80]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
-            "rho": np.deg2rad(np.array([45, 130])),
+            "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad([45, 180]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
