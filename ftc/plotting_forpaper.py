@@ -90,11 +90,11 @@ def exp_plot(loggerpath):
     # observation: position error
     plt.figure(figsize=(9, 7))
 
-    rho = cfg.agents.BLF.oL.rho
-    rho_k = cfg.agents.BLF.oL.rho_k
+    rho = np.array([0.5, 0.25])
+    rhoinf = 0.5
     pos_bounds = np.zeros((np.shape(data["x"]["pos"][:, 0, 0])[0]))
     for i in range(np.shape(data["x"]["pos"][:, 0, 0])[0]):
-        pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data["t"][i]) + rho[1]
+        pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rhoinf*data["t"][i]) + rho[1]
     ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], ["-", "--", "-."])):
         if i != 0:
@@ -112,7 +112,7 @@ def exp_plot(loggerpath):
 
     # euler angles
     plt.figure(figsize=(9, 7))
-    bound = cfg.agents.BLF.iL.rho[0]
+    bound = np.deg2rad(45)
     plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     ax = plt.subplot(311)
@@ -125,10 +125,10 @@ def exp_plot(loggerpath):
         plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
         plt.plot(data["t"], np.rad2deg(data["eulerd"][:, i, 0]), "r--", label="Desired Value")
         plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "k:",
+                 np.ones((np.size(data["t"])))*np.rad2deg(bound), "k:",
                  label="Prescribed Bound")
         plt.plot(data["t"],
-                 -np.ones((np.size(data["t"])))*np.rad2deg(cfg.agents.BLF.iL.rho[0]), "k:")
+                 -np.ones((np.size(data["t"])))*np.rad2deg(bound), "k:")
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.3))
@@ -138,8 +138,6 @@ def exp_plot(loggerpath):
 
     # euler angles error time hist
     plt.figure(figsize=(9, 7))
-    bound = cfg.agents.BLF.iL.rho[0]
-    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
 
     angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
     ax = plt.subplot(311)
@@ -154,8 +152,8 @@ def exp_plot(loggerpath):
 
     # angular rates
     plt.figure(figsize=(9, 7))
-    bound = cfg.agents.BLF.iL.rho[1]
-    bound_psi = cfg.agents.BLF.iL.rho_psi[1]
+    bound = np.deg2rad(130)
+    bound_psi = np.deg2rad(180)
 
     ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip(["p", "q", "r"], ["-.", "--", "-"])):
@@ -205,7 +203,7 @@ def exp_plot(loggerpath):
     plt.figure(figsize=(9, 7))
 
     real_dist = np.zeros((6, np.size(data["t"])))
-    ext_dist = cfg.simul_condi.ext_unc
+    ext_dist = True
     for i in range(np.size(data["t"])):
         t = data["t"][i]
         real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
@@ -244,13 +242,40 @@ def exp_plot(loggerpath):
     # BLF gain
     plt.figure()
 
+    # calculate gain of Scenario 2
+    kpos = np.array([1, 0.5, 0.5/30/(0.2**2)])
+    kang = np.array([400/30, 30, 1/30/np.deg2rad(45)**2])
+    kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
+    kD1 = kpos[0] + kpos[1]
+    kI1 = kpos[1]*kpos[2]*rhoinf**2
+    kP2 = kang[0]*kang[1] + kang[2]
+    kD2 = kang[0] + kang[1]
+    kI2 = kang[1]*kang[2]
+
     ax = plt.subplot(331)
     for i in range(9):
         if i != 0:
             plt.subplot(331+i, sharex=ax)
-        plt.plot(data["t"], data["gain"][:, i, 0], "m", label="Real Value")
+        plt.plot(data["t"], data["gain"][:, i, 0], "r-", label="Real Gain")
         if i % 3 == 0:
-            plt.plot(data["t"], np.ones(np.shape(data["t"]))*
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kP1, "b--", label="PID-like Gain")
+        elif i % 3 == 1:
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kD1, "b--")
+        elif i % 3 == 2:
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI1, "b--")
+        if i == 0:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.1))
+            plt.ylabel("x subsystem")
+            plt.title(r"$k_{P}$")
+        elif i == 1:
+            plt.title(r"$k_{D}$")
+        elif i == 2:
+            plt.title(r"$k_{I}$")
+        elif i == 3:
+            plt.ylabel("y subsystem")
+        elif i == 6:
+            plt.ylabel("z subsystem")
+
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("position Real gain value")
     plt.tight_layout()
@@ -261,10 +286,30 @@ def exp_plot(loggerpath):
     for i in range(9):
         if i != 0:
             plt.subplot(331+i, sharex=ax)
-        plt.plot(data["t"], data["gain"][:, i+9, 0], "m", label=_label)
+        plt.plot(data["t"], data["gain"][:, i+9, 0], "r", label="Real Gain")
+        if i % 3 == 0:
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kP2, "b--", label="PID-like Gain")
+        elif i % 3 == 1:
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kD2, "b--")
+        elif i % 3 == 2:
+            plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI2, "b--")
+        if i == 0:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.1))
+            plt.ylabel(r"$\phi$" + " subsystem")
+            plt.title(r"$k_{P}$")
+        elif i == 1:
+            plt.title(r"$k_{D}$")
+        elif i == 2:
+            plt.title(r"$k_{I}$")
+        elif i == 3:
+            plt.ylabel(r"$\theta$" + " subsystem")
+        elif i == 6:
+            plt.ylabel(r"$\psi$" + " subsystem")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("angle Real gain value")
     plt.tight_layout()
+
+    plt.show()
 
     # Update parameter
     # plt.figure()
