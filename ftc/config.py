@@ -156,7 +156,6 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "Kxy": np.array([1, 0.5, 0.5/30/(0.2)**2]),
-        "Kx": np.array([1, 0.5, 0.5/30/(0.2)**2]),
         "Kang": np.array([400/30, 30, 1/30/np.deg2rad(45)**2]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
