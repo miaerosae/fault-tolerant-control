@@ -92,8 +92,8 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([t/10, -t/15, -t])
-        dref = np.vstack([1/10, -1/15, -1])
+        pos_des = np.vstack([0, 0, -t])
+        dref = np.vstack([0, 0, -1])
         ddref = np.vstack([0, 0, 0])
         return pos_des, dref, ddref
 
@@ -325,6 +325,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("data.h5", "data1.h5")
+    main(args)
+    # comp.exp_plot("data.h5", "data1.h5")
     # pfp.exp_plot("data.h5")

@@ -49,7 +49,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = True
+        self.fault = False
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -117,20 +117,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        if abs(self.blf_x.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_y.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_z.e.state[0]) > 0.5:
-            done = True
-        ang = quat2angle(self.plant.quat.state)
-        for i in range(3):
-            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
-                done = True
-        dang = self.plant.omega.state
-        for i in range(3):
-            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
-                done = True
+        # if abs(self.blf_x.e.state[0]) > 0.5:
+        #     done = True
+        # if abs(self.blf_y.e.state[0]) > 0.5:
+        #     done = True
+        # if abs(self.blf_z.e.state[0]) > 0.5:
+        #     done = True
+        # ang = quat2angle(self.plant.quat.state)
+        # for i in range(3):
+        #     if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+        #         done = True
+        # dang = self.plant.omega.state
+        # for i in range(3):
+        #     if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+        #         done = True
         return done, env_info
 
     def get_W(self, t):
@@ -400,6 +400,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    main(args)
+    # main(args)
     # comp.exp_plot("data.h5", "data1.h5")
-    # pfp.exp_plot("data.h5")
+    pfp.exp_plot("Scenario2.h5")

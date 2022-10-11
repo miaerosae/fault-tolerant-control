@@ -10,8 +10,10 @@ import statistics
 cfg = ftc.config.load()
 
 
-def exp_plot(loggerpath, pf):
-    data, info = fym.load(loggerpath, with_info=True)
+def exp_plot(path1, path2, path3, pf):
+    data1, info = fym.load(path1, with_info=True)  # Scenario 1 - BLF
+    data2 = fym.load(path2)  # Scenario 1 - BS
+    data3 = fym.load(path3)  # Scenario 2
     # detection_time = info["detection_time"]
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
@@ -21,142 +23,142 @@ def exp_plot(loggerpath, pf):
 
     ''' comparing ESOs '''
     ''' 1. disturbance '''
-    # 1a) estimation graph
-    real_dist = np.zeros((6, np.size(data["t"])))
-    ext_dist = cfg.simul_condi.ext_unc
-    for i in range(np.size(data["t"])):
-        t = data["t"][i]
-        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    # # 1a) estimation graph
+    # real_dist = np.zeros((6, np.size(data["t"])))
+    # ext_dist = cfg.simul_condi.ext_unc
+    # for i in range(np.size(data["t"])):
+    #     t = data["t"][i]
+    #     real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
 
-    dist_error = np.zeros((6, np.size(data["t"])))
-    for i in range(6):
-        dist_error[i, :] = data["dist"][:, i, 0] - real_dist[i, :]
+    # dist_error = np.zeros((6, np.size(data["t"])))
+    # for i in range(6):
+    #     dist_error[i, :] = data["dist"][:, i, 0] - real_dist[i, :]
 
-    plt.figure(figsize=(9, 7))
-    ax = plt.subplot(321)
-    for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
-                                r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
-        if i != 0:
-            plt.subplot(321+i, sharex=ax)
-        plt.plot(data["t"], data["dist"][:, i, 0], "k", label="Estimated value")
-        plt.plot(data["t"], real_dist[i, :], "r--", label="Real value")
+    # plt.figure(figsize=(9, 7))
+    # ax = plt.subplot(321)
+    # for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
+    #                             r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
+    #     if i != 0:
+    #         plt.subplot(321+i, sharex=ax)
+    #     plt.plot(data["t"], data["dist"][:, i, 0], "k", label="Estimated value")
+    #     plt.plot(data["t"], real_dist[i, :], "r--", label="Real value")
 
-        # TODO) ESO 비교군 추가
+    #     # TODO) ESO 비교군 추가
 
-        if i == 0:
-            plt.ylabel(_label, labelpad=15)
-        elif i == 1:
-            plt.ylabel(_label, labelpad=12)
-        elif i == 2:
-            plt.ylabel(_label, labelpad=20)
-        elif i == 3:
-            plt.ylabel(_label, labelpad=19)
-        elif i == 4:
-            plt.ylabel(_label, labelpad=12)
-        elif i == 5:
-            plt.ylabel(_label, labelpad=0)
-        if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
-    # plt.savefig("dist.png", dpi=300)
+    #     if i == 0:
+    #         plt.ylabel(_label, labelpad=15)
+    #     elif i == 1:
+    #         plt.ylabel(_label, labelpad=12)
+    #     elif i == 2:
+    #         plt.ylabel(_label, labelpad=20)
+    #     elif i == 3:
+    #         plt.ylabel(_label, labelpad=19)
+    #     elif i == 4:
+    #         plt.ylabel(_label, labelpad=12)
+    #     elif i == 5:
+    #         plt.ylabel(_label, labelpad=0)
+    #     if i == 0:
+    #         plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+    # # plt.savefig("dist.png", dpi=300)
 
-    # 1b) disturbance estimation error
-    plt.figure(figsize=(9, 7))
-    ax = plt.subplot(321)
-    for i, _label in enumerate([r"$\tilde{e}_{3x}$", r"$\tilde{e}_{3y}$", r"$\tilde{e}_{3z}$",
-                                r"$\tilde{e}_{3\phi}$", r"$\tilde{e}_{3\theta}$", r"$\tilde{e}_{3\psi}$"]):
-        if i != 0:
-            plt.subplot(321+i, sharex=ax)
-        plt.plot(data["t"], dist_error[i, :], "k", label="Proposed")
+    # # 1b) disturbance estimation error
+    # plt.figure(figsize=(9, 7))
+    # ax = plt.subplot(321)
+    # for i, _label in enumerate([r"$\tilde{e}_{3x}$", r"$\tilde{e}_{3y}$", r"$\tilde{e}_{3z}$",
+    #                             r"$\tilde{e}_{3\phi}$", r"$\tilde{e}_{3\theta}$", r"$\tilde{e}_{3\psi}$"]):
+    #     if i != 0:
+    #         plt.subplot(321+i, sharex=ax)
+    #     plt.plot(data["t"], dist_error[i, :], "k", label="Proposed")
 
-        # TODO) ESO 비교군 추가
+    #     # TODO) ESO 비교군 추가
 
-        if i == 0:
-            plt.ylabel(_label, labelpad=15)
-        elif i == 1:
-            plt.ylabel(_label, labelpad=12)
-        elif i == 2:
-            plt.ylabel(_label, labelpad=20)
-        elif i == 3:
-            plt.ylabel(_label, labelpad=19)
-        elif i == 4:
-            plt.ylabel(_label, labelpad=12)
-        elif i == 5:
-            plt.ylabel(_label, labelpad=0)
-        if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
-    # plt.savefig("dist_error.png", dpi=300)
+    #     if i == 0:
+    #         plt.ylabel(_label, labelpad=15)
+    #     elif i == 1:
+    #         plt.ylabel(_label, labelpad=12)
+    #     elif i == 2:
+    #         plt.ylabel(_label, labelpad=20)
+    #     elif i == 3:
+    #         plt.ylabel(_label, labelpad=19)
+    #     elif i == 4:
+    #         plt.ylabel(_label, labelpad=12)
+    #     elif i == 5:
+    #         plt.ylabel(_label, labelpad=0)
+    #     if i == 0:
+    #         plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 2.0))
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+    # # plt.savefig("dist_error.png", dpi=300)
 
-    # 1c) STD for observation error(ESO를 여러 개 비교한 경우)
-    for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
-                                r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
-        print("proposed controller: " + _label + str(statistics.stdev(dist_error[i, :])))
+    # # 1c) STD for observation error(ESO를 여러 개 비교한 경우)
+    # for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
+    #                             r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
+    #     print("proposed controller: " + _label + str(statistics.stdev(dist_error[i, :])))
 
-        # TODO) ESO 비교군 추가
+    #     # TODO) ESO 비교군 추가
 
-    ''' 2. position '''
-    # 2a) estimated/real value of proposed controller (tracking error)
-    # ESO 가 여러 개일 경우 estimated term 추가
-    plt.figure()
+    # ''' 2. position '''
+    # # 2a) estimated/real value of proposed controller (tracking error)
+    # # ESO 가 여러 개일 경우 estimated term 추가
+    # plt.figure()
 
-    ax = plt.subplot(311)
-    for i, (_label, _ls) in enumerate([r"$\tilde{e}_{1x}$", r"$\tilde{e}_{1y}$", r"$\tilde{e}_{1z}$"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], (data["obs_pos"]-(data["x"]["pos"]-data["ref"]))[:, i, 0], "k-", label="Proposed")
+    # ax = plt.subplot(311)
+    # for i, (_label, _ls) in enumerate([r"$\tilde{e}_{1x}$", r"$\tilde{e}_{1y}$", r"$\tilde{e}_{1z}$"]):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], (data["obs_pos"]-(data["x"]["pos"]-data["ref"]))[:, i, 0], "k-", label="Proposed")
 
-        # TODO: ESO 추가
+    #     # TODO: ESO 추가
 
-        plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3))
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
-    # plt.savefig("lpeso_pos.png", dpi=300)
+    #     plt.ylabel(_label)
+    #     if i == 0:
+    #         plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3))
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+    # # plt.savefig("lpeso_pos.png", dpi=300)
 
-    # 2b) STD for observation error (ESO를 여러 개 비교한 경우)
-    for i, _label in enumerate([r"$\tilde{e}_{1x}$", r"$\tilde{e}_{1y}$", r"$\tilde{e}_{1z}$"]):
-        print("proposed controller" + _label + str(statistics.stdev((data["obs_pos"]-(data["x"]["pos"]-data["ref"]))[:, i, 0])))
+    # # 2b) STD for observation error (ESO를 여러 개 비교한 경우)
+    # for i, _label in enumerate([r"$\tilde{e}_{1x}$", r"$\tilde{e}_{1y}$", r"$\tilde{e}_{1z}$"]):
+    #     print("proposed controller" + _label + str(statistics.stdev((data["obs_pos"]-(data["x"]["pos"]-data["ref"]))[:, i, 0])))
 
-        # TODO: ESO 추가
+    #     # TODO: ESO 추가
 
-    ''' 3. euler '''
-    # 3a) desired/estimated/real value of proposed controller
-    # ESO 가 여러 개일 경우 estimated term 추가
-    plt.figure(figsize=(9, 7))
+    # ''' 3. euler '''
+    # # 3a) desired/estimated/real value of proposed controller
+    # # ESO 가 여러 개일 경우 estimated term 추가
+    # plt.figure(figsize=(9, 7))
 
-    ax = plt.subplot(311)
-    angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
-    ax = plt.subplot(311)
-    for i, _label in enumerate([r"$\tilde{\bar{r}}_{1\phi}$", r"$\tilde{\bar{r}}_{1\theta}$", r"$\tilde{\bar{r}}_{1\psi}$"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]-angles[:, 2-i]), "k-", label="Real")
+    # ax = plt.subplot(311)
+    # angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
+    # ax = plt.subplot(311)
+    # for i, _label in enumerate([r"$\tilde{\bar{r}}_{1\phi}$", r"$\tilde{\bar{r}}_{1\theta}$", r"$\tilde{\bar{r}}_{1\psi}$"]):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]-angles[:, 2-i]), "k-", label="Real")
 
-        # TODO: ESO 추가
+    #     # TODO: ESO 추가
 
-        plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.3))
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
-    # plt.savefig("angle.png", dpi=300)
+    #     plt.ylabel(_label)
+    #     if i == 0:
+    #         plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.3))
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
+    # # plt.savefig("angle.png", dpi=300)
 
-    # 3b) STD for observation error (ESO를 여러 개 비교한 경우)
-    for i, _label in enumerate([r"$\tilde{\bar{r}}_{1\phi}$", r"$\tilde{\bar{r}}_{1\theta}$", r"$\tilde{\bar{r}}_{1\psi}$"]):
-        print("proposed controller: " + _label + str(statistics.stdev(np.rad2deg(data["obs_ang"][:, i, 0]-angles[:, 2-i]))))
+    # # 3b) STD for observation error (ESO를 여러 개 비교한 경우)
+    # for i, _label in enumerate([r"$\tilde{\bar{r}}_{1\phi}$", r"$\tilde{\bar{r}}_{1\theta}$", r"$\tilde{\bar{r}}_{1\psi}$"]):
+    #     print("proposed controller: " + _label + str(statistics.stdev(np.rad2deg(data["obs_ang"][:, i, 0]-angles[:, 2-i]))))
 
-        # TODO: ESO 추가
+    #     # TODO: ESO 추가
 
     ''' comparing controllers '''
     ''' 4. position '''
     # 4a) 3D plot(x, y, z)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot(data["x"]["pos"][:, 0, 0], data["x"]["pos"][:, 1, 0], -data["x"]["pos"][:, 2, 0], "k-", label="Proposed")
+    ax.plot(data1["x"]["pos"][:, 0, 0], data1["x"]["pos"][:, 1, 0], -data1["x"]["pos"][:, 2, 0], "k-", label="Proposed")
 
     # TODO: add compare controller data here
 

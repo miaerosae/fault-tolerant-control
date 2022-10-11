@@ -169,28 +169,28 @@ def exp_plot(loggerpath1, loggerpath2):
     plt.tight_layout()
 
     # disturbance
-    plt.figure()
+    # plt.figure()
 
-    real_dist = np.zeros((6, np.size(data1["t"])))
-    ext_dist = cfg.simul_condi.ext_unc
-    for i in range(np.size(data1["t"])):
-        t = data1["t"][i]
-        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    # real_dist = np.zeros((6, np.size(data1["t"])))
+    # ext_dist = cfg.simul_condi.ext_unc
+    # for i in range(np.size(data1["t"])):
+    #     t = data1["t"][i]
+    #     real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
 
-    ax = plt.subplot(611)
-    for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
-                                r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
-        if i != 0:
-            plt.subplot(611+i, sharex=ax)
-        plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
-        plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
-        plt.plot(data2["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
-        # plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
-        # plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
-        plt.ylabel(_label)
-    plt.gcf().supylabel("dist")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
+    # ax = plt.subplot(611)
+    # for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
+    #                             r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
+    #     if i != 0:
+    #         plt.subplot(611+i, sharex=ax)
+    #     plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
+    #     plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
+    #     plt.plot(data2["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
+    #     # plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
+    #     # plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
+    #     plt.ylabel(_label)
+    # plt.gcf().supylabel("dist")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
 
     # q
     plt.figure()
