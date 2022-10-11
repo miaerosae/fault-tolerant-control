@@ -91,10 +91,10 @@ def exp_plot(loggerpath):
     plt.figure(figsize=(9, 7))
 
     rho = np.array([0.5, 0.25])
-    rhoinf = 0.5
+    rho_k = 0.5
     pos_bounds = np.zeros((np.shape(data["x"]["pos"][:, 0, 0])[0]))
     for i in range(np.shape(data["x"]["pos"][:, 0, 0])[0]):
-        pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rhoinf*data["t"][i]) + rho[1]
+        pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data["t"][i]) + rho[1]
     ax = plt.subplot(311)
     for i, (_label, _ls) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], ["-", "--", "-."])):
         if i != 0:
@@ -152,7 +152,7 @@ def exp_plot(loggerpath):
 
     # angular rates
     plt.figure(figsize=(9, 7))
-    bound = np.deg2rad(130)
+    bound = np.deg2rad(150)
     bound_psi = np.deg2rad(180)
 
     ax = plt.subplot(311)
@@ -230,11 +230,13 @@ def exp_plot(loggerpath):
         elif i == 2:
             plt.ylabel(_label, labelpad=20)
         elif i == 3:
-            plt.ylabel(_label, labelpad=19)
+            plt.ylabel(_label, labelpad=15)
         elif i == 4:
             plt.ylabel(_label, labelpad=12)
         elif i == 5:
             plt.ylabel(_label, labelpad=0)
+        if i == 0:
+            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.3))
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
     # plt.savefig("dist.png", dpi=300)
@@ -245,12 +247,13 @@ def exp_plot(loggerpath):
     # calculate gain of Scenario 2
     kpos = np.array([1, 0.5, 0.5/30/(0.2**2)])
     kang = np.array([400/30, 30, 1/30/np.deg2rad(45)**2])
+    rhoinf = 0.25
     kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]
     kI1 = kpos[1]*kpos[2]*rhoinf**2
-    kP2 = kang[0]*kang[1] + kang[2]
-    kD2 = kang[0] + kang[1]
-    kI2 = kang[1]*kang[2]
+    kP2 = kang[0]*kang[1] + kang[2] + (kang[0] + kang[1])*np.sqrt(0.1) + 0.1
+    kD2 = kang[0] + kang[1] + 2*np.sqrt(0.1)
+    kI2 = (kang[1] + np.sqrt(0.1))*kang[2]
 
     ax = plt.subplot(331)
     for i in range(9):
@@ -264,7 +267,6 @@ def exp_plot(loggerpath):
         elif i % 3 == 2:
             plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI1, "b--")
         if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.1))
             plt.ylabel("x subsystem")
             plt.title(r"$k_{P}$")
         elif i == 1:
@@ -294,7 +296,6 @@ def exp_plot(loggerpath):
         elif i % 3 == 2:
             plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI2, "b--")
         if i == 0:
-            plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.1))
             plt.ylabel(r"$\phi$" + " subsystem")
             plt.title(r"$k_{P}$")
         elif i == 1:
