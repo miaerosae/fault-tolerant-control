@@ -92,16 +92,16 @@ class Env(BaseEnv):
         self.prev_rotors = np.zeros((4, 1))
 
     def get_ref(self, t):
-        pos_des = np.vstack([0, 0, -t])
-        dref = np.vstack([0, 0, -1])
-        ddref = np.vstack([0, 0, 0])
+        pos_des = np.vstack([1, np.cos(t), -t])
+        dref = np.vstack([0, -np.sin(t), -1])
+        ddref = np.vstack([0, -np.cos(t), 0])
         return pos_des, dref, ddref
 
     def step(self):
         env_info, done = self.update()
-        # pos = self.plant.pos.state
-        # ang = quat2angle(self.plant.quat.state)
-        # dang = self.plant.omega.state
+        pos = self.plant.pos.state
+        ang = quat2angle(self.plant.quat.state)
+        dang = self.plant.omega.state
         # for i in range(3):
         #     if abs(pos[i]) > 1:
         #         done = True
@@ -246,19 +246,19 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": tune.uniform(0.1, 500),
-            "k12": tune.uniform(0.1, 500),
-            "k13": 0,
+            "k11": tune.uniform(0.1, 100),
+            "k12": tune.uniform(0.1, 100),
+            "k13": tune.uniform(0.1, 10),
             "k21": tune.uniform(0.1, 500),
             "k22": tune.uniform(0.1, 500),
-            "k23": 0,
+            "k23": tune.uniform(0.1, 10),
         }
         current_best_params = [{
-            "k11": 2,
-            "k12": 30,
+            "k11": 10,
+            "k12": 0.1,
             "k13": 0,
-            "k21": 500/30,
-            "k22": 30,
+            "k21": 20,
+            "k22": 100/20,
             "k23": 0,
         }]
         search = HyperOptSearch(
@@ -274,7 +274,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=1000,
+                num_samples=2500,
                 search_alg=search,
             ),
             run_config=RunConfig(
@@ -325,6 +325,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    main(args)
-    # comp.exp_plot("data.h5", "data1.h5")
+    # main(args)
+    comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
     # pfp.exp_plot("data.h5")

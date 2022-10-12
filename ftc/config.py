@@ -19,14 +19,14 @@ default_settings = fym.parser.parse({
     # ------ ftc.faults.manager ------ #
 
     "faults.manager": {
-        "delay": 0.1,
+        "delay": 0.2,
         "threshold": 0.,
         # "fault_time": np.array([5, 7, 10, 14, 15]),
         # "fault_index": np.array([0, 1, 2, 2, 1]),
         # "LoE": np.array([0.5, 0.6, 0.8, 0.4, 1]),
-        "fault_time": np.array([5]),
-        "fault_index": np.array([0]),
-        "LoE": np.array([0.2]),
+        "fault_time": np.array([5, 7]),
+        "fault_index": np.array([0, 1]),
+        "LoE": np.array([0.2, 0.5]),
     },
 
     # ====== ftc.plants ====== #
@@ -138,7 +138,7 @@ default_settings = fym.parser.parse({
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "eps": np.array([25, 45, 25]),
-            "rho": np.array([0.5, 0.15]),
+            "rho": np.array([1.5, 0.2]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
@@ -149,14 +149,14 @@ default_settings = fym.parser.parse({
             "eps": np.array([80, 80, 80]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
-            "rho": np.deg2rad(np.array([45, 100])),
+            "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad([45, 180]),
             "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([1, 12, 0]),
-        "Kang": np.array([20, 15, 0]),
+        "Kxy": np.array([0.5, 6, 0/6/(0.2)**2]),
+        "Kang": np.array([8, 150/8, 0/12/np.deg2rad(45)**2]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),

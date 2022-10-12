@@ -28,7 +28,7 @@ class outerLoop(BaseEnv):
         self.rho_0, self.rho_inf = rho.ravel()
         self.BLF = BLF
 
-    def get_virtual(self, t, e, *args):
+    def get_virtual(self, t, e, x2, dref, ddref):
         integ_e = self.integ_e.state
         rho_0, rho_inf, k, K = self.rho_0, self.rho_inf, self.k, self.K
         if self.BLF is True:
@@ -44,9 +44,8 @@ class outerLoop(BaseEnv):
             dalpha = ddrho*z1 + drho*dz1 - drho*K[0]*z1 - rho*K[0]*dz1 \
                 - K[2]*(1-z1**2)*(rho**2*e[0]+2*rho*drho*integ_e) \
                 + K[2]*2*z1*dz1*rho**2*integ_e
-            q = dalpha - K[1]*z2 - z1/(1-z1**2)/rho
+            q = ddref + dalpha - K[1]*z2 - z1/(1-z1**2)/rho
         else:
-            x2, dref, ddref = args
             q = ddref - K[0]*(x2-dref) - K[1]*(x2-dref+K[0]*e[0]) - e[0]
 
         return q
