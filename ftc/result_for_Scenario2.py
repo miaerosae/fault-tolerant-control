@@ -28,7 +28,7 @@ def exp_plot(path1):
     # plt.savefig("lambda.png", dpi=300)
 
     # 4d) tracking error (subplots)
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     rho = np.array([0.5, 0.25])
     rho_k = 0.5
@@ -45,7 +45,7 @@ def exp_plot(path1):
         plt.plot(data["t"], -pos_bounds, "k:")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right', ncol=3, bbox_to_anchor=(1, 1.45))
+            plt.legend(loc='upper right', ncol=3, bbox_to_anchor=(1, 1.25))
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
@@ -97,22 +97,22 @@ def exp_plot(path1):
     plt.figure(figsize=(7, 5))
 
     name = [r"$\Omega_1$", r"$\Omega_2$", r"$\Omega_3$", r"$\Omega_4$"]
-    ax = plt.subplot(221)
+    ax = plt.subplot(411)
     for i in range(data["rotors"].shape[1]):
         if i != 0:
-            plt.subplot(221+i, sharex=ax)
+            plt.subplot(411+i, sharex=ax)
         plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
         plt.plot(data["t"], np.sqrt(data["rotors"][:, i]), "k-", label="Response")
         plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
         plt.ylabel(name[i])
-        if i == 1:
-            plt.legend(loc='upper right', ncol=2, bbox_to_anchor=(1, 1.25))
+        if i == 0:
+            plt.legend(loc='upper right', ncol=2, bbox_to_anchor=(1, 1.15))
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("rotor_input.png")
 
     # 6b) generalized forces comparison
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(7, 5))
 
     ax = plt.subplot(411)
     for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
@@ -122,9 +122,9 @@ def exp_plot(path1):
         if i == 0:
             plt.ylabel(_label, labelpad=23)
         elif i == 1:
-            plt.ylabel(_label, labelpad=5)
+            plt.ylabel(_label, labelpad=12)
         elif i == 2:
-            plt.ylabel(_label, labelpad=10)
+            plt.ylabel(_label, labelpad=8)
         elif i == 3:
             plt.ylabel(_label, labelpad=0)
     plt.gcf().supxlabel("Time [sec]")
@@ -132,7 +132,7 @@ def exp_plot(path1):
     # plt.savefig("forces.png", dpi=300)
 
     # disturbance
-    plt.figure()
+    plt.figure(figsize=(12, 9))
 
     real_dist = np.zeros((6, np.size(data["t"])))
     ext_dist = cfg.simul_condi.ext_unc
@@ -157,12 +157,12 @@ def exp_plot(path1):
         plt.plot(data["t"], data["dist"][:, i, 0], "b--", label="Estimated Value")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right', ncol=2, bbox_to_anchor=(1, 2.55))
+            plt.legend(loc='lower right', ncol=2, bbox_to_anchor=(1, 1.15))
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
     # BLF gain
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     # calculate gain of Scenario 2
     kpos = np.array([1, 0.5, 0.5/30/(0.2**2)])
@@ -190,23 +190,23 @@ def exp_plot(path1):
         elif i % 3 == 2:
             plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI1, "b--", label="PID-like Gain")
         if i == 0:
-            plt.ylabel("x subsystem")
+            plt.ylabel("x subsystem", labelpad=10)
             plt.title(r"$k_{P}$")
         elif i == 1:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.33], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
             plt.title(r"$k_{D}$")
         elif i == 2:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.33], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
             plt.ylabel("y subsystem")
         elif i == 6:
-            plt.ylabel("z subsystem")
+            plt.ylabel("z subsystem", labelpad=8)
 
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
-    plt.figure()
+    plt.figure(figsize=(9, 7))
 
     ax = plt.subplot(331)
     for i in range(9):
@@ -223,18 +223,18 @@ def exp_plot(path1):
         elif i % 3 == 2:
             plt.plot(data["t"], np.ones(np.shape(data["t"]))*kI2, "b--", label="PID-like Gain")
         if i == 0:
-            plt.ylabel(r"$\phi$" + " subsystem")
+            plt.ylabel(r"$\phi$" + " subsystem", labelpad=10)
             plt.title(r"$k_{P}$")
         elif i == 1:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.33], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
             plt.title(r"$k_{D}$")
         elif i == 2:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.33], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
             plt.ylabel(r"$\theta$" + " subsystem")
         elif i == 6:
-            plt.ylabel(r"$\psi$" + " subsystem")
+            plt.ylabel(r"$\psi$" + " subsystem", labelpad=9)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
