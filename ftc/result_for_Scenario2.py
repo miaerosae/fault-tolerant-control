@@ -6,13 +6,14 @@ from ftc.agents.param import get_uncertainties
 import ftc.config
 from ftc.agents.param import get_sumOfDist
 import statistics
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
 plt.rc("axes", grid=True, labelsize=15, titlesize=12)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=13)
+plt.rc("legend", fontsize=11)
 
 cfg = ftc.config.load()
 

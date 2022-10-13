@@ -6,13 +6,14 @@ from ftc.agents.param import get_uncertainties
 import ftc.config
 from ftc.agents.param import get_sumOfDist
 import statistics
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
 plt.rc("axes", grid=True, labelsize=15, titlesize=12)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=13)
+plt.rc("legend", fontsize=11)
 
 cfg = ftc.config.load()
 
@@ -42,8 +43,6 @@ def exp_plot(path1, path2, path3):
 
     ''' comparing controllers '''
     # 4d) tracking error (subplots)
-    plt.figure(figsize=(9, 7))
-
     rho = np.array([1.5, 0.2])
     rho_k = 1
     pos_bounds = np.zeros((np.shape(data1["x"]["pos"][:, 0, 0])[0]))
@@ -52,18 +51,27 @@ def exp_plot(path1, path2, path3):
     pos_err3 = data3["x"]["pos"]-data3["ref"]
     for i in range(np.shape(data1["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
-    ax = plt.subplot(311)
-    for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same gain)")
-        plt.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different gain)")
-        plt.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
-        plt.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
-        plt.plot(data1["t"], -pos_bounds, "r:")
-        plt.ylabel(_label)
+
+    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True, constrained_layout=True)
+    for i, (_label, ax) in enumerate(zip([r"$e_x$", r"$e_y$", r"$e_z$"], axes)):
+        ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same gain)")
+        ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different gain)")
+        ax.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
+        ax.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
+        ax.plot(data1["t"], -pos_bounds, "r:")
+        ax.set_ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
+        axins = zoomed_inset_axes(ax, 1.8, loc="upper right")
+        axins.plot(data1["t"], pos_err2[:, i, 0], "k-")
+        axins.plot(data1["t"], pos_err3[:, i, 0], "g--")
+        axins.plot(data1["t"], pos_err1[:, i, 0], "b--")
+        axins.plot(data1["t"], pos_bounds, "r:")
+        axins.plot(data1["t"], -pos_bounds, "r:")
+        x1, x2, y1, y2 = 3, 9, -0.3, 0.3
+        axins.set_xlim(x1, x2)
+        axins.set_ylim(y1, y2)
+        mark_inset(ax, axins, loc1=1, loc2=3, edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
