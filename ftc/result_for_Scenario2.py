@@ -7,6 +7,13 @@ import ftc.config
 from ftc.agents.param import get_sumOfDist
 import statistics
 
+
+plt.rc("text", usetex=False)
+plt.rc("lines", linewidth=1.5)
+plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+plt.rc("grid", linestyle="--", alpha=0.8)
+plt.rc("legend", fontsize=13)
+
 cfg = ftc.config.load()
 
 
@@ -22,7 +29,7 @@ def exp_plot(path1):
     for i in range(data["W"].shape[1]):
         plt.ylim([0-0.1, 1+0.1])
         plt.plot(data["t"], data["W"][:, i, i], "--", label=name[i])
-    plt.legend(loc='upper right', ncol=4, bbox_to_anchor=(1, 1.15))
+    plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.xlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("lambda.png", dpi=300)
@@ -41,18 +48,18 @@ def exp_plot(path1):
             plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k-", label="Real Value")
         plt.plot(data["t"], data["obs_pos"][:, i, 0], "b--", label="Estimated Value")
-        plt.plot(data["t"], pos_bounds, "k:", label="Prescribed Bound")
-        plt.plot(data["t"], -pos_bounds, "k:")
+        plt.plot(data["t"], pos_bounds, "r:", label="Prescribed Bound")
+        plt.plot(data["t"], -pos_bounds, "r:")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right', ncol=3, bbox_to_anchor=(1, 1.25))
+            plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
     # 5a) Euler angle trajectories
     plt.figure(figsize=(9, 7))
     bound = 45
-    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
+    plt.ylim([-bound-5, bound+5])
 
     angles = np.vstack([quat2angle(data["x"]["quat"][j, :, 0]) for j in range(len(data["x"]["quat"][:, 0, 0]))])
     ax = plt.subplot(311)
@@ -62,11 +69,11 @@ def exp_plot(path1):
         plt.plot(data["t"], np.rad2deg(angles[:, 2-i]), "k-", label="Real Value")
         plt.plot(data["t"], np.rad2deg(data["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
         plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*bound, "k:", label="Prescribed Bound")
-        plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound, "k:")
+                 np.ones((np.size(data["t"])))*bound, "r:", label="Prescribed Bound")
+        plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound, "r:")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right', ncol=3, bbox_to_anchor=(1, 1.25))
+            plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("angle.png", dpi=300)
@@ -74,21 +81,26 @@ def exp_plot(path1):
     # 5b) Angular rate trajectories
     plt.figure(figsize=(9, 7))
     bound = np.deg2rad(150)
-    plt.ylim(np.rad2deg([-bound, bound])+[-5, 5])
+    bound_psi = np.deg2rad(180)
 
     ax = plt.subplot(311)
     for i, _label in enumerate(["p", "q", "r"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data["t"], data["x"]["omega"][:, i, 0], "k-")
-        plt.plot(data["t"],
-                 np.ones((np.size(data["t"])))*bound, "k:",
-                 label="Prescribed Bound")
-        plt.plot(data["t"],
-                 -np.ones((np.size(data["t"])))*bound, "k:")
+        if i == 2:
+            plt.plot(data["t"], np.ones((np.size(data["t"])))*bound_psi, "r:",
+                     label="Prescribed Bound")
+            plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound_psi, "r:")
+            plt.ylim([-bound_psi-5, bound_psi+5])
+        else:
+            plt.plot(data["t"], np.ones((np.size(data["t"])))*bound, "r:",
+                     label="Prescribed Bound")
+            plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound, "r:")
+            plt.ylim([-bound-5, bound+5])
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='upper right', ncol=1, bbox_to_anchor=(1, 1.25))
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("angular.png", dpi=300)
@@ -106,7 +118,7 @@ def exp_plot(path1):
         plt.plot(data["t"], np.sqrt(data["rotors_cmd"][:, i]), "r--", label="Command")
         plt.ylabel(name[i])
         if i == 0:
-            plt.legend(loc='upper right', ncol=2, bbox_to_anchor=(1, 1.15))
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("rotor_input.png")
@@ -157,7 +169,7 @@ def exp_plot(path1):
         plt.plot(data["t"], data["dist"][:, i, 0], "b--", label="Estimated Value")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc='lower right', ncol=2, bbox_to_anchor=(1, 1.15))
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
@@ -193,10 +205,10 @@ def exp_plot(path1):
             plt.ylabel("x subsystem", labelpad=10)
             plt.title(r"$k_{P}$")
         elif i == 1:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{D}$")
         elif i == 2:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
             plt.ylabel("y subsystem")
@@ -226,10 +238,10 @@ def exp_plot(path1):
             plt.ylabel(r"$\phi$" + " subsystem", labelpad=10)
             plt.title(r"$k_{P}$")
         elif i == 1:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{D}$")
         elif i == 2:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.15], edgecolor="white")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
             plt.ylabel(r"$\theta$" + " subsystem")
