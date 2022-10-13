@@ -52,6 +52,16 @@ def exp_plot(path1):
         plt.plot(data["t"], pos_bounds, "r:", label="Prescribed Bound")
         plt.plot(data["t"], -pos_bounds, "r:")
         plt.ylabel(_label)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
@@ -75,33 +85,53 @@ def exp_plot(path1):
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("angle.png", dpi=300)
 
     # 5b) Angular rate trajectories
     plt.figure(figsize=(9, 7))
-    bound = np.deg2rad(150)
-    bound_psi = np.deg2rad(180)
+    bound = 150
+    bound_psi = 180
 
     ax = plt.subplot(311)
     for i, _label in enumerate(["p", "q", "r"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["x"]["omega"][:, i, 0], "k-")
+        plt.plot(data["t"], np.rad2deg(data["x"]["omega"][:, i, 0]), "k-")
         if i == 2:
             plt.plot(data["t"], np.ones((np.size(data["t"])))*bound_psi, "r:",
                      label="Prescribed Bound")
             plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound_psi, "r:")
-            plt.ylim([-bound_psi-5, bound_psi+5])
+            plt.ylim([-bound_psi-15, bound_psi+15])
         else:
             plt.plot(data["t"], np.ones((np.size(data["t"])))*bound, "r:",
                      label="Prescribed Bound")
             plt.plot(data["t"], -np.ones((np.size(data["t"])))*bound, "r:")
-            plt.ylim([-bound-5, bound+5])
+            plt.ylim([-bound-15, bound+15])
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("angular.png", dpi=300)
@@ -120,6 +150,16 @@ def exp_plot(path1):
         plt.ylabel(name[i])
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("rotor_input.png")
@@ -140,6 +180,16 @@ def exp_plot(path1):
             plt.ylabel(_label, labelpad=8)
         elif i == 3:
             plt.ylabel(_label, labelpad=0)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("forces.png", dpi=300)
@@ -171,6 +221,16 @@ def exp_plot(path1):
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
@@ -195,7 +255,7 @@ def exp_plot(path1):
         if i == 1:
             plt.plot(data["t"], data["gain"][:, i, 0], "r", label="Real Gain")
         else:
-            plt.plot(data["t"], data["gain"][:, i+9, 0], "r")
+            plt.plot(data["t"], data["gain"][:, i, 0], "r")
         if i % 3 == 0:
             plt.plot(data["t"], np.ones(np.shape(data["t"]))*kP1, "b--", label="PID-like Gain")
         elif i % 3 == 1:
@@ -215,6 +275,16 @@ def exp_plot(path1):
             plt.ylabel("y subsystem")
         elif i == 6:
             plt.ylabel("z subsystem", labelpad=8)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
 
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
@@ -248,6 +318,16 @@ def exp_plot(path1):
             plt.ylabel(r"$\theta$" + " subsystem")
         elif i == 6:
             plt.ylabel(r"$\psi$" + " subsystem", labelpad=9)
+        plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
+        plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
+        plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
+        plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 

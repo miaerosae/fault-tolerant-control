@@ -52,7 +52,7 @@ def exp_plot(path1, path2, path3):
     for i in range(np.shape(data1["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
 
-    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True, constrained_layout=True)
+    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$e_x$", r"$e_y$", r"$e_z$"], axes)):
         ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same gain)")
         ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different gain)")
@@ -62,16 +62,19 @@ def exp_plot(path1, path2, path3):
         ax.set_ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
-        axins = zoomed_inset_axes(ax, 1.8, loc="upper right")
-        axins.plot(data1["t"], pos_err2[:, i, 0], "k-")
-        axins.plot(data1["t"], pos_err3[:, i, 0], "g--")
-        axins.plot(data1["t"], pos_err1[:, i, 0], "b--")
-        axins.plot(data1["t"], pos_bounds, "r:")
-        axins.plot(data1["t"], -pos_bounds, "r:")
-        x1, x2, y1, y2 = 3, 9, -0.3, 0.3
-        axins.set_xlim(x1, x2)
-        axins.set_ylim(y1, y2)
-        mark_inset(ax, axins, loc1=1, loc2=3, edgecolor="lightgray", ec="0.5")
+            axins = zoomed_inset_axes(ax, 2, loc="upper right",
+                                      axes_kwargs={"facecolor": "lavender"})
+            axins.plot(data1["t"], pos_err2[:, i, 0], "k-")
+            axins.plot(data1["t"], pos_err3[:, i, 0], "g--")
+            axins.plot(data1["t"], pos_err1[:, i, 0], "b--")
+            axins.plot(data1["t"], pos_bounds, "r:")
+            axins.plot(data1["t"], -pos_bounds, "r:")
+            x1, x2, y1, y2 = 4, 8, -0.3, 0.3
+            axins.set_xlim(x1, x2)
+            axins.set_ylim(y1, y2)
+            axins.set_xticks([])
+            axins.set_yticks([])
+            mark_inset(ax, axins, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
 
@@ -137,30 +140,53 @@ def exp_plot(path1, path2, path3):
     # plt.savefig("angle.png", dpi=300)
 
     # 5b) Angular rate trajectories
-    plt.figure(figsize=(9, 7))
     bound = 150
     bound_psi = 180
 
-    ax = plt.subplot(311)
-    for i, _label in enumerate(["p", "q", "r"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
-        plt.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
-        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--", label="Proposed")
+    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
+    for i, (_label, ax) in enumerate(zip(["p", "q", "r"], axes)):
+        ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
+        ax.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
+        ax.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--", label="Proposed")
         if i == 2:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound_psi, "r:",
-                     label="Prescribed Bound")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound_psi, "r:")
-            # plt.ylim([-bound_psi-15, bound_psi+15])
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*bound_psi, "r:",
+                    label="Prescribed Bound")
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound_psi, "r:")
+            ax.set_ylim([-bound_psi-15, bound_psi+15])
         else:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:",
-                     label="Prescribed Bound")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
-            # plt.ylim([-bound-15, bound+15])
-        plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:",
+                    label="Prescribed Bound")
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
+        if i == 1:
+            plt.ylim([-200, 200])
+        elif i == 0:
+            ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
+            ax.set_ylim([-bound-15, bound+15])
+        ax.set_ylabel(_label)
+        if i == 1:
+            axins = zoomed_inset_axes(ax, 5, loc="upper left",
+                                      axes_kwargs={"facecolor": "lavender"})
+            axins.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
+            axins.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
+            x1, x2, y1, y2 = 0, 0.2, -155, -130
+            axins.set_xlim(x1, x2)
+            axins.set_ylim(y1, y2)
+            axins.set_xticks([])
+            axins.set_yticks([])
+            mark_inset(ax, axins, loc1=3, loc2=2, fc="lavender", edgecolor="lightgray", ec="0.5")
+        if i == 1:
+            axins1 = zoomed_inset_axes(ax, 2.5, loc="lower center",
+                                       axes_kwargs={"facecolor": "lavender"})
+            axins1.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
+            axins1.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
+            axins1.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
+            axins1.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
+            x1, x2, y1, y2 = 4.5, 5.5, -170, -90
+            axins1.set_xlim(x1, x2)
+            axins1.set_ylim(y1, y2)
+            axins1.set_xticks([])
+            axins1.set_yticks([])
+            mark_inset(ax, axins1, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     # plt.savefig("angular.png", dpi=300)
@@ -302,5 +328,5 @@ def exp_plot(path1, path2, path3):
 
 
 if __name__ == "__main__":
-    exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5", "Scenario1_Bs_additional.h5")
+    exp_plot("Scenario1_BLF_additional.h5", "Scenario1_Bs.h5", "Scenario1_Bs_additional.h5")
     # exp_plot("Scenario1_BLF_additional.h5", "Scenario1_Bs.h5")
