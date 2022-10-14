@@ -54,14 +54,15 @@ def exp_plot(path1, path2, path3):
 
     fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$e_x$", r"$e_y$", r"$e_z$"], axes)):
-        ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same gain)")
-        ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different gain)")
+        ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same)")
+        ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different)")
         ax.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
         ax.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         ax.plot(data1["t"], -pos_bounds, "r:")
         ax.set_ylabel(_label)
         if i == 0:
-            plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
+            ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
+        if i == 0:
             axins = zoomed_inset_axes(ax, 2, loc="upper right",
                                       axes_kwargs={"facecolor": "lavender"})
             axins.plot(data1["t"], pos_err2[:, i, 0], "k-")
