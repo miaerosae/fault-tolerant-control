@@ -90,7 +90,7 @@ def get_uncertainties(t, uncertainty):
             0.3*np.cos(t),
         ])
         uvel = np.vstack([
-            0.1*np.sin(t),
+            0.1*np.sin(t) - 0.2,
             0.2*np.sin(np.pi*t),
             0.2*np.sin(3*t) - 0.1*np.sin(0.5*np.pi*t)
         ])
@@ -100,9 +100,9 @@ def get_uncertainties(t, uncertainty):
             0.2*np.sin(0.5*np.pi*t),
         ])
         uomega = np.vstack([
-            - 0.2*np.sin(0.5*np.pi*t),
+            - 0.2*np.sin(0.5*np.pi*t) + 0.1,
             0.1*np.cos(np.sqrt(2)*t),
-            0.1*np.cos(2*t+1)
+            0.1*np.cos(2*t+1) + 0.05
         ])
     return upos, uvel, ueuler, uomega
 

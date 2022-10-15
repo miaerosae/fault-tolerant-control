@@ -363,4 +363,4 @@ def exp_plot(path1, path2):
 
 
 if __name__ == "__main__":
-    exp_plot("Scenario2.h5", "Scenario2_nofault.h5")
+    exp_plot("Scenario2_additional.h5", "Scenario2_nofault_additional.h5")
