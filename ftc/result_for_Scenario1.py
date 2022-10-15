@@ -39,7 +39,7 @@ def exp_plot(path1, path2, path3):
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.xlabel("Time [sec]")
     plt.tight_layout()
-    # plt.savefig("lambda.png", dpi=300)
+    plt.savefig("Case1_lambda.png", dpi=300)
 
     ''' comparing controllers '''
     # 4d) tracking error (subplots)
@@ -53,7 +53,7 @@ def exp_plot(path1, path2, path3):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
 
     fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
-    for i, (_label, ax) in enumerate(zip([r"$e_x$", r"$e_y$", r"$e_z$"], axes)):
+    for i, (_label, ax) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], axes)):
         ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same)")
         ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different)")
         ax.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
@@ -78,6 +78,7 @@ def exp_plot(path1, path2, path3):
             mark_inset(ax, axins, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
+    plt.savefig("Case1_poserr.png", dpi=300)
 
     # 4e) STD of tracking error
     for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
@@ -138,7 +139,7 @@ def exp_plot(path1, path2, path3):
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    # plt.savefig("angle.png", dpi=300)
+    plt.savefig("Case1_ang.png", dpi=300)
 
     # 5b) Angular rate trajectories
     bound = 150
@@ -190,12 +191,12 @@ def exp_plot(path1, path2, path3):
             mark_inset(ax, axins1, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    # plt.savefig("angular.png", dpi=300)
+    plt.savefig("Case1_dang.png", dpi=300)
 
     # 5c) tracking error
     plt.figure()
     ax = plt.subplot(311)
-    for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
+    for i, _label in enumerate([r"$e_{1\phi}$", r"$e_{1\theta}$", r"$e_{1\psi}$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]), "k-",
@@ -207,9 +208,11 @@ def exp_plot(path1, path2, path3):
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
+        elif i == 2:
+            plt.ylabel(_label, labelpad=15)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    # plt.savefig("angle_error.png", dpi=300)
+    plt.savefig("Case1_angerr.png", dpi=300)
 
     # 5d) STD of tracking error
     for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
@@ -284,7 +287,7 @@ def exp_plot(path1, path2, path3):
 
     ''' 6. etc '''
     # 6a) rotor input comparison
-    plt.figure(figsize=(7, 5))
+    plt.figure(figsize=(9, 7/3*4))
 
     name = [r"$\Omega_1$", r"$\Omega_2$", r"$\Omega_3$", r"$\Omega_4$"]
     ax = plt.subplot(411)
@@ -300,10 +303,10 @@ def exp_plot(path1, path2, path3):
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    # plt.savefig("rotor_input.png")
+    plt.savefig("Case1_rotor.png", dpi=300)
 
     # 6b) generalized forces comparison
-    plt.figure(figsize=(7, 5))
+    plt.figure(figsize=(9, 7/3*4))
 
     ax = plt.subplot(411)
     for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
@@ -314,16 +317,16 @@ def exp_plot(path1, path2, path3):
         plt.plot(data1["t"], data1["virtual_u"][:, i], "b--", label="Proposed")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-            plt.ylabel(_label, labelpad=18)
+            plt.ylabel(_label, labelpad=20)
         elif i == 1:
-            plt.ylabel(_label, labelpad=0)
+            plt.ylabel(_label, labelpad=9)
         elif i == 2:
             plt.ylabel(_label, labelpad=21)
         elif i == 3:
             plt.ylabel(_label, labelpad=2)
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
-    # plt.savefig("forces.png", dpi=300)
+    plt.savefig("Case1_force.png", dpi=300)
 
     plt.show()
 
