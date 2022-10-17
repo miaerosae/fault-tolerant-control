@@ -37,12 +37,6 @@ def gain_bound():
     k1_1[k1_1 == np.inf] = 0
     k3_1[k3_1 == np.inf] = 0
     kP_1[kP_1 == np.inf] = 0
-    ax.fill_between(kP_1, 0, 1, where=k2 > rho_k,
-                    interpolate=True, color="pink", alpha=0.2,
-                    transform=ax.get_xaxis_transform(), label="possible range")
-    # ax.fill_between(kP_1, 0, 1, where=k2 > 2*rho_k*(rho_0-rho_inf)/rho_0,
-    #                 interpolate=True, color="pink", alpha=0.2,
-    #                 transform=ax.get_xaxis_transform(), label="possible range")
     plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
     plt.xlabel(r"$k_P$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
@@ -65,12 +59,6 @@ def gain_bound():
     k1_2[k1_2 == np.inf] = 0
     k3_2[k3_2 == np.inf] = 0
     kD_2[kD_2 == np.inf] = 0
-    ax.fill_between(kD_2, 0, 1, where=k2 > rho_k,
-                    interpolate=True, color="pink", alpha=0.2,
-                    transform=ax.get_xaxis_transform(), label="possible range")
-    # ax.fill_between(kD_2, 0, 1, where=k2 > 2*rho_k*(rho_0-rho_inf)/rho_0,
-    #                 interpolate=True, color="pink", alpha=0.2,
-    #                 transform=ax.get_xaxis_transform(), label="possible range")
     plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
     plt.xlabel(r"$k_D$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
@@ -82,9 +70,12 @@ def gain_bound():
     k3_3 = np.zeros((np.size(k2),))
     kP_3 = np.zeros((np.size(k2),))
     for i in range(np.size(k2)):
-        k1_3[i] = kD_3 - k2[i]
-        k3_3[i] = kI / k2[i]
-        kP_3[i] = (- k2[i]**3 + (kD_3)*k2[i]**2 + kI) / k2[i]
+        nk = np.sqrt(0.1)
+        k1_3[i] = kD_3 - k2[i] - 2*nk
+        k3_3[i] = kI / (k2[i] + nk)
+        kP_3[i] = ((- k2[i]**3 + (kD_3-2*nk)*k2[i]**2
+                    + (1 - nk/(k2[i]+nk))*kI) / k2[i]
+                   + nk * (kD_3 - 2*nk) + nk)
     fig, ax = plt.subplots()
     plt.xlim([0, max(kP_3)])
     ax.plot(kP_3, k1_3, "r-", label=r"$k_1$")
@@ -107,9 +98,12 @@ def gain_bound():
     k3_4 = np.zeros((np.size(k2),))
     kD_4 = np.zeros((np.size(k2),))
     for i in range(np.size(k2)):
-        kD_4[i] = ((k2[i]**3 + (kP_4)*k2[i] - kI) / k2[i]**2)
-        k1_4[i] = kD_4[i] - k2[i]
-        k3_4[i] = kI / k2[i]
+        nk = np.sqrt(0.1)
+        kD_4[i] = ((k2[i]**3 + 2*nk*k2[i]**2 + (kP_4+0.1)*k2[i]
+                    - (1 - nk/(k2[i]+nk))*kI)
+                   / (k2[i]**2 + nk*k2[i]))
+        k1_4[i] = kD_4[i] - k2[i] - 2*nk
+        k3_4[i] = kI / (k2[i] + nk)
     fig, ax = plt.subplots()
     plt.xlim([0, max(kD_4)])
     ax.plot(kD_4, k1_4, "r-", label=r"$k_1$")
