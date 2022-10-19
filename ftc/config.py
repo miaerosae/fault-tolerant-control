@@ -24,9 +24,9 @@ default_settings = fym.parser.parse({
         # "fault_time": np.array([5, 7, 10, 14, 15]),
         # "fault_index": np.array([0, 1, 2, 2, 1]),
         # "LoE": np.array([0.5, 0.6, 0.8, 0.4, 1]),
-        "fault_time": np.array([5, 7]),
-        "fault_index": np.array([0, 1]),
-        "LoE": np.array([0.2, 0.5]),
+        "fault_time": np.array([5]),
+        "fault_index": np.array([0]),
+        "LoE": np.array([0.6]),
     },
 
     # ====== ftc.plants ====== #
@@ -138,8 +138,8 @@ default_settings = fym.parser.parse({
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "eps": np.array([25, 45, 25]),
-            "rho": np.array([1.5, 0.2]),
-            "rho_k": 1,
+            "rho": np.array([0.5, 0.25]),
+            "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
@@ -155,8 +155,8 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([0.1, 6, 0/6/(0.2)**2]),
-        "Kang": np.array([8, 150/8, 0/12/np.deg2rad(45)**2]),
+        "Kxy": np.array([1, 0.5, 0.417]),
+        "Kang": np.array([13.3, 30, 0.054]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),

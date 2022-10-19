@@ -49,7 +49,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -146,7 +146,7 @@ class Env(BaseEnv):
         ref = self.get_ref(t)
         dref, ddref = self.get_dref(t)
         W = self.get_W(t)
-        What = self.get_W(t-self.delay)
+        # What = self.get_W(t-self.delay)
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -185,6 +185,7 @@ class Env(BaseEnv):
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
+        What = np.diag([1, 1, 1, 1])
         rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
@@ -400,6 +401,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    # main(args)
+    main(args)
     # comp.exp_plot("data.h5", "data1.h5")
-    pfp.exp_plot("Scenario2.h5")
+    # pfp.exp_plot("Scenario2.h5")
