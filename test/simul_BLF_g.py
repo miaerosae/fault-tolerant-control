@@ -117,20 +117,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        # if abs(self.blf_x.e.state[0]) > 0.5:
-        #     done = True
-        # if abs(self.blf_y.e.state[0]) > 0.5:
-        #     done = True
-        # if abs(self.blf_z.e.state[0]) > 0.5:
-        #     done = True
-        # ang = quat2angle(self.plant.quat.state)
-        # for i in range(3):
-        #     if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
-        #         done = True
-        # dang = self.plant.omega.state
-        # for i in range(3):
-        #     if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
-        #         done = True
+        if abs(self.blf_x.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_y.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_z.e.state[0]) > 0.5:
+            done = True
+        ang = quat2angle(self.plant.quat.state)
+        for i in range(3):
+            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+                done = True
+        dang = self.plant.omega.state
+        for i in range(3):
+            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+                done = True
         return done, env_info
 
     def get_W(self, t):
@@ -305,31 +305,31 @@ def main(args):
 
         config = {
             "k11": 1,
-            "k12": 12,
-            "k13": 0,
-            "k21": 1,
-            "k22": tune.uniform(0.1, 800),
-            "k23": 0,
-            "eps11": 8,
-            "eps12": 8,
-            "eps13": 10,
-            "eps21": tune.uniform(20, 40),
-            "eps22": tune.uniform(20, 40),
-            "eps23": tune.uniform(20, 40),
+            "k12": 0.5,
+            "k13": 0.417,
+            "k21": tune.uniform(0.1, 50),
+            "k22": tune.uniform(0.1, 50),
+            "k23": tune.uniform(0.01, 0.1),
+            "eps11": 25,
+            "eps12": 45,
+            "eps13": 25,
+            "eps21": tune.uniform(2, 150),
+            "eps22": tune.uniform(2, 150),
+            "eps23": tune.uniform(2, 150),
         }
         current_best_params = [{
             "k11": 1,
-            "k12": 12,
-            "k13": 0,
-            "k21": 1,
-            "k22": 15,
-            "k23": 0,
-            "eps11": 8,
-            "eps12": 8,
+            "k12": 0.5,
+            "k13": 0.417,
+            "k21": 13.3,
+            "k22": 30,
+            "k23": 0.054,
+            "eps11": 25,
+            "eps12": 45,
             "eps13": 25,
-            "eps21": 25,
-            "eps22": 25,
-            "eps23": 25,
+            "eps21": 80,
+            "eps22": 80,
+            "eps23": 80,
         }]
         search = HyperOptSearch(
             metric="tf",
@@ -344,7 +344,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=10000,
+                num_samples=2000,
                 search_alg=search,
             ),
             run_config=RunConfig(
