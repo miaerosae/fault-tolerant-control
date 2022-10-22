@@ -21,12 +21,12 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        # "fault_time": np.array([5, 7, 10, 14, 15]),
-        # "fault_index": np.array([0, 1, 2, 2, 1]),
-        # "LoE": np.array([0.5, 0.6, 0.8, 0.4, 1]),
-        "fault_time": np.array([5]),
-        "fault_index": np.array([0]),
-        "LoE": np.array([0.5]),
+        "fault_time": np.array([5, 7, 10, 11]),
+        "fault_index": np.array([0, 1, 2, 2]),
+        "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
+        # "fault_time": np.array([5]),
+        # "fault_index": np.array([0]),
+        # "LoE": np.array([0.4]),
     },
 
     # ====== ftc.plants ====== #
@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([25, 45, 25]),
+            "eps": np.array([60, 70, 40]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -146,17 +146,17 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([80, 80, 80]),
+            "eps": np.array([110, 250, 80]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad([45, 180]),
-            "c": np.array([20, 20]),
+            "c": np.array([200, 200]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "Kxy": np.array([1, 0.5, 0.417]),
-        "Kang": np.array([13.3, 30, 0.054]),
+        "Kang": np.array([10.5, 100, 0.970]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
@@ -191,7 +191,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 20,
+        "max_t": 30,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
@@ -201,12 +201,12 @@ default_settings = fym.parser.parse({
         "drygen": False,  # not use
         # "BLF": False,
         "BLF": True,
-        # "uncertainty": True,
-        # "ext_unc": True,
-        # "int_unc": True,
-        "uncertainty": False,
-        "ext_unc": False,
-        "int_unc": False,
+        "uncertainty": True,
+        "ext_unc": True,
+        "int_unc": True,
+        # "uncertainty": False,
+        # "ext_unc": False,
+        # "int_unc": False,
     },
 
     "wind_dist": {
