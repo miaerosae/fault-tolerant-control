@@ -18,9 +18,9 @@ plt.rc("legend", fontsize=11)
 cfg = ftc.config.load()
 
 
-def exp_plot(path1, path2):
+def exp_plot(path1):
     data1, info = fym.load(path1, with_info=True)
-    data2 = fym.load(path2)
+    # data2 = fym.load(path2)
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
 
@@ -200,25 +200,25 @@ def exp_plot(path1, path2):
     plt.figure(figsize=(9, 7/3*6))
 
     real_dist = np.zeros((6, np.size(data1["t"])))
-    real_dist2 = np.zeros((6, np.size(data2["t"])))
+    # real_dist2 = np.zeros((6, np.size(data2["t"])))
     for i in range(np.size(data1["t"])):
         t = data1["t"][i]
         real_dist[:, i] = get_sumOfDist(t, True).ravel()
-        real_dist2[:, i] = get_sumOfDist(t, True).ravel()
+        # real_dist2[:, i] = get_sumOfDist(t, True).ravel()
     for i in range(3):
         real_dist[i, :] = (real_dist[i, :]
                            + data1["model_uncert_vel"][:, i, 0]
                            + data1["int_uncert_vel"][:, i, 0])
-        real_dist2[i, :] = (real_dist2[i, :]
-                            + data2["model_uncert_vel"][:, i, 0]
-                            + data2["int_uncert_vel"][:, i, 0])
+        # real_dist2[i, :] = (real_dist2[i, :]
+        #                     + data2["model_uncert_vel"][:, i, 0]
+        #                     + data2["int_uncert_vel"][:, i, 0])
     for i in range(3):
         real_dist[i+3, :] = (real_dist[i+3, :]
                              + data1["f"][:, i, 0]
                              + data1["model_uncert_omega"][:, i, 0])
-        real_dist2[i+3, :] = (real_dist2[i+3, :]
-                              + data2["f"][:, i, 0]
-                              + data2["model_uncert_omega"][:, i, 0])
+        # real_dist2[i+3, :] = (real_dist2[i+3, :]
+        #                       + data2["f"][:, i, 0]
+        #                       + data2["model_uncert_omega"][:, i, 0])
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
@@ -226,8 +226,8 @@ def exp_plot(path1, path2):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
         plt.plot(data1["t"], real_dist[i, :], "k-", label="Real Value")
-        plt.plot(data1["t"], data1["dist"][:, i, 0], "b--", label="Estimated Value (with faults)")
-        plt.plot(data1["t"], data2["dist"][:, i, 0], "g--", label="Estimated Value (without faults)")
+        plt.plot(data1["t"], data1["dist"][:, i, 0], "b--", label="Estimated Value")
+        # plt.plot(data1["t"], data2["dist"][:, i, 0], "g--", label="Estimated Value (without faults)")
         plt.ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
@@ -264,8 +264,8 @@ def exp_plot(path1, path2):
     plt.figure(figsize=(9, 7))
 
     # calculate gain of Scenario 2
-    kpos = np.array([1, 0.5, 0.5/30/(0.2**2)])
-    kang = np.array([400/30, 30, 1/30/np.deg2rad(45)**2])
+    kpos = np.array([1, 0.5, 0.417])
+    kang = np.array([10.5, 100, 0.97])
     rhoinf = 0.25
     kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]
@@ -363,4 +363,4 @@ def exp_plot(path1, path2):
 
 
 if __name__ == "__main__":
-    exp_plot("Scenario2_additional.h5", "Scenario2_nofault_additional.h5")
+    exp_plot("Scenario2_noFDI.h5")

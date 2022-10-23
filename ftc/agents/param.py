@@ -65,18 +65,6 @@ def get_K_ls():
     return K
 
 
-def stable_sigmoid(x):
-
-    if x >= 0:
-        z = math.exp(-x)
-        sig = 1 / (1 + z)
-        return sig
-    else:
-        z = math.exp(x)
-        sig = z / (1 + z)
-        return sig
-
-
 def get_uncertainties(t, uncertainty):
     upos = np.zeros((3, 1))
     uvel = np.zeros((3, 1))
@@ -111,9 +99,9 @@ def get_sumOfDist(t, condi):
     pi = np.pi
     ref_dist = np.zeros((6, 1))
     ref_dist[0] = - (- pi/5*np.cos(t/2)*np.sin(pi*t/5)
-                     - (1/4 + pi**2/25)*np.sin(t/2)*np.cos(pi*t/5))
+                     - (1/4 + pi**2/25)*np.sin(t/2)*np.cos(pi*t/5)) * np.cos(np.pi/4)
     ref_dist[1] = - (pi/5*np.cos(t/2)*np.cos(pi*t/5)
-                     - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5))
+                     - (1/4 + pi**2/25)*np.sin(t/2)*np.sin(pi*t/5)) * np.cos(np.pi/4)
 
     if condi is True:
         ext_dist = np.zeros((6, 1))
@@ -165,10 +153,6 @@ def get_W(t, fault):
     else:
         W = np.diag([1, 1, 1, 1])
     return W
-
-
-def get_faulty_input(W, rotors):
-    return W.dot(rotors)
 
 
 def get_PID_gain(param):

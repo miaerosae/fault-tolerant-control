@@ -16,7 +16,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_faulty_input
+from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -186,11 +186,14 @@ class Env(BaseEnv):
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
         What = np.diag([1, 1, 1, 1])
-        rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
+        rotors_cmd = np.linalg.pinv(self.plant.mixer.B).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
+        # get model uncertainty disturbance value
+        dist_vel, dist_omega = self.plant.get_dist(t, W, rotors)
+
         # Set actuator faults
-        rotors = get_faulty_input(W, rotors)
+        rotors = W.dot(rotors)
         self.prev_rotors = rotors
 
         # Disturbance
@@ -211,17 +214,6 @@ class Env(BaseEnv):
         obs_ang[0] = self.blf_phi.get_obs()
         obs_ang[1] = self.blf_theta.get_obs()
         obs_ang[2] = self.blf_psi.get_obs()
-
-        # caculate f
-        J = np.diag(self.plant.J)
-        p_, q_, r_ = self.plant.omega.state
-        f = np.array([(J[1]-J[2]) / J[0] * q_ * r_,
-                      (J[2]-J[0]) / J[1] * p_ * r_,
-                      (J[0]-J[1]) / J[2] * p_ * q_])
-
-        # get model uncertainty disturbance value
-        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors, t)
-        int_vel = self.plant.get_int_uncertainties(t, self.plant.vel.state)
 
         # get gain
         k = np.vstack([
@@ -249,11 +241,9 @@ class Env(BaseEnv):
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist, q=q, f=f,
+                    virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
-                    model_uncert_vel=model_uncert_vel,
-                    model_uncert_omega=model_uncert_omega,
-                    int_uncert_vel=int_vel,
+                    dist_vel=dist_vel, dist_omega=dist_omega,
                     gain=k)
 
 
@@ -268,9 +258,7 @@ def run(loggerpath, params):
         while True:
             env.render()
             done, env_info = env.step()
-            # env.logger.record(env=env_info)
             env_info = {
-                # "detection_time": env.detection_time,
                 "rotor_min": env.plant.rotor_min,
                 "rotor_max": env.plant.rotor_max,
             }

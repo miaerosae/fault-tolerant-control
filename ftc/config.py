@@ -26,7 +26,7 @@ default_settings = fym.parser.parse({
         "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
-        # "LoE": np.array([0.4]),
+        # "LoE": np.array([0.5]),
     },
 
     # ====== ftc.plants ====== #

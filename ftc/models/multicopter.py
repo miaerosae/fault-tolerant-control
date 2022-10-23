@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import sin, cos
 import math
 
 import fym
@@ -148,7 +149,6 @@ class Multicopter(BaseEnv):
 
         m, g, J = self.m, self.g, self.J
         if self.uncertainty is True:
-            self.J_rand = np.random.randn(1)
             m = (cfg.model_uncert.del_m*np.sin(t) + 1) * m
             J = (cfg.model_uncert.del_J*self.J_rand + 1) * J
         Jinv = np.linalg.inv(J)
@@ -193,7 +193,7 @@ class Multicopter(BaseEnv):
 
         return dpos, dvel, dquat, domega
 
-    def get_model_uncertainty(self, rotors, t):
+    def get_dist(self, t, W, rotors):
         # calculate real and disturbance value of F, M
         if self.uncertainty is True:
             F, M1, M2, M3 = self.mixer.inverse(rotors)
@@ -206,14 +206,48 @@ class Multicopter(BaseEnv):
             vel_real = (- F*dcm.T.dot(e3)/self.m)
             omega_real = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
 
+            p, q, r = self.omega.state
+            J = np.diag(self.J)
+            f = np.array([(J[1]-J[2]) / J[0] * q * r,
+                          (J[2]-J[0]) / J[1] * p * r,
+                          (J[0]-J[1]) / J[2] * p * q])
+
+            F, M1, M2, M3 = self.mixer.inverse(W.dot(rotors))
+            M = np.vstack((M1, M2, M3))
             delm = cfg.model_uncert.del_m
+            self.J_rand = np.random.randn(1)
             J = (cfg.model_uncert.del_J*self.J_rand + 1) * self.J
             Jinv_dist = np.linalg.inv(J)
             vel_dist = (- F*dcm.T.dot(e3)/(self.m*(delm*np.sin(t) + 1)))
             omega_dist = Jinv_dist.dot(M - np.cross(omega, J.dot(omega), axis=0))
-            return vel_dist-vel_real, omega_dist-omega_real
+
+            resultvel, resultdang = vel_dist-vel_real, omega_dist-omega_real+f
         else:
-            return np.zeros((3, 1)), np.zeros((3, 1))
+            F, M1, M2, M3 = self.mixer.inverse(rotors)
+            M = np.vstack((M1, M2, M3))
+            e3 = np.vstack((0, 0, 1))
+            dcm = quat2dcm(self.quat.state)
+            omega = self.omega.state
+
+            Jinv_real = np.linalg.inv(self.J)
+            vel_real = (- F*dcm.T.dot(e3)/self.m)
+            omega_real = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
+
+            F, M1, M2, M3 = self.mixer.inverse(W.dot(rotors))
+            M = np.vstack((M1, M2, M3))
+            vel_dist = (- F*dcm.T.dot(e3)/self.m)
+            omega_dist = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
+            resultvel, resultdang = vel_dist-vel_real, omega_dist-omega_real
+        if self.int_unc is True:
+            vel = self.vel.state
+            int_vel = np.vstack([
+                vel[0]*vel[1],
+                vel[1]*vel[2],
+                np.exp(-t)*np.sin(t+np.pi/4)
+            ])
+        else:
+            int_vel = np.zeros((3, 1))
+        return resultvel+int_vel, resultdang
 
     def set_dot(self, t, rotors, windvel=np.zeros((3, 1)),
                 prev_rotors=np.zeros((4, 1))):
@@ -261,6 +295,21 @@ class Multicopter(BaseEnv):
         else:
             u1_d = ratio * u1
         return u1_d
+
+#     def get_fault_dist(self, W, rotors):
+#         J = np.diag(self.J)
+#         b = np.array([1/J[0], 1/J[1], 1/J[2]])
+#         fault = W - np.eye(4)
+#         fault_nu = self.mixer.B.dot(fault.dot(rotors))
+#         dcm = quat2dcm(self.quat.state)
+#         e3 = np.vstack((0, 0, 1))
+#         m, J = self.m, self.J
+#         if self.uncertainty is True:
+#             m = (cfg.model_uncert.del_m*np.sin(t) + 1) * m
+#             J = (cfg.model_uncert.del_J*self.J_rand + 1) * J
+#         Jinv = np.linalg.inv(J)
+#         fault_pos = fault_nu[0]*dcm.T.dot(e3)/self.m
+#         return np.vstack((fault_pos, self * fault_nu[1:, :]))
 
     # def get_drygen(self, t, z, vel, quat):
     #     if self.drygen is True:
