@@ -200,25 +200,15 @@ def exp_plot(path1):
     plt.figure(figsize=(9, 7/3*6))
 
     real_dist = np.zeros((6, np.size(data1["t"])))
-    # real_dist2 = np.zeros((6, np.size(data2["t"])))
     for i in range(np.size(data1["t"])):
         t = data1["t"][i]
         real_dist[:, i] = get_sumOfDist(t, True).ravel()
-        # real_dist2[:, i] = get_sumOfDist(t, True).ravel()
     for i in range(3):
         real_dist[i, :] = (real_dist[i, :]
-                           + data1["model_uncert_vel"][:, i, 0]
-                           + data1["int_uncert_vel"][:, i, 0])
-        # real_dist2[i, :] = (real_dist2[i, :]
-        #                     + data2["model_uncert_vel"][:, i, 0]
-        #                     + data2["int_uncert_vel"][:, i, 0])
+                           + data1["dist_vel"][:, i, 0])
     for i in range(3):
         real_dist[i+3, :] = (real_dist[i+3, :]
-                             + data1["f"][:, i, 0]
-                             + data1["model_uncert_omega"][:, i, 0])
-        # real_dist2[i+3, :] = (real_dist2[i+3, :]
-        #                       + data2["f"][:, i, 0]
-        #                       + data2["model_uncert_omega"][:, i, 0])
+                             + data1["dist_omega"][:, i, 0])
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
