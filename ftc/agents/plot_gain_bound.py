@@ -8,9 +8,9 @@ cfg = ftc.config.load()
 
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
-plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+plt.rc("axes", grid=True, labelsize=15, titlesize=15)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=12)
+plt.rc("legend", fontsize=15)
 
 
 def gain_bound():
@@ -37,10 +37,10 @@ def gain_bound():
     k1_1[k1_1 == np.inf] = 0
     k3_1[k3_1 == np.inf] = 0
     kP_1[kP_1 == np.inf] = 0
-    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.xlabel(r"$k_P$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
-    plt.savefig("PID_gain_range_KD1.png", dpi=300)
+    plt.savefig("PID_gain_range_KD1.png", dpi=600)
 
     # outer loop, kP const
     kP_2 = 30
@@ -59,10 +59,10 @@ def gain_bound():
     k1_2[k1_2 == np.inf] = 0
     k3_2[k3_2 == np.inf] = 0
     kD_2[kD_2 == np.inf] = 0
-    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.xlabel(r"$k_D$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
-    plt.savefig("PID_gain_range_KP1.png", dpi=300)
+    plt.savefig("PID_gain_range_KP1.png", dpi=600)
 
     # inner loop, kD const
     kD_3 = 45
@@ -87,10 +87,10 @@ def gain_bound():
     # ax.fill_between(kP_3, 0, 1, where=k1_3*k2 > k1_3-rho2**2/rho1**2,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform(), label="possible range")
-    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.xlabel(r"$k_P$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
-    plt.savefig("PID_gain_range_KD2.png", dpi=300)
+    plt.savefig("PID_gain_range_KD2.png", dpi=600)
 
     # # inner loop, kP const
     kP_4 = 500
@@ -115,10 +115,10 @@ def gain_bound():
     # ax.fill_between(kD_4, 0, 1, where=k1_4*k2 > k1_4-rho2**2/rho1**2,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform(), label="possible range")
-    plt.legend(loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.15))
+    plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.xlabel(r"$k_D$")
     plt.ylabel(r"$k_1$, $k_2$, $k_3$")
-    plt.savefig("PID_gain_range_KP2.png", dpi=300)
+    plt.savefig("PID_gain_range_KP2.png", dpi=600)
 
     plt.show()
 

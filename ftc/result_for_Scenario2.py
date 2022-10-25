@@ -11,9 +11,9 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
-plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+plt.rc("axes", grid=True, labelsize=15, titlesize=15)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=11)
+plt.rc("legend", fontsize=15)
 
 cfg = ftc.config.load()
 
@@ -34,7 +34,7 @@ def exp_plot(path1):
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.xlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_lambda.png", dpi=300)
+    plt.savefig("Case2_lambda.png", dpi=600)
 
     # 4d) tracking error (subplots)
     plt.figure(figsize=(9, 7))
@@ -67,7 +67,7 @@ def exp_plot(path1):
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_poserr.png", dpi=300)
+    plt.savefig("Case2_poserr.png", dpi=600)
 
     # 5a) Euler angle trajectories
     plt.figure(figsize=(9, 7))
@@ -99,7 +99,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_ang.png", dpi=300)
+    plt.savefig("Case2_ang.png", dpi=600)
 
     # 5b) Angular rate trajectories
     plt.figure(figsize=(9, 7))
@@ -136,7 +136,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_dang.png", dpi=300)
+    plt.savefig("Case2_dang.png", dpi=600)
 
     # 6a) rotor input comparison
     plt.figure(figsize=(9, 7/3*4))
@@ -164,7 +164,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_rotor.png", dpi=300)
+    plt.savefig("Case2_rotor.png", dpi=600)
 
     # 6b) generalized forces comparison
     plt.figure(figsize=(9, 7/3*4))
@@ -194,7 +194,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_force.png", dpi=300)
+    plt.savefig("Case2_force.png", dpi=600)
 
     # disturbance
     plt.figure(figsize=(9, 7/3*6))
@@ -233,7 +233,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_dist.png", dpi=300)
+    plt.savefig("Case2_dist.png", dpi=600)
 
     # disturbance err
     # plt.figure(figsize=(12, 9))
@@ -304,7 +304,7 @@ def exp_plot(path1):
 
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_gain1.png", dpi=300)
+    plt.savefig("Case2_gain1.png", dpi=600)
 
     plt.figure(figsize=(9, 7))
 
@@ -332,9 +332,9 @@ def exp_plot(path1):
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
-            plt.ylabel(r"$\theta$" + " subsystem")
+            plt.ylabel(r"$\theta$" + " subsystem", labelpad=9)
         elif i == 6:
-            plt.ylabel(r"$\psi$" + " subsystem", labelpad=9)
+            plt.ylabel(r"$\psi$" + " subsystem")
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -347,7 +347,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_gain2.png", dpi=300)
+    plt.savefig("Case2_gain2.png", dpi=600)
 
     plt.show()
 

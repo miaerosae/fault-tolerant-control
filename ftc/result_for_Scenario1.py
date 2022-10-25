@@ -11,9 +11,9 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
 
 plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
-plt.rc("axes", grid=True, labelsize=15, titlesize=12)
+plt.rc("axes", grid=True, labelsize=15, titlesize=15)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=11)
+plt.rc("legend", fontsize=15)
 
 cfg = ftc.config.load()
 
@@ -39,7 +39,7 @@ def exp_plot(path1, path2, path3):
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.xlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case1_lambda.png", dpi=300)
+    plt.savefig("Case1_lambda.png", dpi=600)
 
     ''' comparing controllers '''
     # 4d) tracking error (subplots)
@@ -52,7 +52,7 @@ def exp_plot(path1, path2, path3):
     for i in range(np.shape(data1["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
 
-    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
+    fig, axes = plt.subplots(nrows=3, figsize=(9*1.3, 7*1.3), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], axes)):
         ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same)")
         ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different)")
@@ -77,8 +77,7 @@ def exp_plot(path1, path2, path3):
             axins.set_yticks([])
             mark_inset(ax, axins, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
-    plt.tight_layout()
-    plt.savefig("Case1_poserr.png", dpi=300)
+    plt.savefig("Case1_poserr.png", dpi=600)
 
     # 4e) STD of tracking error
     for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
@@ -139,13 +138,13 @@ def exp_plot(path1, path2, path3):
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case1_ang.png", dpi=300)
+    plt.savefig("Case1_ang.png", dpi=600)
 
     # 5b) Angular rate trajectories
     bound = 150
     bound_psi = 180
 
-    fig, axes = plt.subplots(nrows=3, figsize=(9, 7), sharex=True)
+    fig, axes = plt.subplots(nrows=3, figsize=(9*1.3, 7*1.3), sharex=True)
     for i, (_label, ax) in enumerate(zip(["p", "q", "r"], axes)):
         ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
         ax.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
@@ -166,35 +165,34 @@ def exp_plot(path1, path2, path3):
             ax.set_ylim([-bound-15, bound+15])
         ax.set_ylabel(_label)
         if i == 1:
-            axins = zoomed_inset_axes(ax, 5, loc="upper left",
+            axins = zoomed_inset_axes(ax, 5, loc="lower center",
                                       axes_kwargs={"facecolor": "lavender"})
             axins.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
             axins.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
-            x1, x2, y1, y2 = 0, 0.2, -155, -130
+            x1, x2, y1, y2 = 0, 0.1, -155, -135
             axins.set_xlim(x1, x2)
             axins.set_ylim(y1, y2)
             axins.set_xticks([])
             axins.set_yticks([])
-            mark_inset(ax, axins, loc1=3, loc2=2, fc="lavender", edgecolor="lightgray", ec="0.5")
-        if i == 1:
-            axins1 = zoomed_inset_axes(ax, 2.5, loc="lower center",
-                                       axes_kwargs={"facecolor": "lavender"})
-            axins1.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
-            axins1.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
-            axins1.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
-            axins1.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
-            x1, x2, y1, y2 = 4.5, 5.5, -170, -90
-            axins1.set_xlim(x1, x2)
-            axins1.set_ylim(y1, y2)
-            axins1.set_xticks([])
-            axins1.set_yticks([])
-            mark_inset(ax, axins1, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
+            mark_inset(ax, axins, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
+        # if i == 1:
+        #     axins1 = zoomed_inset_axes(ax, 2.5, loc="lower center",
+        #                                axes_kwargs={"facecolor": "lavender"})
+        #     axins1.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
+        #     axins1.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
+        #     axins1.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
+        #     axins1.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
+        #     x1, x2, y1, y2 = 4.5, 5.5, -170, -90
+        #     axins1.set_xlim(x1, x2)
+        #     axins1.set_ylim(y1, y2)
+        #     axins1.set_xticks([])
+        #     axins1.set_yticks([])
+        #     mark_inset(ax, axins1, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
     plt.gcf().supxlabel("Time [sec]")
-    plt.tight_layout()
-    plt.savefig("Case1_dang.png", dpi=300)
+    plt.savefig("Case1_dang.png", dpi=600)
 
     # 5c) tracking error
-    plt.figure()
+    plt.figure(figsize=(9, 7))
     ax = plt.subplot(311)
     for i, _label in enumerate([r"$e_{1\phi}$", r"$e_{1\theta}$", r"$e_{1\psi}$"]):
         if i != 0:
@@ -212,7 +210,7 @@ def exp_plot(path1, path2, path3):
             plt.ylabel(_label, labelpad=15)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case1_angerr.png", dpi=300)
+    plt.savefig("Case1_angerr.png", dpi=600)
 
     # 5d) STD of tracking error
     for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
@@ -303,7 +301,7 @@ def exp_plot(path1, path2, path3):
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case1_rotor.png", dpi=300)
+    plt.savefig("Case1_rotor.png", dpi=600)
 
     # 6b) generalized forces comparison
     plt.figure(figsize=(9, 7/3*4))
@@ -326,7 +324,7 @@ def exp_plot(path1, path2, path3):
             plt.ylabel(_label, labelpad=2)
     plt.gcf().supxlabel("Time, sec")
     plt.tight_layout()
-    plt.savefig("Case1_force.png", dpi=300)
+    plt.savefig("Case1_force.png", dpi=600)
 
     plt.show()
 
