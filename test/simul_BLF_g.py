@@ -361,6 +361,7 @@ def main(args):
 
     elif args.with_plot:
         loggerpath = "data.h5"
+        # loggerpath = "Scenario2_noFDI.h5"
         exp_plot(loggerpath, False)
 
     else:

@@ -21,12 +21,12 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10, 11]),
-        "fault_index": np.array([0, 1, 2, 2]),
-        "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
-        # "fault_time": np.array([5]),
-        # "fault_index": np.array([0]),
-        # "LoE": np.array([0.5]),
+        # "fault_time": np.array([5, 7, 10, 11]),
+        # "fault_index": np.array([0, 1, 2, 2]),
+        # "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
+        "fault_time": np.array([5]),
+        "fault_index": np.array([0]),
+        "LoE": np.array([0.4]),
     },
 
     # ====== ftc.plants ====== #
@@ -164,25 +164,28 @@ default_settings = fym.parser.parse({
 
         # --- peaking-free --- #
         "pf.oL": {
-            "l": 5,
+            "l": np.array([60, 70, 40]),
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
-            "rho": np.array([1, 0.5]),
-            "rho_k": 0.5,
-            "R": np.array([1, 0.5]),
+            "rho": np.array([0.5, 0.25]),
+            "rho_k": 0.6,
+            "R": np.array([[0.6, 2],
+                           [0.6, 3],
+                           [1.8, 10]]),
         },
         "pf.iL": {
-            "l": 25,
+            "l": np.array([110, 250, 80]),
             "alp": np.array([3, 3, 1]),
             "bet": np.array([3.98, 0.993]),
-            "xi": np.array([-1, 1]) * 0.15,
-            "rho": np.deg2rad(np.array([45, 130])),
-            "c": np.array([20, 20]),
-            "dist_range": 5,  # disturbance saturation value
+            "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
+            "xi_psi": np.array([-1, 1]) * 2 * 0.75,
+            "rho": np.deg2rad(np.array([45, 150])),
+            "rho_psi": np.deg2rad(np.array([45, 180])),
+            "c": np.array([200, 200]),
+            "dist_range": 40,  # disturbance saturation value
         },
-        "pf.Kxy": np.array([2, 30, 5/30/(0.5)**2]),
-        "pf.Kz": np.array([2, 30, 5/30/(0.5)**2]),
-        "pf.Kang": np.array([500/30, 30, 5/30/np.deg2rad(45)**2]),
+        "pf.Kxy": np.array([1, 0.5, 0.417]),
+        "pf.Kang": np.array([10.5, 50, 0.97]),
         "pf.theta": 0.7,
 
     },
@@ -191,7 +194,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 30,
+        "max_t": 10,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
