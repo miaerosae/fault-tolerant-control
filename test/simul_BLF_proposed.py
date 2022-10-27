@@ -55,6 +55,8 @@ class Env(BaseEnv):
 
         # Define agents
         params = cfg.agents.BLF.pf
+        self.rho_pos = params.oL.rho[1]
+        self.rho_ang = params.iL.rho
         k11 = config["k11"]
         k12 = config["k12"]
         k13 = config["k13"]
@@ -101,25 +103,23 @@ class Env(BaseEnv):
         return pos_des
 
     def step(self):
-        *_, done = self.update()
+        env_info, done = self.update()
 
-        # Stop condition
-        # omega = self.plant.omega.state
-        # for dang in omega:
-        #     if abs(dang) > np.deg2rad(80):
-        #         done = True
-        # err_pos = np.array([self.blf_x.e.state[0],
-        #                     self.blf_y.e.state[0],
-        #                     self.blf_z.e.state[0]])
-        # for err in err_pos:
-        #     if abs(err) > 10:
-        #         done = True
-
-        # for rotor in self.rotors_cmd:
-        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
-        #         done = True
-
-        return done
+        if abs(self.blf_x.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_y.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_z.e.state[0]) > 0.5:
+            done = True
+        ang = quat2angle(self.plant.quat.state)
+        for i in range(3):
+            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+                done = True
+        dang = self.plant.omega.state
+        for i in range(3):
+            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+                done = True
+        return done, env_info
 
     def get_W(self, t):
         W = np.diag([1., 1., 1., 1.])
