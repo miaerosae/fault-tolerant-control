@@ -24,9 +24,10 @@ from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
 
 plt.rc("text", usetex=False)
-plt.rc("lines", linewidth=1)
-plt.rc("axes", grid=True)
+plt.rc("lines", linewidth=1.5)
+plt.rc("axes", grid=True, labelsize=15, titlesize=12)
 plt.rc("grid", linestyle="--", alpha=0.8)
+plt.rc("legend", fontsize=15)
 
 cfg = ftc.config.load()
 
@@ -86,11 +87,11 @@ class Env(BaseEnv):
                                      self.plant.g, params.theta, cond.noise)
         self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp, params.iL.bet,
                                        params.iL.dist_range, Kang, params.iL.xi,
-                                       params.iL.rho, params.iL.c, b[0],
+                                       params.iL.rho, params.iL.c, b[1],
                                        self.plant.g, params.theta, cond.noise)
         self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi_psi,
-                                     params.iL.rho_psi, params.iL.c, b[0],
+                                     params.iL.rho_psi, params.iL.c, b[2],
                                      self.plant.g, params.theta, cond.noise)
 
         self.prev_rotors = np.zeros((4, 1))
@@ -105,20 +106,20 @@ class Env(BaseEnv):
     def step(self):
         env_info, done = self.update()
 
-        if abs(self.blf_x.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_y.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_z.e.state[0]) > 0.5:
-            done = True
-        ang = quat2angle(self.plant.quat.state)
-        for i in range(3):
-            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
-                done = True
-        dang = self.plant.omega.state
-        for i in range(3):
-            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
-                done = True
+#         if abs(self.blf_x.e.state[0]) > 0.5:
+#             done = True
+#         if abs(self.blf_y.e.state[0]) > 0.5:
+#             done = True
+#         if abs(self.blf_z.e.state[0]) > 0.5:
+#             done = True
+#         ang = quat2angle(self.plant.quat.state)
+#         for i in range(3):
+#             if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+#                 done = True
+#         dang = self.plant.omega.state
+#         for i in range(3):
+#             if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+#                 done = True
         return done, env_info
 
     def get_W(self, t):
@@ -149,13 +150,11 @@ class Env(BaseEnv):
 
         m = self.plant.m
         u1_cmd = m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
-        euler = quat2angle(self.plant.quat.state)[::-1]
-        psid = euler[2]
-        phid = np.clip(np.arcsin(- m / u1_cmd * (q[2]*np.sin(psid)-q[1]*np.cos(psid))),
+        phid = np.clip(np.arcsin(q[1] * self.plant.m / u1_cmd),
                        - np.deg2rad(45), np.deg2rad(45))
-        thetad = np.clip(np.arctan(1 / (q[2] - self.plant.g) * (q[0]*np.cos(psid)+q[1]*np.sin(psid))),
+        thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
                          - np.deg2rad(45), np.deg2rad(45))
-
+        psid = 0
         eulerd = np.vstack([phid, thetad, psid])
 
         # Inner-Loop
@@ -219,23 +218,6 @@ class Env(BaseEnv):
                     dist_vel=dist_vel, dist_omega=dist_omega)
 
 
-def run_ray(params):
-    env = Env(params)
-    env.reset()
-
-    while True:
-        env.render()
-        done = env.step()
-
-        if done:
-            break
-
-    time = env.clock.get()
-    env.close()
-
-    return time
-
-
 def run(loggerpath, params):
     env = Env(params)
     env.logger = fym.Logger(loggerpath)
@@ -246,7 +228,7 @@ def run(loggerpath, params):
     try:
         while True:
             env.render()
-            done = env.step()
+            done, env_info = env.step()
 
             env_info = {
                 # "detection_time": env.detection_time,

@@ -295,15 +295,15 @@ def main(args):
             "k11": 1,
             "k12": 0.5,
             "k13": 0.417,
-            "k21": tune.uniform(0.1, 30),
-            "k22": tune.uniform(0.1, 100),
-            "k23": tune.uniform(0.01, 1),
-            "eps11": tune.uniform(20, 100),
-            "eps12": tune.uniform(40, 150),
-            "eps13": tune.uniform(20, 100),
+            "k21": tune.uniform(0.1, 15),
+            "k22": tune.uniform(0.1, 400),
+            "k23": tune.uniform(0.5, 1),
+            "eps11": tune.uniform(50, 200),
+            "eps12": tune.uniform(50, 200),
+            "eps13": tune.uniform(30, 100),
             "eps21": tune.uniform(20, 300),
             "eps22": tune.uniform(20, 300),
-            "eps23": 80,
+            "eps23": tune.uniform(50, 200),
         }
         current_best_params = [{
             "k11": 1,
@@ -332,7 +332,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=2000,
+                num_samples=3000,
                 search_alg=search,
             ),
             run_config=RunConfig(

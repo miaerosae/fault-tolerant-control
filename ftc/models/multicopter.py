@@ -237,7 +237,13 @@ class Multicopter(BaseEnv):
             M = np.vstack((M1, M2, M3))
             vel_dist = (- F*dcm.T.dot(e3)/self.m)
             omega_dist = Jinv_real.dot(M - np.cross(omega, self.J.dot(omega), axis=0))
-            resultvel, resultdang = vel_dist-vel_real, omega_dist-omega_real
+
+            p, q, r = self.omega.state
+            J = np.diag(self.J)
+            f = np.array([(J[1]-J[2]) / J[0] * q * r,
+                          (J[2]-J[0]) / J[1] * p * r,
+                          (J[0]-J[1]) / J[2] * p * q])
+            resultvel, resultdang = vel_dist-vel_real, omega_dist-omega_real+f
         if self.int_unc is True:
             vel = self.vel.state
             int_vel = np.vstack([

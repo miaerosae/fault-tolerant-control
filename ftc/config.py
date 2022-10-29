@@ -165,7 +165,7 @@ default_settings = fym.parser.parse({
         # --- peaking-free --- #
         "pf.oL": {
             "l": np.array([60, 70, 40]),
-            "alp": np.array([3, 3, 1]),
+            "alp": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
@@ -175,7 +175,7 @@ default_settings = fym.parser.parse({
         },
         "pf.iL": {
             "l": np.array([110, 250, 80]),
-            "alp": np.array([3, 3, 1]),
+            "alp": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
@@ -185,8 +185,8 @@ default_settings = fym.parser.parse({
             "dist_range": 40,  # disturbance saturation value
         },
         "pf.Kxy": np.array([1, 0.5, 0.417]),
-        "pf.Kang": np.array([10.5, 50, 0.97]),
-        "pf.theta": 0.7,
+        "pf.Kang": np.array([10.5, 100, 0.97]),
+        "pf.theta": 1,
 
     },
 
@@ -194,7 +194,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 10,
+        "max_t": 20,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise

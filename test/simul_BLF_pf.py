@@ -1,5 +1,9 @@
-import ray
 from ray import tune
+import os
+import json
+from ray.air import CheckpointConfig, RunConfig
+from ray.tune.search.hyperopt import HyperOptSearch
+from ray.tune import CLIReporter
 import argparse
 import numpy as np
 from numpy import sin, cos
@@ -12,7 +16,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_pf as BLF
-from ftc.agents.param import get_b0, get_faulty_input
+from ftc.agents.param import get_b0
 from ftc.plotting import exp_plot
 from copy import deepcopy
 from ftc.faults.actuator import LoE
@@ -27,7 +31,7 @@ cfg = ftc.config.load()
 
 
 class Env(BaseEnv):
-    def __init__(self, Kxy, Kz, Kang):
+    def __init__(self, config):
         super().__init__(dt=cfg.simul_condi.dt, max_t=cfg.simul_condi.max_t)
         init = cfg.models.multicopter.init
         cond = cfg.simul_condi
@@ -50,30 +54,40 @@ class Env(BaseEnv):
 
         # Define agents
         params = cfg.agents.BLF.pf
+        self.rho_pos = params.oL.rho[1]
+        self.rho_ang = params.iL.rho
+        k11 = config["k11"]
+        k12 = config["k12"]
+        k13 = config["k13"]
+        k21 = config["k21"]
+        k22 = config["k22"]
+        k23 = config["k23"]
+        Kxy = np.array([k11, k12, k13])
         self.pos_ref = np.vstack([-0, 0, 0])
-        self.blf_x = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.R, Kxy, params.oL.rho,
+        self.blf_x = BLF.outerLoop(config["l11"], params.oL.alp, params.oL.bet,
+                                   params.oL.R[0, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[0][0])
-        self.blf_y = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.R, Kxy, params.oL.rho,
+        self.blf_y = BLF.outerLoop(config["l12"], params.oL.alp, params.oL.bet,
+                                   params.oL.R[1, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[1][0])
-        self.blf_z = BLF.outerLoop(params.oL.l, params.oL.alp, params.oL.bet,
-                                   params.oL.R, Kz, params.oL.rho,
+        self.blf_z = BLF.outerLoop(config["l13"], params.oL.alp, params.oL.bet,
+                                   params.oL.R[2, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[2][0])
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        self.blf_phi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
+        Kang = np.array([k21, k22, k23])
+        self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
-        self.blf_theta = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
+        self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp, params.iL.bet,
                                        params.iL.dist_range, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[0],
                                        self.plant.g, cond.noise)
-        self.blf_psi = BLF.innerLoop(params.iL.l, params.iL.alp, params.iL.bet,
+        self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
@@ -88,25 +102,23 @@ class Env(BaseEnv):
         return pos_des
 
     def step(self):
-        *_, done = self.update()
+        env_info, done = self.update()
 
-        # Stop condition
-        # omega = self.plant.omega.state
-        # for dang in omega:
-        #     if abs(dang) > np.deg2rad(80):
-        #         done = True
-        # err_pos = np.array([self.blf_x.e.state[0],
-        #                     self.blf_y.e.state[0],
-        #                     self.blf_z.e.state[0]])
-        # for err in err_pos:
-        #     if abs(err) > 10:
-        #         done = True
-
-        # for rotor in self.rotors_cmd:
-        #     if rotor < 0 or rotor > self.plant.rotor_max + 5:
-        #         done = True
-
-        return done
+#         if abs(self.blf_x.e.state[0]) > 0.5:
+#             done = True
+#         if abs(self.blf_y.e.state[0]) > 0.5:
+#             done = True
+#         if abs(self.blf_z.e.state[0]) > 0.5:
+#             done = True
+#         ang = quat2angle(self.plant.quat.state)
+#         for i in range(3):
+#             if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+#                 done = True
+#         dang = self.plant.omega.state
+#         for i in range(3):
+#             if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+#                 done = True
+        return done, env_info
 
     def get_W(self, t):
         W = np.diag([1., 1., 1., 1.])
@@ -120,7 +132,7 @@ class Env(BaseEnv):
     def set_dot(self, t):
         ref = self.get_ref(t)
         W = self.get_W(t)
-        What = self.get_W(t-self.delay)
+        What = np.diag([1, 1, 1, 1])
         # windvel = self.get_windvel(t)
 
         # Outer-Loop: virtual input
@@ -131,8 +143,10 @@ class Env(BaseEnv):
 
         # Inverse solution
         u1_cmd = self.plant.m * (q[0]**2 + q[1]**2 + (q[2]-self.plant.g)**2)**(1/2)
-        phid = np.arcsin(q[1] * self.plant.m / u1_cmd)
-        thetad = np.arctan(q[0] / (q[2] - self.plant.g))
+        phid = np.clip(np.arcsin(q[1] * self.plant.m / u1_cmd),
+                       - np.deg2rad(45), np.deg2rad(45))
+        thetad = np.clip(np.arctan(q[0] / (q[2] - self.plant.g)),
+                         - np.deg2rad(45), np.deg2rad(45))
         psid = 0
         eulerd = np.vstack([phid, thetad, psid])
 
@@ -142,16 +156,19 @@ class Env(BaseEnv):
         u4 = self.blf_psi.get_u(t, psid)
 
         # Saturation u1
-        # u1 = np.clip(u1_cmd, 0, self.plant.rotor_max*self.n)
-        u1 = u1_cmd
+        u1 = np.clip(u1_cmd, 0,
+                     self.plant.rotor_max**2*self.n*cfg.models.multicopter.physPropBy.OS4.b)
 
         # rotors
         forces = np.vstack([u1, u2, u3, u4])
         rotors_cmd = np.linalg.pinv(self.plant.mixer.B.dot(What)).dot(forces)
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
+        # get model uncertainty disturbance value
+        dist_vel, dist_omega = self.plant.get_dist(t, W, rotors)
+
         # Set actuator faults
-        rotors = get_faulty_input(W, rotors)
+        rotors = W.dot(rotors)
         self.prev_rotors = rotors
 
         # Disturbance
@@ -173,16 +190,6 @@ class Env(BaseEnv):
         obs_ang[1] = self.blf_theta.get_obs()
         obs_ang[2] = self.blf_psi.get_obs()
 
-        # caculate f
-        J = np.diag(self.plant.J)
-        p_, q_, r_ = self.plant.omega.state
-        f = np.array([(J[1]-J[2]) / J[0] * q_ * r_,
-                      (J[2]-J[0]) / J[1] * p_ * r_,
-                      (J[0]-J[1]) / J[2] * p_ * q_])
-
-        # get model uncertainty disturbance value
-        model_uncert_vel, model_uncert_omega = self.plant.get_model_uncertainty(rotors)
-
         # set_dot
         self.plant.set_dot(t, rotors,
                            # windvel
@@ -199,76 +206,140 @@ class Env(BaseEnv):
 
         return dict(t=t, x=self.plant.observe_dict(), What=What,
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
-                    virtual_u=forces, dist=dist, q=q, f=f,
+                    virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
-                    model_uncert_vel=model_uncert_vel,
-                    model_uncert_omega=model_uncert_omega)
+                    dist_vel=dist_vel, dist_omega=dist_omega)
 
 
-def run_ray(Kxy, Kz, Kang):
-    env = Env(Kxy, Kz, Kang)
-    env.reset()
-
-    while True:
-        env.render()
-        done = env.step()
-
-        if done:
-            break
-
-    time = env.clock.get()
-    env.close()
-
-    return time
-
-
-def run(loggerpath, Kxy, Kz, Kang):
-    env = Env(Kxy, Kz, Kang)
+def run(loggerpath, params):
+    env = Env(params)
     env.logger = fym.Logger(loggerpath)
     env.logger.set_info(cfg=ftc.config.load())
 
     env.reset()
 
-    while True:
-        env.render()
-        done = env.step()
+    try:
+        while True:
+            env.render()
+            done, env_info = env.step()
 
-        if done:
             env_info = {
                 # "detection_time": env.detection_time,
                 "rotor_min": env.plant.rotor_min,
                 "rotor_max": env.plant.rotor_max,
             }
             env.logger.set_info(**env_info)
-            break
+            if done:
+                break
 
-    env.close()
+    finally:
+        env.close()
+        return
 
 
 def main(args):
     if args.with_ray:
-        configs = {
-            "k11": tune.uniform(1, 10),
-            "k12": tune.uniform(1, 10),
-            "k21": tune.uniform(1, 20),
-            "k22": tune.uniform(1, 20),
-            "k31": tune.uniform(1, 20),
-            "k32": tune.uniform(1, 20),
+        def objective(config):
+            np.seterr(all="raise")
+            env = Env(config)
+
+            env.reset()
+            tf = 0
+            try:
+                while True:
+                    done, env_info = env.step()
+                    tf = env_info["t"]
+
+                    if done:
+                        break
+
+            finally:
+                return {"tf": tf}
+
+        config = {
+            "k11": 1,
+            "k12": 0.5,
+            "k13": 0.417,
+            "k21": tune.uniform(0.1, 30),
+            "k22": tune.uniform(0.1, 100),
+            "k23": tune.uniform(0.01, 1),
+            "l11": 60,
+            "l12": 70,
+            "l13": 40,
+            "l21": 110,
+            "l22": 250,
+            "l23": 80,
         }
-
-        def trainable(configs):
-            score = run_ray(configs["k11"], configs["k12"], configs["k21"],
-                            configs["k22"], configs["k31"], configs["k32"])
-            tune.report(score=score)
-        tune.run(trainable, config=configs, num_samples=10)
-
+        current_best_params = [{
+            "k11": 1,
+            "k12": 0.5,
+            "k13": 0.417,
+            "k21": 10.5,
+            "k22": 50,
+            "k23": 0.97,
+            "l11": 60,
+            "l12": 70,
+            "l13": 40,
+            "l21": 110,
+            "l22": 250,
+            "l23": 80,
+        }]
+        search = HyperOptSearch(
+            metric="tf",
+            mode="max",
+            points_to_evaluate=current_best_params,
+        )
+        tuner = tune.Tuner(
+            tune.with_resources(
+                objective,
+                resources={"cpu": os.cpu_count()},
+                # resources={"cpu": 12},
+            ),
+            param_space=config,
+            tune_config=tune.TuneConfig(
+                num_samples=2000,
+                search_alg=search,
+            ),
+            run_config=RunConfig(
+                name="train_run",
+                local_dir="data/ray_results",
+                verbose=1,
+                progress_reporter=CLIReporter(
+                    parameter_columns=list(config.keys())[:3],
+                    max_progress_rows=3,
+                    metric="tf",
+                    mode="max",
+                    sort_by_metric=True,
+                ),
+                checkpoint_config=CheckpointConfig(
+                    num_to_keep=5,
+                    checkpoint_score_attribute="tf",
+                    checkpoint_score_order="max",
+                ),
+            ),
+        )
+        results = tuner.fit()
+        config = results.get_best_result(metric="tf", mode="max").config
+        with open("data/ray_results/train_run/best_config.json", "w") as f:
+            json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
+        return
     else:
         loggerpath = "data.h5"
-
-        Kxy = cfg.agents.BLF.Kxy.ravel()
-        Kz = cfg.agents.BLF.Kz.ravel()
-        Kang = cfg.agents.BLF.Kang.ravel()
-        run(loggerpath, Kxy, Kz, Kang)
+        params = {
+            "k11": cfg.agents.BLF.pf.Kxy[0],
+            "k12": cfg.agents.BLF.pf.Kxy[1],
+            "k13": cfg.agents.BLF.pf.Kxy[2],
+            "k21": cfg.agents.BLF.pf.Kang[0],
+            "k22": cfg.agents.BLF.pf.Kang[1],
+            "k23": cfg.agents.BLF.pf.Kang[2],
+            "l11": cfg.agents.BLF.pf.oL.l[0],
+            "l12": cfg.agents.BLF.pf.oL.l[1],
+            "l13": cfg.agents.BLF.pf.oL.l[2],
+            "l21": cfg.agents.BLF.pf.iL.l[0],
+            "l22": cfg.agents.BLF.pf.iL.l[1],
+            "l23": cfg.agents.BLF.pf.iL.l[2],
+        }
+        run(loggerpath, params)
         exp_plot(loggerpath, True)
 
 
