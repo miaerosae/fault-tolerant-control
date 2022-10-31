@@ -6,6 +6,7 @@ import numpy as np
 def func_g(x, theta, delta):
     # return abs(x)**theta * np.sign(x)
     # delta = 5  # delta가 작아질수록 반응속도가 빨라지지만 peaking이 커진다
+    delta = 1
     if abs(x) < delta:
         return x / delta**(1-theta)
     else:

@@ -264,9 +264,9 @@ def main(args):
                 return {"tf": tf}
 
         config = {
-            "k11": 1,
-            "k12": 0.5,
-            "k13": 0.417,
+            "k11": tune.uniform(0.1, 20),
+            "k12": tune.uniform(0.01, 10),
+            "k13": tune.uniform(0.01, 1),
             "k21": tune.uniform(0.1, 30),
             "k22": tune.uniform(0.1, 100),
             "k23": tune.uniform(0.01, 1),

@@ -5,6 +5,7 @@ import numpy as np
 
 def func_g(x, theta, delta):
     # return abs(x)**theta * np.sign(x)
+    delta = 1
     if abs(x) < delta:
         return x / delta**(1-theta)
     else:
