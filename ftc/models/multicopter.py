@@ -215,7 +215,7 @@ class Multicopter(BaseEnv):
             F, M1, M2, M3 = self.mixer.inverse(W.dot(rotors))
             M = np.vstack((M1, M2, M3))
             delm = cfg.model_uncert.del_m
-            self.J_rand = np.random.randn(1)
+            self.J_rand = 1
             J = (cfg.model_uncert.del_J*self.J_rand + 1) * self.J
             Jinv_dist = np.linalg.inv(J)
             vel_dist = (- F*dcm.T.dot(e3)/(self.m*(delm*np.sin(t) + 1)))
