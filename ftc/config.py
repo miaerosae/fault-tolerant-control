@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([60, 70, 40]),
+            "eps": np.array([6, 7, 4]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([110, 250, 80]),
+            "eps": np.array([11, 25, 8]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -164,7 +164,7 @@ default_settings = fym.parser.parse({
 
         # --- peaking-free --- #
         "pf.oL": {
-            "l": np.array([60, 70, 40]),
+            "l": np.array([35, 35, 4]),
             "alp": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "rho": np.array([0.5, 0.25]),
@@ -174,7 +174,7 @@ default_settings = fym.parser.parse({
                            [1.8, 10]]),
         },
         "pf.iL": {
-            "l": np.array([110, 250, 80]),
+            "l": np.array([40, 40, 8]),
             "alp": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
@@ -184,8 +184,8 @@ default_settings = fym.parser.parse({
             "c": np.array([200, 200]),
             "dist_range": 40,  # disturbance saturation value
         },
-        "pf.Kxy": np.array([1, 0.5, 0.417]),
-        "pf.Kang": np.array([10.5, 100, 0.97]),
+        "pf.Kxy": np.array([1.1878, 5.1439, 0.2293]),
+        "pf.Kang": np.array([18.2726, 77.03, 0.1892]),
         "pf.theta": 0.7,
 
     },
@@ -194,7 +194,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 20,
+        "max_t": 10,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
@@ -204,12 +204,12 @@ default_settings = fym.parser.parse({
         "drygen": False,  # not use
         # "BLF": False,
         "BLF": True,
-        "uncertainty": True,
-        "ext_unc": True,
-        "int_unc": True,
-        # "uncertainty": False,
-        # "ext_unc": False,
-        # "int_unc": False,
+        # "uncertainty": True,
+        # "ext_unc": True,
+        # "int_unc": True,
+        "uncertainty": False,
+        "ext_unc": False,
+        "int_unc": False,
     },
 
     "wind_dist": {

@@ -15,8 +15,8 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-import ftc.agents.BLF_proposed3 as BLF
-from ftc.agents.param import get_b0
+import ftc.agents.BLF_proposed2 as BLF
+from ftc.agents.param import get_b0, get_sumOfDist
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 from copy import deepcopy
@@ -48,7 +48,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = True
+        self.fault = False
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -103,7 +103,7 @@ class Env(BaseEnv):
                              -t])
         return pos_des
 
-    def step(self):
+    def step(self, t):
         env_info, done = self.update()
 
         if abs(self.blf_x.e.state[0]) > 0.5:
@@ -120,7 +120,8 @@ class Env(BaseEnv):
         for i in range(3):
             if abs(dang[i]) > cfg.agents.BLF.pf.iL.rho[1]:
                 done = True
-        return done, env_info
+
+        return done, env_info, sum(abs(self.get_dist_err(t)))
 
     def get_W(self, t):
         W = np.diag([1., 1., 1., 1.])
@@ -130,6 +131,18 @@ class Env(BaseEnv):
                 if t > self.fault_time[i]:
                     W[index[i], index[i]] = self.LoE[i]
         return W
+
+    def get_dist_err(self, t):
+        dist = [self.blf_x.get_dist(),
+                self.blf_y.get_dist(),
+                self.blf_z.get_dist(),
+                self.blf_phi.get_dist(),
+                self.blf_theta.get_dist(),
+                self.blf_psi.get_dist()]
+        real_dist = get_sumOfDist(t, cfg.simul_condi.ext_unc)
+        dist_vel, dist_omega = self.plant.get_dist(t, self.get_W(t), self.prev_rotors)
+        real_dist = real_dist - np.vstack([dist_vel, dist_omega])
+        return abs(dist-real_dist)
 
     def set_dot(self, t):
         ref = self.get_ref(t)
@@ -224,11 +237,12 @@ def run(loggerpath, params):
     env.logger.set_info(cfg=ftc.config.load())
 
     env.reset()
+    t = 0
 
     try:
         while True:
             env.render()
-            done, env_info = env.step()
+            done, env_info, _ = env.step(t)
 
             env_info = {
                 # "detection_time": env.detection_time,
@@ -236,6 +250,7 @@ def run(loggerpath, params):
                 "rotor_max": env.plant.rotor_max,
             }
             env.logger.set_info(**env_info)
+            t = t + cfg.simul_condi.dt
             if done:
                 break
 
@@ -251,48 +266,51 @@ def main(args):
             env = Env(config)
 
             env.reset()
+            t = 0
             tf = 0
+            sumDistErr = 0
             try:
                 while True:
-                    done, env_info = env.step()
+                    done, env_info, sumDistErr = env.step(t)
                     tf = env_info["t"]
 
+                    t = t + cfg.simul_condi.dt
                     if done:
                         break
 
             finally:
-                return {"tf": tf}
+                return {"cost": 100*tf-sumDistErr}
 
         config = {
-            "k11": tune.uniform(0.1, 20),
+            "k11": tune.uniform(0.01, 5),
             "k12": tune.uniform(0.01, 10),
             "k13": tune.uniform(0.01, 1),
-            "k21": tune.uniform(0.1, 30),
-            "k22": tune.uniform(0.1, 100),
+            "k21": tune.uniform(1, 30),
+            "k22": tune.uniform(50, 200),
             "k23": tune.uniform(0.01, 1),
-            "l11": 60,
-            "l12": 70,
-            "l13": 40,
-            "l21": 110,
-            "l22": 250,
-            "l23": 80,
+            "l11": 35,
+            "l12": 35,
+            "l13": 4,
+            "l21": 40,
+            "l22": 40,
+            "l23": 8,
         }
         current_best_params = [{
-            "k11": 1,
-            "k12": 0.5,
-            "k13": 0.417,
-            "k21": 10.5,
-            "k22": 50,
-            "k23": 0.97,
-            "l11": 60,
-            "l12": 70,
-            "l13": 40,
-            "l21": 110,
-            "l22": 250,
-            "l23": 80,
+            "k11": 1.1878,
+            "k12": 5.1439,
+            "k13": 0.2293,
+            "k21": 18.2726,
+            "k22": 77.03,
+            "k23": 0.1892,
+            "l11": 35,
+            "l12": 35,
+            "l13": 4,
+            "l21": 40,
+            "l22": 40,
+            "l23": 8,
         }]
         search = HyperOptSearch(
-            metric="tf",
+            metric="cost",
             mode="max",
             points_to_evaluate=current_best_params,
         )
@@ -304,7 +322,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=2000,
+                num_samples=1000,
                 search_alg=search,
             ),
             run_config=RunConfig(
@@ -314,19 +332,19 @@ def main(args):
                 progress_reporter=CLIReporter(
                     parameter_columns=list(config.keys())[:3],
                     max_progress_rows=3,
-                    metric="tf",
+                    metric="cost",
                     mode="max",
                     sort_by_metric=True,
                 ),
                 checkpoint_config=CheckpointConfig(
                     num_to_keep=5,
-                    checkpoint_score_attribute="tf",
+                    checkpoint_score_attribute="cost",
                     checkpoint_score_order="max",
                 ),
             ),
         )
         results = tuner.fit()
-        config = results.get_best_result(metric="tf", mode="max").config
+        config = results.get_best_result(metric="cost", mode="max").config
         with open("data/ray_results/train_run/best_config.json", "w") as f:
             json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
         return

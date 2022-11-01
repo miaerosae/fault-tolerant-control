@@ -46,7 +46,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = True
+        self.fault = False
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
