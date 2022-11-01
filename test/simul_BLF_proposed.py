@@ -48,7 +48,7 @@ class Env(BaseEnv):
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
         # Define faults
-        self.fault = False
+        self.fault = True
         self.delay = cfg.faults.manager.delay
         self.fault_time = cfg.faults.manager.fault_time
         self.fault_index = cfg.faults.manager.fault_index
@@ -103,7 +103,7 @@ class Env(BaseEnv):
                              -t])
         return pos_des
 
-    def step(self, t):
+    def step(self):
         env_info, done = self.update()
 
         if abs(self.blf_x.e.state[0]) > 0.5:
@@ -121,7 +121,7 @@ class Env(BaseEnv):
             if abs(dang[i]) > cfg.agents.BLF.pf.iL.rho[1]:
                 done = True
 
-        return done, env_info, sum(abs(self.get_dist_err(t)))
+        return done, env_info
 
     def get_W(self, t):
         W = np.diag([1., 1., 1., 1.])
@@ -131,18 +131,6 @@ class Env(BaseEnv):
                 if t > self.fault_time[i]:
                     W[index[i], index[i]] = self.LoE[i]
         return W
-
-    def get_dist_err(self, t):
-        dist = [self.blf_x.get_dist(),
-                self.blf_y.get_dist(),
-                self.blf_z.get_dist(),
-                self.blf_phi.get_dist(),
-                self.blf_theta.get_dist(),
-                self.blf_psi.get_dist()]
-        real_dist = get_sumOfDist(t, cfg.simul_condi.ext_unc)
-        dist_vel, dist_omega = self.plant.get_dist(t, self.get_W(t), self.prev_rotors)
-        real_dist = real_dist - np.vstack([dist_vel, dist_omega])
-        return abs(dist-real_dist)
 
     def set_dot(self, t):
         ref = self.get_ref(t)
@@ -185,7 +173,9 @@ class Env(BaseEnv):
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # get model uncertainty disturbance value
+        real_dist = get_sumOfDist(t, cfg.simul_condi.ext_unc)
         dist_vel, dist_omega = self.plant.get_dist(t, W, rotors)
+        real_dist = real_dist + np.vstack([dist_vel, dist_omega])
 
         # Set actuator faults
         rotors = W.dot(rotors)
@@ -228,7 +218,8 @@ class Env(BaseEnv):
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
-                    dist_vel=dist_vel, dist_omega=dist_omega)
+                    dist_vel=dist_vel, dist_omega=dist_omega,
+                    disterr=sum(abs(dist-real_dist)))
 
 
 def run(loggerpath, params):
@@ -237,12 +228,11 @@ def run(loggerpath, params):
     env.logger.set_info(cfg=ftc.config.load())
 
     env.reset()
-    t = 0
 
     try:
         while True:
             env.render()
-            done, env_info, _ = env.step(t)
+            done, env_info = env.step()
 
             env_info = {
                 # "detection_time": env.detection_time,
@@ -250,7 +240,6 @@ def run(loggerpath, params):
                 "rotor_max": env.plant.rotor_max,
             }
             env.logger.set_info(**env_info)
-            t = t + cfg.simul_condi.dt
             if done:
                 break
 
@@ -266,20 +255,19 @@ def main(args):
             env = Env(config)
 
             env.reset()
-            t = 0
             tf = 0
             sumDistErr = 0
             try:
                 while True:
-                    done, env_info, sumDistErr = env.step(t)
+                    done, env_info = env.step()
                     tf = env_info["t"]
+                    sumDistErr = env_info["disterr"]
 
-                    t = t + cfg.simul_condi.dt
                     if done:
                         break
 
             finally:
-                return {"cost": 100*tf-sumDistErr}
+                return {"cost": 100*tf-sumDistErr[0]}
 
         config = {
             "k11": tune.uniform(0.01, 5),
@@ -288,12 +276,12 @@ def main(args):
             "k21": tune.uniform(1, 30),
             "k22": tune.uniform(50, 200),
             "k23": tune.uniform(0.01, 1),
-            "l11": 35,
-            "l12": 35,
-            "l13": 4,
-            "l21": 40,
-            "l22": 40,
-            "l23": 8,
+            "l11": tune.uniform(20, 100),
+            "l12": tune.uniform(20, 100),
+            "l13": tune.uniform(10, 50),
+            "l21": tune.uniform(30, 250),
+            "l22": tune.uniform(30, 250),
+            "l23": tune.uniform(30, 150),
         }
         current_best_params = [{
             "k11": 1.1878,

@@ -174,7 +174,7 @@ default_settings = fym.parser.parse({
                            [1.8, 10]]),
         },
         "pf.iL": {
-            "l": np.array([40, 40, 8]),
+            "l": np.array([60, 40, 8]),
             "alp": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
@@ -184,8 +184,8 @@ default_settings = fym.parser.parse({
             "c": np.array([200, 200]),
             "dist_range": 40,  # disturbance saturation value
         },
-        "pf.Kxy": np.array([1.1878, 5.1439, 0.2293]),
-        "pf.Kang": np.array([18.2726, 77.03, 0.1892]),
+        "pf.Kxy": np.array([2.0212, 3.6088, 0.5427]),
+        "pf.Kang": np.array([29.9862, 199.7739, 0.1901]),
         "pf.theta": 0.7,
 
     },
@@ -204,12 +204,12 @@ default_settings = fym.parser.parse({
         "drygen": False,  # not use
         # "BLF": False,
         "BLF": True,
-        # "uncertainty": True,
-        # "ext_unc": True,
-        # "int_unc": True,
-        "uncertainty": False,
-        "ext_unc": False,
-        "int_unc": False,
+        "uncertainty": True,
+        "ext_unc": True,
+        "int_unc": True,
+        # "uncertainty": False,
+        # "ext_unc": False,
+        # "int_unc": False,
     },
 
     "wind_dist": {
