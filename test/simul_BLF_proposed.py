@@ -264,7 +264,7 @@ def main(args):
                 while True:
                     done, env_info = env.step()
                     tf = env_info["t"]
-                    sumDistErr = env_info["disterr"]
+                    sumDistErr = sumDistErr + env_info["disterr"]
 
                     if done:
                         break
