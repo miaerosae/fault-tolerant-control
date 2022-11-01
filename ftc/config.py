@@ -194,7 +194,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 10,
+        "max_t": 15,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise

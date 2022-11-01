@@ -81,7 +81,7 @@ class Env(BaseEnv):
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
-        self.blf_phi = BLF.innerLoop(config["l12"], params.iL.alp, params.iL.bet,
+        self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, params.theta, cond.noise)
@@ -229,23 +229,26 @@ def run(loggerpath, params):
 
     env.reset()
 
-    try:
-        while True:
-            env.render()
-            done, env_info = env.step()
+    sumDistErr = 0
+    # try:
+    while True:
+        env.render()
+        done, env_info = env.step()
+        sumDistErr = sumDistErr + env_info["disterr"]
 
-            env_info = {
-                # "detection_time": env.detection_time,
-                "rotor_min": env.plant.rotor_min,
-                "rotor_max": env.plant.rotor_max,
-            }
-            env.logger.set_info(**env_info)
-            if done:
-                break
+        env_info["rotor_min"] = env.plant.rotor_min
+        env_info["rotor_max"] = env.plant.rotor_max
+        env.logger.set_info(**env_info)
+        if done:
+            tf = env_info["t"]
+            print(str(tf))
+            print(str(sumDistErr))
+            print(str(100*tf-sumDistErr[0]))
+            break
 
-    finally:
-        env.close()
-        return
+    # finally:
+    env.close()
+    # return
 
 
 def main(args):
@@ -310,7 +313,7 @@ def main(args):
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
-                num_samples=1000,
+                num_samples=4000,
                 search_alg=search,
             ),
             run_config=RunConfig(
