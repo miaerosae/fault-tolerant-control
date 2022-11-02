@@ -230,25 +230,27 @@ def run(loggerpath, params):
     env.reset()
 
     sumDistErr = 0
-    # try:
-    while True:
-        env.render()
-        done, env_info = env.step()
-        sumDistErr = sumDistErr + env_info["disterr"]
+    try:
+        while True:
+            env.render()
+            done, env_info = env.step()
+            sumDistErr = sumDistErr + env_info["disterr"]
 
-        env_info["rotor_min"] = env.plant.rotor_min
-        env_info["rotor_max"] = env.plant.rotor_max
-        env.logger.set_info(**env_info)
-        if done:
-            tf = env_info["t"]
-            print(str(tf))
-            print(str(sumDistErr))
-            print(str(100*tf-sumDistErr[0]))
-            break
+            env_info["rotor_min"] = env.plant.rotor_min
+            env_info["rotor_max"] = env.plant.rotor_max
+            env.logger.set_info(**env_info)
+            if done:
+                tf = env_info["t"]
+                print(str(tf))
+                print(str(sumDistErr))
+                if np.isnan(sumDistErr):
+                    sumDistErr = [1e6]
+                print(str(100*tf-sumDistErr[0]))
+                break
 
-    # finally:
-    env.close()
-    # return
+    finally:
+        env.close()
+        return
 
 
 def main(args):
@@ -270,35 +272,37 @@ def main(args):
                         break
 
             finally:
-                return {"cost": 100*tf-sumDistErr[0]}
+                if np.isnan(sumDistErr):
+                    sumDistErr = [1e6]
+                return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": tune.uniform(0.01, 5),
-            "k12": tune.uniform(0.01, 10),
+            "k11": tune.uniform(0.01, 1),
+            "k12": tune.uniform(0.01, 5),
             "k13": tune.uniform(0.01, 1),
             "k21": tune.uniform(1, 30),
             "k22": tune.uniform(50, 200),
             "k23": tune.uniform(0.01, 1),
-            "l11": tune.uniform(20, 100),
-            "l12": tune.uniform(20, 100),
-            "l13": tune.uniform(10, 50),
-            "l21": tune.uniform(30, 250),
-            "l22": tune.uniform(30, 250),
-            "l23": tune.uniform(30, 150),
+            "l11": 50,
+            "l12": 70,
+            "l13": 80,
+            "l21": 55,
+            "l22": 60,
+            "l23": 80,
         }
         current_best_params = [{
-            "k11": 1.1878,
-            "k12": 5.1439,
-            "k13": 0.2293,
-            "k21": 18.2726,
-            "k22": 77.03,
-            "k23": 0.1892,
-            "l11": 35,
-            "l12": 35,
-            "l13": 4,
-            "l21": 40,
-            "l22": 40,
-            "l23": 8,
+            "k11": 0.7734,
+            "k12": 2.8927,
+            "k13": 0.1421,
+            "k21": 20.5698,
+            "k22": 100.8238,
+            "k23": 0.1389,
+            "l11": 50,
+            "l12": 70,
+            "l13": 80,
+            "l21": 55,
+            "l22": 60,
+            "l23": 80,
         }]
         search = HyperOptSearch(
             metric="cost",
