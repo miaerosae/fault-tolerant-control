@@ -81,15 +81,15 @@ class Env(BaseEnv):
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
-        self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp, params.iL.bet,
+        self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp_phi, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, params.theta, cond.noise)
-        self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp, params.iL.bet,
+        self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp_theta, params.iL.bet,
                                        params.iL.dist_range, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[1],
                                        self.plant.g, params.theta, cond.noise)
-        self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp, params.iL.bet,
+        self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp_psi, params.iL.bet,
                                      params.iL.dist_range, Kang, params.iL.xi_psi,
                                      params.iL.rho_psi, params.iL.c, b[2],
                                      self.plant.g, params.theta, cond.noise)
@@ -344,6 +344,10 @@ def main(args):
             json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
         return
 
+    elif args.with_plot:
+        loggerpath = "data.h5"
+        exp_plot(loggerpath, True)
+
     else:
         loggerpath = "data.h5"
         params = {
@@ -367,6 +371,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--with-ray", action="store_true")
+    parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
     main(args)
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "data.h5")

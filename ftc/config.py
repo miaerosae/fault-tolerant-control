@@ -26,7 +26,7 @@ default_settings = fym.parser.parse({
         # "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
         "fault_time": np.array([5]),
         "fault_index": np.array([0]),
-        "LoE": np.array([0.5]),
+        "LoE": np.array([0.3]),
     },
 
     # ====== ftc.plants ====== #
@@ -176,17 +176,20 @@ default_settings = fym.parser.parse({
         "pf.iL": {
             "l": np.array([55, 60, 80]),
             "alp": np.array([2.9, 2.9, 2]),
+            "alp_phi": np.array([2.9, 2.9, 5]),
+            "alp_theta": np.array([2.9, 2.9, 30]),
+            "alp_psi": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad(np.array([45, 180])),
             "c": np.array([200, 200]),
-            "dist_range": 40,  # disturbance saturation value
+            "dist_range": 200,  # disturbance saturation value
         },
-        "pf.Kxy": np.array([0.7734, 2.8927, 0.1421]),
-        "pf.Kang": np.array([20.5698, 100.8238, 0.1389]),
-        "pf.theta": 0.7,
+        "pf.Kxy": np.array([0.2651, 4.9938, 0.8745]),
+        "pf.Kang": np.array([28.6062, 189.0149, 0.7886]),
+        "pf.theta": 0.8,
 
     },
 
