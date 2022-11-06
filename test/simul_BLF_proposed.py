@@ -82,15 +82,15 @@ class Env(BaseEnv):
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
         self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp_phi, params.iL.bet,
-                                     params.iL.dist_range, Kang, params.iL.xi,
+                                     params.iL.dist_range_phi, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, params.theta, cond.noise)
         self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp_theta, params.iL.bet,
-                                       params.iL.dist_range, Kang, params.iL.xi,
+                                       params.iL.dist_range_theta, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[1],
                                        self.plant.g, params.theta, cond.noise)
         self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp_psi, params.iL.bet,
-                                     params.iL.dist_range, Kang, params.iL.xi_psi,
+                                     params.iL.dist_range_psi, Kang, params.iL.xi_psi,
                                      params.iL.rho_psi, params.iL.c, b[2],
                                      self.plant.g, params.theta, cond.noise)
 
@@ -277,32 +277,32 @@ def main(args):
                 return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": tune.uniform(0.01, 1),
-            "k12": tune.uniform(0.01, 5),
-            "k13": tune.uniform(0.01, 1),
+            "k11": cfg.agents.BLF.pf.Kxy[0],
+            "k12": cfg.agents.BLF.pf.Kxy[1],
+            "k13": cfg.agents.BLF.pf.Kxy[2],
             "k21": tune.uniform(1, 30),
-            "k22": tune.uniform(50, 200),
+            "k22": tune.uniform(50, 250),
             "k23": tune.uniform(0.01, 1),
             "l11": 50,
             "l12": 70,
             "l13": 80,
             "l21": 55,
             "l22": 60,
-            "l23": 80,
+            "l23": 60,
         }
         current_best_params = [{
-            "k11": 0.7734,
-            "k12": 2.8927,
-            "k13": 0.1421,
-            "k21": 20.5698,
-            "k22": 100.8238,
-            "k23": 0.1389,
-            "l11": 50,
-            "l12": 70,
-            "l13": 80,
-            "l21": 55,
-            "l22": 60,
-            "l23": 80,
+            "k11": cfg.agents.BLF.pf.Kxy[0],
+            "k12": cfg.agents.BLF.pf.Kxy[1],
+            "k13": cfg.agents.BLF.pf.Kxy[2],
+            "k21": cfg.agents.BLF.pf.Kang[0],
+            "k22": cfg.agents.BLF.pf.Kang[1],
+            "k23": cfg.agents.BLF.pf.Kang[2],
+            "l11": cfg.agents.BLF.pf.oL.l[0],
+            "l12": cfg.agents.BLF.pf.oL.l[1],
+            "l13": cfg.agents.BLF.pf.oL.l[2],
+            "l21": cfg.agents.BLF.pf.iL.l[0],
+            "l22": cfg.agents.BLF.pf.iL.l[1],
+            "l23": cfg.agents.BLF.pf.iL.l[2],
         }]
         search = HyperOptSearch(
             metric="cost",
@@ -377,4 +377,4 @@ if __name__ == "__main__":
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "data.h5")
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "result_comp_ESO_blf_proposed.h5")
     # exp_plot("result_blf_proposed.h5", True)
-    # comp.exp_plot("data.h5", "data1.h5")
+    # comp.exp_plot("Scenario2_noFDI.h5", "Scenario2_proposed2.h5")

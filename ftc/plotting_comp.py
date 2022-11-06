@@ -87,7 +87,7 @@ def exp_plot(loggerpath1, loggerpath2):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k-", label="Estimated")
-        plt.plot(data1["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "k-", label="Estimated")
+        plt.plot(data1["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="Estimated")
         # plt.plot(data1["t"], data3["obs_pos"][:, i, 0], "g--", label="Estimated")
         # plt.plot(data1["t"], data4["obs_pos"][:, i, 0], "m--", label="Estimated")
         plt.plot(data1["t"], pos_bounds, "c")
@@ -169,28 +169,39 @@ def exp_plot(loggerpath1, loggerpath2):
     plt.tight_layout()
 
     # disturbance
-    # plt.figure()
+    plt.figure()
 
-    # real_dist = np.zeros((6, np.size(data1["t"])))
-    # ext_dist = cfg.simul_condi.ext_unc
-    # for i in range(np.size(data1["t"])):
-    #     t = data1["t"][i]
-    #     real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    real_dist1 = np.zeros((6, np.size(data1["t"])))
+    real_dist2 = np.zeros((6, np.size(data1["t"])))
+    ext_dist = cfg.simul_condi.ext_unc
+    for i in range(np.size(data1["t"])):
+        t = data1["t"][i]
+        real_dist1[:, i] = get_sumOfDist(t, ext_dist).ravel()
+        real_dist2[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    for i in range(3):
+        real_dist1[i, :] = (real_dist1[i, :]
+                            + data1["dist_vel"][:, i, 0])
+        real_dist2[i, :] = (real_dist2[i, :]
+                            + data2["dist_vel"][:, i, 0])
+    for i in range(3):
+        real_dist1[i+3, :] = (real_dist1[i+3, :]
+                              + data1["dist_omega"][:, i, 0])
+        real_dist2[i+3, :] = (real_dist2[i+3, :]
+                              + data2["dist_omega"][:, i, 0])
 
-    # ax = plt.subplot(611)
-    # for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
-    #                             r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
-    #     if i != 0:
-    #         plt.subplot(611+i, sharex=ax)
-    #     plt.plot(data1["t"], real_dist[i, :], "r-", label="true")
-    #     plt.plot(data1["t"], data1["dist"][:, i, 0], "k--", label=" distarbance")
-    #     plt.plot(data2["t"], data2["dist"][:, i, 0], "b--", label=" distarbance")
-    #     # plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
-    #     # plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
-    #     plt.ylabel(_label)
-    # plt.gcf().supylabel("dist")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.tight_layout()
+    ax = plt.subplot(611)
+    for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
+                                r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
+        if i != 0:
+            plt.subplot(611+i, sharex=ax)
+        plt.plot(data1["t"], data1["dist"][:, i, 0]-real_dist1[i, :], "k-", label="true")
+        plt.plot(data2["t"], data2["dist"][:, i, 0]-real_dist2[i, :], "b--", label=" distarbance")
+        # plt.plot(data1["t"], data3["dist"][:, i, 0], "g--", label=" distarbance")
+        # plt.plot(data1["t"], data4["dist"][:, i, 0], "m--", label=" distarbance")
+        plt.ylabel(_label)
+    plt.gcf().supylabel("dist")
+    plt.gcf().supxlabel("Time, sec")
+    plt.tight_layout()
 
     # q
     plt.figure()
