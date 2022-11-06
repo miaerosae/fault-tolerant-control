@@ -26,7 +26,7 @@ default_settings = fym.parser.parse({
         # "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
         "fault_time": np.array([5]),
         "fault_index": np.array([0]),
-        "LoE": np.array([0.3]),
+        "LoE": np.array([0.5]),
     },
 
     # ====== ftc.plants ====== #
@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([6, 7, 4]),
+            "eps": np.array([60, 70, 40]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([11, 25, 8]),
+            "eps": np.array([110, 250, 80]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
