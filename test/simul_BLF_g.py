@@ -333,7 +333,7 @@ def main(args):
             "eps23": 60,
         }]
         search = HyperOptSearch(
-            metric="tf",
+            metric="cost",
             mode="max",
             points_to_evaluate=current_best_params,
         )
@@ -355,19 +355,19 @@ def main(args):
                 progress_reporter=CLIReporter(
                     parameter_columns=list(config.keys())[:3],
                     max_progress_rows=3,
-                    metric="tf",
+                    metric="cost",
                     mode="max",
                     sort_by_metric=True,
                 ),
                 checkpoint_config=CheckpointConfig(
                     num_to_keep=5,
-                    checkpoint_score_attribute="tf",
+                    checkpoint_score_attribute="cost",
                     checkpoint_score_order="max",
                 ),
             ),
         )
         results = tuner.fit()
-        config = results.get_best_result(metric="tf", mode="max").config
+        config = results.get_best_result(metric="cost", mode="max").config
         with open("data/ray_results/train_run/best_config.json", "w") as f:
             json.dump(config, f)  # json file은 cat cmd로 볼 수 있다
         return
