@@ -80,15 +80,15 @@ class Env(BaseEnv):
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
         self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp, params.iL.bet,
-                                     params.iL.dist_range, Kang, params.iL.xi,
+                                     params.iL.dist_range_phi, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
         self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp, params.iL.bet,
-                                       params.iL.dist_range, Kang, params.iL.xi,
+                                       params.iL.dist_range_theta, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[0],
                                        self.plant.g, cond.noise)
         self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp, params.iL.bet,
-                                     params.iL.dist_range, Kang, params.iL.xi,
+                                     params.iL.dist_range_psi, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, cond.noise)
 
