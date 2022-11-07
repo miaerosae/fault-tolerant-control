@@ -166,6 +166,7 @@ default_settings = fym.parser.parse({
         "pf.oL": {
             "l": np.array([50, 70, 80]),
             "alp": np.array([2.9, 2.9, 2]),
+            "alp_y": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
@@ -176,8 +177,8 @@ default_settings = fym.parser.parse({
         "pf.iL": {
             "l": np.array([55, 60, 60]),
             "alp": np.array([2.9, 2.9, 2]),
-            "alp_phi": np.array([2.9, 2.9, 20]),
-            "alp_theta": np.array([2.9, 2.9, 30]),
+            "alp_phi": np.array([2.9, 2.9, 30]),
+            "alp_theta": np.array([2.9, 2.9, 40]),
             "alp_psi": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
@@ -185,12 +186,12 @@ default_settings = fym.parser.parse({
             "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad(np.array([45, 180])),
             "c": np.array([200, 200]),
-            "dist_range_phi": 1000,  # disturbance saturation value
-            "dist_range_theta": 200,  # disturbance saturation value
-            "dist_range_psi": 1000,  # disturbance saturation value
+            "dist_range_phi": 40,  # disturbance saturation value
+            "dist_range_theta": 60,  # disturbance saturation value
+            "dist_range_psi": 10,  # disturbance saturation value
         },
         "pf.Kxy": np.array([0.2651, 4.9938, 0.8745]),
-        "pf.Kang": np.array([28.6062, 189.0149, 0.7886]),
+        "pf.Kang": np.array([29.9895, 125.3485, 0.2621]),
         "pf.theta": 0.8,
 
     },

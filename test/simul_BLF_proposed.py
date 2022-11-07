@@ -70,7 +70,7 @@ class Env(BaseEnv):
                                    params.oL.R[0, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[0][0], params.theta)
-        self.blf_y = BLF.outerLoop(config["l12"], params.oL.alp, params.oL.bet,
+        self.blf_y = BLF.outerLoop(config["l12"], params.oL.alp_y, params.oL.bet,
                                    params.oL.R[1, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
                                    -self.pos_ref[1][0], params.theta)
@@ -374,7 +374,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
     main(args)
+    # comp.exp_plot("Scenario2_noFDI.h5", "Scenario2_proposed2.h5")
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "data.h5")
     # comp.exp_plot4("result_comp_ESO_blf.h5", "result_comp_ESO_blf_g.h5", "result_comp_ESO_blf_pf.h5", "result_comp_ESO_blf_proposed.h5")
     # exp_plot("result_blf_proposed.h5", True)
-    # comp.exp_plot("Scenario2_noFDI.h5", "Scenario2_proposed2.h5")
