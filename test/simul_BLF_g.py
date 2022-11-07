@@ -16,7 +16,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0
+from ftc.agents.param import get_b0, get_sumOfDist
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -190,7 +190,9 @@ class Env(BaseEnv):
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # get model uncertainty disturbance value
+        real_dist = get_sumOfDist(t, cfg.simul_condi.ext_unc)
         dist_vel, dist_omega = self.plant.get_dist(t, W, rotors)
+        real_dist = real_dist + np.vstack([dist_vel, dist_omega])
 
         # Set actuator faults
         rotors = W.dot(rotors)
@@ -244,6 +246,7 @@ class Env(BaseEnv):
                     virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
                     dist_vel=dist_vel, dist_omega=dist_omega,
+                    disterr=sum(abs(dist-real_dist)),
                     gain=k)
 
 
@@ -254,17 +257,23 @@ def run(loggerpath, params):
 
     env.reset()
 
+    sumDistErr = 0
     try:
         while True:
             env.render()
             done, env_info = env.step()
-            env_info = {
-                "rotor_min": env.plant.rotor_min,
-                "rotor_max": env.plant.rotor_max,
-            }
+            sumDistErr = sumDistErr + env_info["disterr"]
+            env_info["rotor_min"] = env.plant.rotor_min
+            env_info["rotor_max"] = env.plant.rotor_max
             env.logger.set_info(**env_info)
 
             if done:
+                tf = env_info["t"]
+                print(str(tf))
+                print(str(sumDistErr))
+                if np.isnan(sumDistErr):
+                    sumDistErr = [1e6]
+                print(str(100*tf-sumDistErr[0]))
                 break
 
     finally:
@@ -280,30 +289,34 @@ def main(args):
 
             env.reset()
             tf = 0
+            sumDistErr = 0
             try:
                 while True:
                     done, env_info = env.step()
                     tf = env_info["t"]
+                    sumDistErr = sumDistErr + env_info["disterr"]
 
                     if done:
                         break
 
             finally:
-                return {"tf": tf}
+                if np.isnan(sumDistErr):
+                    sumDistErr = [1e6]
+                return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": 1,
-            "k12": 0.5,
-            "k13": 0.417,
+            "k11": tune.uniform(0.1, 15),
+            "k12": tune.uniform(0.1, 100),
+            "k13": tune.uniform(0.01, 1),
             "k21": tune.uniform(0.1, 15),
-            "k22": tune.uniform(0.1, 400),
-            "k23": tune.uniform(0.5, 1),
-            "eps11": tune.uniform(50, 200),
-            "eps12": tune.uniform(50, 200),
-            "eps13": tune.uniform(30, 100),
-            "eps21": tune.uniform(20, 300),
-            "eps22": tune.uniform(20, 300),
-            "eps23": tune.uniform(50, 200),
+            "k22": tune.uniform(0.1, 200),
+            "k23": tune.uniform(0.01, 1),
+            "eps11": 50,
+            "eps12": 70,
+            "eps13": 80,
+            "eps21": 55,
+            "eps22": 60,
+            "eps23": 60,
         }
         current_best_params = [{
             "k11": 1,
@@ -312,12 +325,12 @@ def main(args):
             "k21": 13.3,
             "k22": 30,
             "k23": 0.054,
-            "eps11": 25,
-            "eps12": 45,
-            "eps13": 25,
-            "eps21": 80,
-            "eps22": 80,
-            "eps23": 80,
+            "eps11": 50,
+            "eps12": 70,
+            "eps13": 80,
+            "eps21": 55,
+            "eps22": 60,
+            "eps23": 60,
         }]
         search = HyperOptSearch(
             metric="tf",
