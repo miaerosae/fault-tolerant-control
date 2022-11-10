@@ -69,15 +69,15 @@ class Env(BaseEnv):
         self.blf_x = BLF.outerLoop(config["l11"], params.oL.alp, params.oL.bet,
                                    params.oL.R[0, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[0][0], params.theta)
+                                   -self.pos_ref[0][0], params.theta.pos)
         self.blf_y = BLF.outerLoop(config["l12"], params.oL.alp_y, params.oL.bet,
                                    params.oL.R[1, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[1][0], params.theta)
+                                   -self.pos_ref[1][0], params.theta.pos)
         self.blf_z = BLF.outerLoop(config["l13"], params.oL.alp, params.oL.bet,
                                    params.oL.R[2, :], Kxy, params.oL.rho,
                                    params.oL.rho_k, cond.noise,
-                                   -self.pos_ref[2][0], params.theta)
+                                   -self.pos_ref[2][0], params.theta.pos)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
@@ -245,7 +245,7 @@ def run(loggerpath, params):
                 print(str(sumDistErr))
                 if np.isnan(sumDistErr):
                     sumDistErr = [1e6]
-                print(str(100*tf-sumDistErr[0]))
+                print(str(1e5*tf-sumDistErr[0]))
                 break
 
     finally:
