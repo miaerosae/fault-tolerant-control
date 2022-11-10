@@ -81,15 +81,18 @@ class Env(BaseEnv):
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
-        self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp_phi, params.iL.bet,
+        alp_phi = np.array([2.9, 2.9, config["a1"]])
+        alp_theta = np.array([2.9, 2.9, config["a2"]])
+        alp_psi = np.array([2.9, 2.9, config["a3"]])
+        self.blf_phi = BLF.innerLoop(config["l21"], alp_phi, params.iL.bet,
                                      params.iL.dist_range_phi, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
                                      self.plant.g, params.theta.ang, cond.noise)
-        self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp_theta, params.iL.bet,
+        self.blf_theta = BLF.innerLoop(config["l22"], alp_theta, params.iL.bet,
                                        params.iL.dist_range_theta, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[1],
                                        self.plant.g, params.theta.ang, cond.noise)
-        self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp_psi, params.iL.bet,
+        self.blf_psi = BLF.innerLoop(config["l23"], alp_psi, params.iL.bet,
                                      params.iL.dist_range_psi, Kang, params.iL.xi_psi,
                                      params.iL.rho_psi, params.iL.c, b[2],
                                      self.plant.g, params.theta.ang, cond.noise)
@@ -280,15 +283,18 @@ def main(args):
             "k11": cfg.agents.BLF.pf.Kxy[0],
             "k12": cfg.agents.BLF.pf.Kxy[1],
             "k13": cfg.agents.BLF.pf.Kxy[2],
-            "k21": tune.uniform(1, 30),
-            "k22": tune.uniform(1, 300),
-            "k23": tune.uniform(0.01, 1),
-            "l11": 50,
-            "l12": 70,
-            "l13": 80,
-            "l21": tune.uniform(55., 150.),
-            "l22": tune.uniform(60., 250.),
-            "l23": tune.uniform(60., 80.),
+            "k21": cfg.agents.BLF.pf.Kang[0],
+            "k22": cfg.agents.BLF.pf.Kang[1],
+            "k23": cfg.agents.BLF.pf.Kang[2],
+            "l11": cfg.agents.BLF.pf.oL.l[0],
+            "l12": cfg.agents.BLF.pf.oL.l[1],
+            "l13": cfg.agents.BLF.pf.oL.l[2],
+            "l21": cfg.agents.BLF.pf.iL.l[0],
+            "l22": cfg.agents.BLF.pf.iL.l[1],
+            "l23": cfg.agents.BLF.pf.iL.l[2],
+            "a1": tune.uniform(2., 300.),
+            "a2": tune.uniform(2., 300.),
+            "a3": tune.uniform(2., 300.),
         }
         current_best_params = [{
             "k11": cfg.agents.BLF.pf.Kxy[0],
@@ -303,6 +309,9 @@ def main(args):
             "l21": cfg.agents.BLF.pf.iL.l[0],
             "l22": cfg.agents.BLF.pf.iL.l[1],
             "l23": cfg.agents.BLF.pf.iL.l[2],
+            "a1": cfg.agents.BLF.pf.iL.alp_phi[2],
+            "a2": cfg.agents.BLF.pf.iL.alp_theta[2],
+            "a3": cfg.agents.BLF.pf.iL.alp_psi[2],
         }]
         search = HyperOptSearch(
             metric="cost",
@@ -363,6 +372,9 @@ def main(args):
             "l21": cfg.agents.BLF.pf.iL.l[0],
             "l22": cfg.agents.BLF.pf.iL.l[1],
             "l23": cfg.agents.BLF.pf.iL.l[2],
+            "a1": cfg.agents.BLF.pf.iL.alp_phi[2],
+            "a2": cfg.agents.BLF.pf.iL.alp_theta[2],
+            "a3": cfg.agents.BLF.pf.iL.alp_psi[2],
         }
         run(loggerpath, params)
         exp_plot(loggerpath, True)
