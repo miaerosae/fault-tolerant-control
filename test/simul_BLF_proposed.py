@@ -84,15 +84,15 @@ class Env(BaseEnv):
         self.blf_phi = BLF.innerLoop(config["l21"], params.iL.alp_phi, params.iL.bet,
                                      params.iL.dist_range_phi, Kang, params.iL.xi,
                                      params.iL.rho, params.iL.c, b[0],
-                                     self.plant.g, params.theta, cond.noise)
+                                     self.plant.g, params.theta.ang, cond.noise)
         self.blf_theta = BLF.innerLoop(config["l22"], params.iL.alp_theta, params.iL.bet,
                                        params.iL.dist_range_theta, Kang, params.iL.xi,
                                        params.iL.rho, params.iL.c, b[1],
-                                       self.plant.g, params.theta, cond.noise)
+                                       self.plant.g, params.theta.ang, cond.noise)
         self.blf_psi = BLF.innerLoop(config["l23"], params.iL.alp_psi, params.iL.bet,
                                      params.iL.dist_range_psi, Kang, params.iL.xi_psi,
                                      params.iL.rho_psi, params.iL.c, b[2],
-                                     self.plant.g, params.theta, cond.noise)
+                                     self.plant.g, params.theta.ang, cond.noise)
 
         self.prev_rotors = np.zeros((4, 1))
 
@@ -281,14 +281,14 @@ def main(args):
             "k12": cfg.agents.BLF.pf.Kxy[1],
             "k13": cfg.agents.BLF.pf.Kxy[2],
             "k21": tune.uniform(1, 30),
-            "k22": tune.uniform(50, 250),
+            "k22": tune.uniform(1, 300),
             "k23": tune.uniform(0.01, 1),
             "l11": 50,
             "l12": 70,
             "l13": 80,
-            "l21": 55,
-            "l22": 60,
-            "l23": 60,
+            "l21": tune.uniform(55., 150.),
+            "l22": tune.uniform(60., 250.),
+            "l23": tune.uniform(60., 80.),
         }
         current_best_params = [{
             "k11": cfg.agents.BLF.pf.Kxy[0],

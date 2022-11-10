@@ -193,6 +193,7 @@ default_settings = fym.parser.parse({
         "pf.Kxy": np.array([0.2651, 4.9938, 0.8745]),
         "pf.Kang": np.array([29.9895, 125.3485, 0.2621]),
         "pf.theta": 0.8,
+        "pf.theta.ang": 0.7,
 
     },
 
