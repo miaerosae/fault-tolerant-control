@@ -15,7 +15,7 @@ from fym.utils.rot import angle2quat, quat2angle
 
 import ftc.config
 from ftc.models.multicopter import Multicopter
-import ftc.agents.BLF_proposed2 as BLF
+import ftc.agents.BLF_proposed as BLF
 from ftc.agents.param import get_b0, get_sumOfDist
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
