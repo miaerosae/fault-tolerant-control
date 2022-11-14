@@ -289,12 +289,12 @@ def main(args):
             "l11": cfg.agents.BLF.pf.oL.l[0],
             "l12": cfg.agents.BLF.pf.oL.l[1],
             "l13": cfg.agents.BLF.pf.oL.l[2],
-            "l21": cfg.agents.BLF.pf.iL.l[0],
-            "l22": cfg.agents.BLF.pf.iL.l[1],
-            "l23": cfg.agents.BLF.pf.iL.l[2],
-            "a1": tune.uniform(2., 300.),
-            "a2": tune.uniform(2., 300.),
-            "a3": tune.uniform(2., 300.),
+            "l21": tune.uniform(50., 150.),
+            "l22": tune.uniform(80., 150.),
+            "l23": tune.uniform(50., 150.),
+            "a1": tune.uniform(2., 100.),
+            "a2": tune.uniform(2., 100.),
+            "a3": tune.uniform(2., 50.),
         }
         current_best_params = [{
             "k11": cfg.agents.BLF.pf.Kxy[0],
