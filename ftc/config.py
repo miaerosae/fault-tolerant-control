@@ -177,9 +177,9 @@ default_settings = fym.parser.parse({
         "pf.iL": {
             "l": np.array([80, 117, 69]),
             "alp": np.array([2.9, 2.9, 2]),
-            "alp_phi": np.array([2.9, 2.9, 100]),
-            "alp_theta": np.array([2.9, 2.9, 100]),
-            "alp_psi": np.array([2.9, 2.9, 100]),
+            "alp_phi": np.array([2.9, 2.9, 30]),
+            "alp_theta": np.array([2.9, 2.9, 40]),
+            "alp_psi": np.array([2.9, 2.9, 2]),
             "bet": np.array([3.98, 0.993]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
