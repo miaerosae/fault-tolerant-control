@@ -21,9 +21,9 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10, 11]),
-        "fault_index": np.array([0, 1, 2, 2]),
-        "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
+        "fault_time": np.array([5]),
+        "fault_index": np.array([0]),
+        "LoE": np.array([0.3]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
         # "LoE": np.array([0.5]),
@@ -187,7 +187,7 @@ default_settings = fym.parser.parse({
             "rho_psi": np.deg2rad(np.array([45, 180])),
             "c": np.array([200, 200]),
             "dist_range_phi": 40,  # disturbance saturation value
-            "dist_range_theta": 60,  # disturbance saturation value
+            "dist_range_theta": 100,  # disturbance saturation value
             "dist_range_psi": 10,  # disturbance saturation value
         },
         # "pf.Kxy": np.array([0.2651, 4.9938, 0.8745]),
@@ -203,7 +203,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 30,
+        "max_t": 20,
         "blade": False,
         "faultBias": False,  # not use
         "noise": False,  # Estimator real value noise
