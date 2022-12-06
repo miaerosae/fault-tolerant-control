@@ -31,15 +31,15 @@ def gain_bound():
         kP_1[i] = 1 / k2[i] * (kI + kD_1*k2[i]**2-k2[i]**3) - 1 / rho_inf**2
     fig, ax = plt.subplots()
     plt.xlim([0, max(kP_1)])
-    ax.plot(kP_1, k1_1, "r-", label=r"$k_1$")
-    ax.plot(kP_1, k2, "g--", label=r"$k_2$")
-    ax.plot(kP_1, k3_1, "b-", label=r"$k_3$")
+    ax.plot(kP_1, k1_1, "r-", label=r"$k_{1i}$")
+    ax.plot(kP_1, k2, "g--", label=r"$k_{2i}$")
+    ax.plot(kP_1, k3_1, "b-", label=r"$k_{3i}$")
     k1_1[k1_1 == np.inf] = 0
     k3_1[k3_1 == np.inf] = 0
     kP_1[kP_1 == np.inf] = 0
     plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.xlabel(r"$k_P$")
-    plt.ylabel(r"$k_1$, $k_2$, $k_3$")
+    plt.xlabel(r"$k_{Pi_m}$")
+    plt.ylabel(r"$k_{1i}$, $k_{2i}$, $k_{3i}$")
     plt.savefig("PID_gain_range_KD1.png", dpi=600)
 
     # outer loop, kP const
@@ -53,15 +53,15 @@ def gain_bound():
         k3_2[i] = kI / k2[i] / rho_inf**2
     fig, ax = plt.subplots()
     plt.xlim([0, max(kD_2)])
-    ax.plot(kD_2, k1_2, "r-", label=r"$k_1$")
-    ax.plot(kD_2, k2, "g--", label=r"$k_2$")
-    ax.plot(kD_2, k3_2, "b-", label=r"$k_3$")
+    ax.plot(kD_2, k1_2, "r-", label=r"$k_{1i}$")
+    ax.plot(kD_2, k2, "g--", label=r"$k_{2i}$")
+    ax.plot(kD_2, k3_2, "b-", label=r"$k_{3i}$")
     k1_2[k1_2 == np.inf] = 0
     k3_2[k3_2 == np.inf] = 0
     kD_2[kD_2 == np.inf] = 0
     plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.xlabel(r"$k_D$")
-    plt.ylabel(r"$k_1$, $k_2$, $k_3$")
+    plt.xlabel(r"$k_{Di_m}$")
+    plt.ylabel(r"$k_{1i}$, $k_{2i}$, $k_{3i}$")
     plt.savefig("PID_gain_range_KP1.png", dpi=600)
 
     # inner loop, kD const
@@ -78,9 +78,9 @@ def gain_bound():
                    + nk * (kD_3 - 2*nk) + nk)
     fig, ax = plt.subplots()
     plt.xlim([0, max(kP_3)])
-    ax.plot(kP_3, k1_3, "r-", label=r"$k_1$")
-    ax.plot(kP_3, k2, "g--", label=r"$k_2$")
-    ax.plot(kP_3, k3_3, "b-", label=r"$k_3$")
+    ax.plot(kP_3, k1_3, "r-", label=r"$k_{1i}$")
+    ax.plot(kP_3, k2, "g--", label=r"$k_{1i}$")
+    ax.plot(kP_3, k3_3, "b-", label=r"$k_{3i}$")
     # ax.fill_between(kP_3, 0, 1, where=k2 > 2*rho2/rho1,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform())
@@ -88,8 +88,8 @@ def gain_bound():
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform(), label="possible range")
     plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.xlabel(r"$k_P$")
-    plt.ylabel(r"$k_1$, $k_2$, $k_3$")
+    plt.xlabel(r"$k_{Pi_m}$")
+    plt.ylabel(r"$k_{1i}$, $k_{2i}$, $k_{3i}$")
     plt.savefig("PID_gain_range_KD2.png", dpi=600)
 
     # # inner loop, kP const
@@ -106,9 +106,9 @@ def gain_bound():
         k3_4[i] = kI / (k2[i] + nk)
     fig, ax = plt.subplots()
     plt.xlim([0, max(kD_4)])
-    ax.plot(kD_4, k1_4, "r-", label=r"$k_1$")
-    ax.plot(kD_4, k2, "g--", label=r"$k_2$")
-    ax.plot(kD_4, k3_4, "b-", label=r"$k_3$")
+    ax.plot(kD_4, k1_4, "r-", label=r"$k_{1i}$")
+    ax.plot(kD_4, k2, "g--", label=r"$k_{2i}$")
+    ax.plot(kD_4, k3_4, "b-", label=r"$k_{3i}$")
     # ax.fill_between(kD_4, 0, 1, where=k2 > 2*rho2/rho1,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform())
@@ -116,8 +116,8 @@ def gain_bound():
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform(), label="possible range")
     plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.xlabel(r"$k_D$")
-    plt.ylabel(r"$k_1$, $k_2$, $k_3$")
+    plt.xlabel(r"$k_{Di_m}$")
+    plt.ylabel(r"$k_{1i}$, $k_{2i}$, $k_{3i}$")
     plt.savefig("PID_gain_range_KP2.png", dpi=600)
 
     plt.show()

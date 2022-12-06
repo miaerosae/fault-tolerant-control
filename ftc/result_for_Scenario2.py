@@ -52,7 +52,7 @@ def exp_plot(path1):
         plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "b--", label="Estimated Value")
         plt.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -pos_bounds, "r:")
-        plt.ylabel(_label)
+        plt.ylabel(_label + " [m]")
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -84,7 +84,7 @@ def exp_plot(path1):
         plt.plot(data1["t"],
                  np.ones((np.size(data1["t"])))*bound, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
-        plt.ylabel(_label)
+        plt.ylabel(_label + " [deg]")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
@@ -103,7 +103,7 @@ def exp_plot(path1):
 
     # 5b) Angular rate trajectories
     plt.figure(figsize=(9, 7))
-    bound = 150
+    bound = 150+0.2
     bound_psi = 180
 
     ax = plt.subplot(311)
@@ -121,7 +121,7 @@ def exp_plot(path1):
                      label="Prescribed Bound")
             plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
             plt.ylim([-bound-15, bound+15])
-        plt.ylabel(_label)
+        plt.ylabel(_label + " [deg/sec]")
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
@@ -218,7 +218,14 @@ def exp_plot(path1):
         plt.plot(data1["t"], real_dist[i, :], "k-", label="Real Value")
         plt.plot(data1["t"], data1["dist"][:, i, 0], "b--", label="Estimated Value")
         # plt.plot(data1["t"], data2["dist"][:, i, 0], "g--", label="Estimated Value (without faults)")
-        plt.ylabel(_label)
+        if i < 2:
+            plt.ylabel(_label)
+        elif i == 2:
+            plt.ylabel(_label, labelpad=10)
+        elif i == 3:
+            plt.ylabel(_label, labelpad=5)
+        else:
+            plt.ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
@@ -269,7 +276,7 @@ def exp_plot(path1):
         if i != 0:
             plt.subplot(331+i, sharex=ax)
         if i == 1:
-            plt.plot(data1["t"], data1["gain"][:, i, 0], "r", label="Real Gain")
+            plt.plot(data1["t"], data1["gain"][:, i, 0], "r", label="Actual Gain")
         else:
             plt.plot(data1["t"], data1["gain"][:, i, 0], "r")
         if i % 3 == 0:
@@ -313,7 +320,7 @@ def exp_plot(path1):
         if i != 0:
             plt.subplot(331+i, sharex=ax)
         if i == 1:
-            plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r", label="Real Gain")
+            plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r", label="Actual Gain")
         else:
             plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r")
         if i % 3 == 0:

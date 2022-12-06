@@ -59,7 +59,7 @@ def exp_plot(path1, path2, path3):
         ax.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
         ax.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         ax.plot(data1["t"], -pos_bounds, "r:")
-        ax.set_ylabel(_label)
+        ax.set_ylabel(_label + " [m]")
         if i == 0:
             ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
         if i == 0:
@@ -133,7 +133,7 @@ def exp_plot(path1, path2, path3):
         plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "b--", label="Proposed")
         plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:", label="Bound")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
-        plt.ylabel(_label)
+        plt.ylabel(_label + " [deg]")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
@@ -163,9 +163,9 @@ def exp_plot(path1, path2, path3):
         elif i == 0:
             ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
             ax.set_ylim([-bound-15, bound+15])
-        ax.set_ylabel(_label)
+        ax.set_ylabel(_label + " [deg/sec]")
         if i == 1:
-            axins = zoomed_inset_axes(ax, 5, loc="lower center",
+            axins = zoomed_inset_axes(ax, 6.5, loc="lower center",
                                       axes_kwargs={"facecolor": "lavender"})
             axins.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
             axins.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
@@ -203,11 +203,11 @@ def exp_plot(path1, path2, path3):
                  label="BS (different)")
         plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]), "b--",
                  label="Proposed")
-        plt.ylabel(_label)
+        plt.ylabel(_label + " [deg]")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         elif i == 2:
-            plt.ylabel(_label, labelpad=15)
+            plt.ylabel(_label + " [deg]", labelpad=15)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case1_angerr.png", dpi=600)
