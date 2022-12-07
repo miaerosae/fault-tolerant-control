@@ -360,4 +360,4 @@ def exp_plot(path1):
 
 
 if __name__ == "__main__":
-    exp_plot("Scenario2_noFDI.h5")
+    exp_plot("Scenario2_new_dang_bound.h5")
