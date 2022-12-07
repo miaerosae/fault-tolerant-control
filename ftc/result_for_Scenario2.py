@@ -34,7 +34,7 @@ def exp_plot(path1):
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
     plt.xlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_lambda.png", dpi=600)
+    plt.savefig("Case2_lambda_minus10.png", dpi=600)
 
     # 4d) tracking error (subplots)
     plt.figure(figsize=(9, 7))
@@ -67,7 +67,7 @@ def exp_plot(path1):
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_poserr.png", dpi=600)
+    plt.savefig("Case2_poserr_minus10.png", dpi=600)
 
     # 5a) Euler angle trajectories
     plt.figure(figsize=(9, 7))
@@ -99,7 +99,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_ang.png", dpi=600)
+    plt.savefig("Case2_ang_minus10.png", dpi=600)
 
     # 5b) Angular rate trajectories
     plt.figure(figsize=(9, 7))
@@ -136,7 +136,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_dang.png", dpi=600)
+    plt.savefig("Case2_dang_minus10.png", dpi=600)
 
     # 6a) rotor input comparison
     plt.figure(figsize=(9, 7/3*4))
@@ -164,7 +164,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_rotor.png", dpi=600)
+    plt.savefig("Case2_rotor_minus10.png", dpi=600)
 
     # 6b) generalized forces comparison
     plt.figure(figsize=(9, 7/3*4))
@@ -194,7 +194,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_force.png", dpi=600)
+    plt.savefig("Case2_force_minus10.png", dpi=600)
 
     # disturbance
     plt.figure(figsize=(9, 7/3*6))
@@ -240,7 +240,7 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_dist.png", dpi=600)
+    plt.savefig("Case2_dist_minus10.png", dpi=600)
 
     # disturbance err
     # plt.figure(figsize=(12, 9))
@@ -311,7 +311,7 @@ def exp_plot(path1):
 
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_gain1.png", dpi=600)
+    plt.savefig("Case2_gain1_minus10.png", dpi=600)
 
     plt.figure(figsize=(9, 7))
 
@@ -354,10 +354,10 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
-    plt.savefig("Case2_gain2.png", dpi=600)
+    plt.savefig("Case2_gain2_minus10.png", dpi=600)
 
     plt.show()
 
 
 if __name__ == "__main__":
-    exp_plot("Scenario2_new_dang_bound.h5")
+    exp_plot("Scenario2_new_dang_bound_minus10uncert.h5")
