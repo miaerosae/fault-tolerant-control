@@ -135,8 +135,6 @@ class Multicopter(BaseEnv):
         self.ground = ground
         self.drygen = drygen
 
-        self.J_rand = 0
-
     def deriv(self, t, pos, vel, quat, omega, rotors, windvel, prev_rotors):
         if self.blade is False:
             F, M1, M2, M3 = self.mixer.inverse(rotors)
@@ -149,8 +147,8 @@ class Multicopter(BaseEnv):
 
         m, g, J = self.m, self.g, self.J
         if self.uncertainty is True:
-            m = (cfg.model_uncert.del_m*np.sin(t) + 1) * m
-            J = (cfg.model_uncert.del_J*self.J_rand + 1) * J
+            m = (cfg.model_uncert.del_m + 1) * m
+            J = (cfg.model_uncert.del_J + 1) * J
         Jinv = np.linalg.inv(J)
         e3 = np.vstack((0, 0, 1))
 
@@ -216,9 +214,9 @@ class Multicopter(BaseEnv):
             M = np.vstack((M1, M2, M3))
             delm = cfg.model_uncert.del_m
             self.J_rand = 1
-            J = (cfg.model_uncert.del_J*self.J_rand + 1) * self.J
+            J = (cfg.model_uncert.del_J + 1) * self.J
             Jinv_dist = np.linalg.inv(J)
-            vel_dist = (- F*dcm.T.dot(e3)/(self.m*(delm*np.sin(t) + 1)))
+            vel_dist = (- F*dcm.T.dot(e3)/(self.m*(delm + 1)))
             omega_dist = Jinv_dist.dot(M - np.cross(omega, J.dot(omega), axis=0))
 
             resultvel, resultdang = vel_dist-vel_real, omega_dist-omega_real+f
