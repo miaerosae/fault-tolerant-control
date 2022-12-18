@@ -100,7 +100,7 @@ class Env(BaseEnv):
     def get_ref(self, t):
         pos_des = np.vstack([np.sin(t/2)*np.cos(np.pi*t/5)*np.cos(np.pi/4),
                              np.sin(t/2)*np.sin(np.pi*t/5)*np.cos(np.pi/4),
-                             -1])
+                             -t])
         return pos_des
 
     def get_dref(self, t):
@@ -305,17 +305,17 @@ def main(args):
                 return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": tune.uniform(0.1, 10),
-            "k12": tune.uniform(0.01, 10),
-            "k13": tune.uniform(0.01, 1),
-            "k21": tune.uniform(0.1, 20),
-            "k22": tune.uniform(0.1, 200),
-            "k23": tune.uniform(0.01, 1),
+            "k11": tune.uniform(0.5, 2),
+            "k12": tune.uniform(0.01, 1),
+            "k13": tune.uniform(0.1, 1),
+            "k21": tune.uniform(5, 20),
+            "k22": tune.uniform(50, 150),
+            "k23": tune.uniform(0.1, 1),
             "eps11": tune.uniform(30, 60),
             "eps12": tune.uniform(30, 60),
             "eps13": tune.uniform(30, 60),
-            "eps21": tune.uniform(100, 200),
-            "eps22": tune.uniform(100, 200),
+            "eps21": tune.uniform(150, 200),
+            "eps22": tune.uniform(150, 200),
             "eps23": tune.uniform(50, 100),
         }
         current_best_params = [{
