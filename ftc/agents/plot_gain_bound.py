@@ -21,7 +21,7 @@ def gain_bound():
     k2 = np.linspace(1, 30, int(29/0.1))
 
     # outer loop, kD const
-    kD_1 = 32
+    kD_1 = 50
     k1_1 = np.zeros((np.size(k2),))
     k3_1 = np.zeros((np.size(k2),))
     kP_1 = np.zeros((np.size(k2),))
@@ -43,12 +43,12 @@ def gain_bound():
     plt.savefig("PID_gain_range_KD1.png", dpi=600)
 
     # outer loop, kP const
-    kP_2 = 30
+    kP_2 = 60
     k1_2 = np.zeros((np.size(k2),))
     k3_2 = np.zeros((np.size(k2),))
     kD_2 = np.zeros((np.size(k2),))
     for i in range(np.size(k2)):
-        kD_2[i] = 1 / k2[i]**2 * (k2[i]**3 + (kP_2+1/rho_inf**2)*k2[i] - kI)
+        kD_2[i] = 1 / k2[i]**2 * (k2[i]**3 + (kP_2-1/rho_inf**2)*k2[i] - kI)
         k1_2[i] = kD_2[i] - k2[i]
         k3_2[i] = kI / k2[i] / rho_inf**2
     fig, ax = plt.subplots()
@@ -93,7 +93,7 @@ def gain_bound():
     plt.savefig("PID_gain_range_KD2.png", dpi=600)
 
     # # inner loop, kP const
-    kP_4 = 500
+    kP_4 = 100
     k1_4 = np.zeros((np.size(k2),))
     k3_4 = np.zeros((np.size(k2),))
     kD_4 = np.zeros((np.size(k2),))
