@@ -83,15 +83,15 @@ class Env(BaseEnv):
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
         Kang = np.array([k21, k22, k23])
         self.blf_phi = BLF.innerLoop(params.iL.alp, config["eps21"], Kang,
-                                     params.iL.xi, params.iL.rho-np.array([0, 0.2]),
+                                     params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g, params.theta,
                                      cond.noise, cond.BLF)
         self.blf_theta = BLF.innerLoop(params.iL.alp, config["eps22"], Kang,
-                                       params.iL.xi, params.iL.rho-np.array([0, 0.1]),
+                                       params.iL.xi, params.iL.rho,
                                        params.iL.c, b[1], self.plant.g, params.theta,
                                        cond.noise, cond.BLF)
         self.blf_psi = BLF.innerLoop(params.iL.alp, config["eps23"], Kang,
-                                     params.iL.xi_psi, params.iL.rho_psi-np.array([0, 0.2]),
+                                     params.iL.xi_psi, params.iL.rho_psi,
                                      params.iL.c, b[2], self.plant.g, params.theta,
                                      cond.noise, cond.BLF)
 
@@ -305,32 +305,32 @@ def main(args):
                 return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": tune.uniform(0.1, 15),
-            "k12": tune.uniform(0.1, 100),
+            "k11": tune.uniform(0.1, 10),
+            "k12": tune.uniform(0.01, 2),
             "k13": tune.uniform(0.01, 1),
-            "k21": tune.uniform(0.1, 15),
-            "k22": tune.uniform(0.1, 200),
+            "k21": tune.uniform(10, 20),
+            "k22": tune.uniform(50, 150),
             "k23": tune.uniform(0.01, 1),
-            "eps11": 50,
-            "eps12": 70,
-            "eps13": 80,
-            "eps21": 55,
-            "eps22": 60,
-            "eps23": 60,
+            "eps11": tune.uniform(30, 60),
+            "eps12": tune.uniform(30, 60),
+            "eps13": tune.uniform(30, 60),
+            "eps21": 110,
+            "eps22": 250,
+            "eps23": 80,
         }
         current_best_params = [{
-            "k11": 1,
-            "k12": 0.5,
-            "k13": 0.417,
-            "k21": 13.3,
-            "k22": 30,
-            "k23": 0.054,
-            "eps11": 50,
-            "eps12": 70,
-            "eps13": 80,
-            "eps21": 55,
-            "eps22": 60,
-            "eps23": 60,
+            "k11": cfg.agents.BLF.Kxy[0],
+            "k12": cfg.agents.BLF.Kxy[1],
+            "k13": cfg.agents.BLF.Kxy[2],
+            "k21": cfg.agents.BLF.Kang[0],
+            "k22": cfg.agents.BLF.Kang[1],
+            "k23": cfg.agents.BLF.Kang[2],
+            "eps11": cfg.agents.BLF.oL.eps[0],
+            "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
         }]
         search = HyperOptSearch(
             metric="cost",

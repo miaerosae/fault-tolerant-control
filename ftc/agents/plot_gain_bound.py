@@ -28,7 +28,7 @@ def gain_bound():
     for i in range(np.size(k2)):
         k1_1[i] = kD_1 - k2[i]
         k3_1[i] = kI / k2[i] / rho_inf**2
-        kP_1[i] = 1 / k2[i] * (kI + kD_1*k2[i]**2-k2[i]**3) - 1 / rho_inf**2
+        kP_1[i] = 1 / k2[i] * (kI + kD_1*k2[i]**2-k2[i]**3) + 1 / rho_inf**2
     fig, ax = plt.subplots()
     plt.xlim([0, max(kP_1)])
     ax.plot(kP_1, k1_1, "r-", label=r"$k_{1i}$")

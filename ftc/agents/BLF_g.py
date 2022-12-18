@@ -138,7 +138,7 @@ class innerLoop(BaseEnv):
         nu_sat = np.clip(nu, bound[0], bound[1])
 
         if self.noise is True:
-            y = y + np.deg2rad(0.001)*np.random.randn(1)
+            y = y + 0.001*np.random.randn(1)
 
         xdot = np.zeros((3, 1))
         xdot[0, :] = x[1] + (alp[0]/eps) * func_g(eps**2 * (y - x[0]), theta[0])

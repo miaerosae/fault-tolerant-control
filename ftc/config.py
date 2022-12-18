@@ -21,9 +21,9 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5]),
-        "fault_index": np.array([0]),
-        "LoE": np.array([0.3]),
+        "fault_time": np.array([5, 7, 10, 12]),
+        "fault_index": np.array([0, 1, 2, 2]),
+        "LoE": np.array([0.4, 0.6, 0.8, 0.5]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
         # "LoE": np.array([0.5]),
@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([60, 70, 40]),
+            "eps": np.array([40, 40, 40]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -151,12 +151,12 @@ default_settings = fym.parser.parse({
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
             "rho_psi": np.deg2rad([45, 180]),
-            "c": np.array([200, 200]),
+            "c": np.array([20, 20]),
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
         "Kxy": np.array([1, 0.5, 0.417]),
-        "Kang": np.array([10.5, 100, 0.97]),
+        "Kang": np.array([13.5, 30, 0.054]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
@@ -192,7 +192,7 @@ default_settings = fym.parser.parse({
         },
         # "pf.Kxy": np.array([0.2651, 4.9938, 0.8745]),
         # "pf.Kang": np.array([17.3747, 160.6405, 0.6933]),
-        "pf.Kxy": np.array([1, 0.5, 0.417]),
+        "pf.Kxy": np.array([0.1, 10, 0.417]),
         "pf.Kang": np.array([10.5, 100, 0.97]),
         "pf.theta.pos": 0.8,
         "pf.theta.ang": 0.8,
@@ -206,7 +206,7 @@ default_settings = fym.parser.parse({
         "max_t": 20,
         "blade": False,
         "faultBias": False,  # not use
-        "noise": False,  # Estimator real value noise
+        "noise": True,  # Estimator real value noise
         "groundEffect": False,
         "hub": False,  # not use
         "gyro": False,

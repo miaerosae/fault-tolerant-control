@@ -153,12 +153,12 @@ class Multicopter(BaseEnv):
         e3 = np.vstack((0, 0, 1))
 
         # uncertainty
-        ext_pos, ext_vel, ext_euler, ext_omega = get_uncertainties(t, self.ext_unc)
+        _, ext_vel, _, ext_omega = get_uncertainties(t, self.ext_unc)
         int_vel = self.get_int_uncertainties(t, vel)
         gyro = self.get_gyro(omega, rotors, prev_rotors)
 
         # wind: vel = vel - windvel
-        dpos = vel + ext_pos
+        dpos = vel
         dcm = quat2dcm(quat)
         dvel = (g*e3 - F*dcm.T.dot(e3)/m
                 - dcm.T.dot(self.D_drag).dot(dcm).dot(vel)
@@ -174,10 +174,7 @@ class Multicopter(BaseEnv):
                                 [r, q, -p, 0.]]).dot(quat)
         eps = 1 - (quat[0]**2+quat[1]**2+quat[2]**2+quat[3]**2)
         k = 1
-        dquat = (dquat + k*eps*quat
-                 + angle2quat(ext_euler[2],
-                              ext_euler[1],
-                              ext_euler[0]))
+        dquat = (dquat + k*eps*quat)
         domega = Jinv.dot(
             M
             - np.cross(omega, J.dot(omega), axis=0)

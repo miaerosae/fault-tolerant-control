@@ -13,7 +13,7 @@ plt.rc("text", usetex=False)
 plt.rc("lines", linewidth=1.5)
 plt.rc("axes", grid=True, labelsize=15, titlesize=15)
 plt.rc("grid", linestyle="--", alpha=0.8)
-plt.rc("legend", fontsize=15)
+plt.rc("legend", fontsize=12)
 
 cfg = ftc.config.load()
 
@@ -37,7 +37,7 @@ def exp_plot(path1, path2, path3):
         plt.ylim([0-0.1, 1+0.1])
         plt.plot(data1["t"], data1["W"][:, i, i], "--", label=name[i])
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
-    plt.xlabel("Time [sec]")
+    plt.xlabel("Time [s]")
     plt.tight_layout()
     plt.savefig("Case1_lambda.png", dpi=600)
 
@@ -52,7 +52,7 @@ def exp_plot(path1, path2, path3):
     for i in range(np.shape(data1["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
 
-    fig, axes = plt.subplots(nrows=3, figsize=(9*1.3, 7*1.3), sharex=True)
+    fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], axes)):
         ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same)")
         ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different)")
@@ -60,6 +60,8 @@ def exp_plot(path1, path2, path3):
         ax.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         ax.plot(data1["t"], -pos_bounds, "r:")
         ax.set_ylabel(_label + " [m]")
+        if i == 2:
+            ax.set_xlabel("Time [s]", labelpad=5)
         if i == 0:
             ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
         if i == 0:
@@ -76,48 +78,47 @@ def exp_plot(path1, path2, path3):
             axins.set_xticks([])
             axins.set_yticks([])
             mark_inset(ax, axins, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
-    plt.gcf().supxlabel("Time [sec]")
-    plt.savefig("Case1_poserr.png", dpi=600)
+    plt.savefig("Case1_poserr.png", dpi=600, bbox_inches='tight')
 
     # 4e) STD of tracking error
-    for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        print("STD of proposed controller: " + _label + str(statistics.stdev(data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0])))
-        print("STD of BS (same): " + _label + str(statistics.stdev(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0])))
-        print("STD of BS (diff): " + _label + str(statistics.stdev(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0])))
-        print("\n")
+    # for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
+    #     print("STD of proposed controller: " + _label + str(statistics.stdev(data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0])))
+    #     print("STD of BS (same): " + _label + str(statistics.stdev(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0])))
+    #     print("STD of BS (diff): " + _label + str(statistics.stdev(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0])))
+    #     print("\n")
 
     # 4f) comparison on x, y, z axis respectively (max, mean)
-    for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
-        for j in range(np.size(fault_time)):
-            overshoot1 = max(abs(pos_err1[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(pos_err1[:, i, 0]) == overshoot1)
-            overshoot2 = np.sign(pos_err1[index, i, 0]) * overshoot1
-            print("overshoot of propsed after " + str(j) + "-th fault: " + _label + str(overshoot2))
-            overshoot3 = max(abs(pos_err2[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(pos_err2[:, i, 0]) == overshoot3)
-            overshoot4 = np.sign(pos_err2[index, i, 0]) * overshoot3
-            print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(overshoot4))
-            overshoot5 = max(abs(pos_err3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(pos_err3[:, i, 0]) == overshoot5)
-            overshoot6 = np.sign(pos_err3[index, i, 0]) * overshoot5
-            print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(overshoot6))
-            print("\n")
-        print("absolute mean error(overall) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0]))))
-        print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data1["ref"][:int(fault_time[j]/dt), i, 0]))))
-        print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data1["ref"][int(fault_time[j]/dt):, i, 0]))))
-        print("\n")
-        print("absolute mean error of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0]))))
-        print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data2["ref"][:int(fault_time[j]/dt), i, 0]))))
-        print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data2["ref"][int(fault_time[j]/dt):, i, 0]))))
-        print("\n")
-        print("absolute mean error of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0]))))
-        print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data3["ref"][:int(fault_time[j]/dt), i, 0]))))
-        print("absolute mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data3["ref"][int(fault_time[j]/dt):, i, 0]))))
-        print("\n")
+    # for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
+    #     for j in range(np.size(fault_time)):
+    #         overshoot1 = max(abs(pos_err1[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(pos_err1[:, i, 0]) == overshoot1)
+    #         overshoot2 = np.sign(pos_err1[index, i, 0]) * overshoot1
+    #         print("overshoot of propsed after " + str(j) + "-th fault: " + _label + str(overshoot2))
+    #         overshoot3 = max(abs(pos_err2[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(pos_err2[:, i, 0]) == overshoot3)
+    #         overshoot4 = np.sign(pos_err2[index, i, 0]) * overshoot3
+    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(overshoot4))
+    #         overshoot5 = max(abs(pos_err3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(pos_err3[:, i, 0]) == overshoot5)
+    #         overshoot6 = np.sign(pos_err3[index, i, 0]) * overshoot5
+    #         print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(overshoot6))
+    #         print("\n")
+    #     print("absolute mean error(overall) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0]))))
+    #     print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data1["ref"][:int(fault_time[j]/dt), i, 0]))))
+    #     print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data1["ref"][int(fault_time[j]/dt):, i, 0]))))
+    #     print("\n")
+    #     print("absolute mean error of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0]))))
+    #     print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data2["ref"][:int(fault_time[j]/dt), i, 0]))))
+    #     print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data2["ref"][int(fault_time[j]/dt):, i, 0]))))
+    #     print("\n")
+    #     print("absolute mean error of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0]))))
+    #     print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data3["ref"][:int(fault_time[j]/dt), i, 0]))))
+    #     print("absolute mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data3["ref"][int(fault_time[j]/dt):, i, 0]))))
+    #     print("\n")
 
     ''' 5. euler '''
     # 5a) Euler angle trajectories
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(9, 10))
     bound = 45
     plt.ylim([-bound-5, bound+5])
 
@@ -131,12 +132,13 @@ def exp_plot(path1, path2, path3):
         plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "k-", label="BS (same)")
         plt.plot(data2["t"], np.rad2deg(angles3[:, 2-i]), "g--", label="BS (different)")
         plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "b--", label="Proposed")
-        plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:", label="Bound")
+        plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
         plt.ylabel(_label + " [deg]")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
-    plt.gcf().supxlabel("Time [sec]")
+        if i == 2:
+            plt.xlabel("Time [s]", labelpad=5)
     plt.tight_layout()
     plt.savefig("Case1_ang.png", dpi=600)
 
@@ -144,7 +146,7 @@ def exp_plot(path1, path2, path3):
     bound = 150
     bound_psi = 180
 
-    fig, axes = plt.subplots(nrows=3, figsize=(9*1.3, 7*1.3), sharex=True)
+    fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
     for i, (_label, ax) in enumerate(zip(["p", "q", "r"], axes)):
         ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
         ax.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
@@ -154,6 +156,7 @@ def exp_plot(path1, path2, path3):
                     label="Prescribed Bound")
             ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound_psi, "r:")
             ax.set_ylim([-bound_psi-15, bound_psi+15])
+            ax.set_xlabel("Time [s]", labelpad=5)
         else:
             ax.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:",
                     label="Prescribed Bound")
@@ -163,7 +166,7 @@ def exp_plot(path1, path2, path3):
         elif i == 0:
             ax.legend(loc=[0, 1.03], ncol=4, mode="expand")
             ax.set_ylim([-bound-15, bound+15])
-        ax.set_ylabel(_label + " [deg/sec]")
+        ax.set_ylabel(_label + " [deg/s]")
         if i == 1:
             axins = zoomed_inset_axes(ax, 6.5, loc="lower center",
                                       axes_kwargs={"facecolor": "lavender"})
@@ -188,11 +191,10 @@ def exp_plot(path1, path2, path3):
         #     axins1.set_xticks([])
         #     axins1.set_yticks([])
         #     mark_inset(ax, axins1, loc1=2, loc2=4, fc="lavender", edgecolor="lightgray", ec="0.5")
-    plt.gcf().supxlabel("Time [sec]")
-    plt.savefig("Case1_dang.png", dpi=600)
+    plt.savefig("Case1_dang.png", dpi=600, bbox_inches='tight')
 
     # 5c) tracking error
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(9, 10))
     ax = plt.subplot(311)
     for i, _label in enumerate([r"$e_{1\phi}$", r"$e_{1\theta}$", r"$e_{1\psi}$"]):
         if i != 0:
@@ -208,84 +210,84 @@ def exp_plot(path1, path2, path3):
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         elif i == 2:
             plt.ylabel(_label + " [deg]", labelpad=15)
-    plt.gcf().supxlabel("Time [sec]")
+            plt.xlabel("Time [s]", labelpad=5)
     plt.tight_layout()
     plt.savefig("Case1_angerr.png", dpi=600)
 
     # 5d) STD of tracking error
-    for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
-        print("STD of proposed controller: " + _label + str(statistics.stdev(np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]))))
-        print("STD of BS (same): " + _label + str(statistics.stdev(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]))))
-        print("STD of BS (different): " + _label + str(statistics.stdev(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]))))
-        print("\n")
+    # for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
+    #     print("STD of proposed controller: " + _label + str(statistics.stdev(np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]))))
+    #     print("STD of BS (same): " + _label + str(statistics.stdev(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]))))
+    #     print("STD of BS (different): " + _label + str(statistics.stdev(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]))))
+    #     print("\n")
 
     # 5e) comparison on phi, theta, psi respectively (max, mean)
-    for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
-        for j in range(np.size(fault_time)):
-            overshoot1 = max(abs(
-                angles1[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
-                - data1["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(angles1[:, 2-i]-data1["eulerd"][:, i, 0]) == overshoot1)
-            overshoot2 = np.sign(angles1[index, 2-i]-data1["eulerd"][index, i, 0]) * overshoot1
-            print("overshoot of proposed after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot2)))
-            overshoot3 = max(abs(
-                angles2[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
-                - data2["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(angles2[:, 2-i]-data2["eulerd"][:, i, 0]) == overshoot3)
-            overshoot4 = np.sign(angles2[index, 2-i]-data2["eulerd"][index, i, 0]) * overshoot3
-            print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
-            overshoot5 = max(abs(
-                angles3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
-                - data3["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(angles3[:, 2-i]-data3["eulerd"][:, i, 0]) == overshoot5)
-            overshoot6 = np.sign(angles3[index, 2-i]-data3["eulerd"][index, i, 0]) * overshoot5
-            print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot6)))
-            print("\n")
-        print("absoulte mean error(overall) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0])))))
-        print("absoulte mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data1["eulerd"][:int(fault_time[j]/dt), i, 0])))))
-        print("absoulte mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data1["eulerd"][int(fault_time[j]/dt):, i, 0])))))
-        print("\n")
-        print("absoulte mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0])))))
-        print("absoulte mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data2["eulerd"][:int(fault_time[j]/dt), i, 0])))))
-        print("absoulte mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data2["eulerd"][int(fault_time[j]/dt):, i, 0])))))
-        print("\n")
-        print("absoulte mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0])))))
-        print("absoulte mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data3["eulerd"][:int(fault_time[j]/dt), i, 0])))))
-        print("absoulte mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data3["eulerd"][int(fault_time[j]/dt):, i, 0])))))
-        print("\n")
+    # for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
+    #     for j in range(np.size(fault_time)):
+    #         overshoot1 = max(abs(
+    #             angles1[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
+    #             - data1["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(angles1[:, 2-i]-data1["eulerd"][:, i, 0]) == overshoot1)
+    #         overshoot2 = np.sign(angles1[index, 2-i]-data1["eulerd"][index, i, 0]) * overshoot1
+    #         print("overshoot of proposed after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot2)))
+    #         overshoot3 = max(abs(
+    #             angles2[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
+    #             - data2["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(angles2[:, 2-i]-data2["eulerd"][:, i, 0]) == overshoot3)
+    #         overshoot4 = np.sign(angles2[index, 2-i]-data2["eulerd"][index, i, 0]) * overshoot3
+    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
+    #         overshoot5 = max(abs(
+    #             angles3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
+    #             - data3["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(angles3[:, 2-i]-data3["eulerd"][:, i, 0]) == overshoot5)
+    #         overshoot6 = np.sign(angles3[index, 2-i]-data3["eulerd"][index, i, 0]) * overshoot5
+    #         print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot6)))
+    #         print("\n")
+    #     print("absoulte mean error(overall) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0])))))
+    #     print("absoulte mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data1["eulerd"][:int(fault_time[j]/dt), i, 0])))))
+    #     print("absoulte mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data1["eulerd"][int(fault_time[j]/dt):, i, 0])))))
+    #     print("\n")
+    #     print("absoulte mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0])))))
+    #     print("absoulte mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data2["eulerd"][:int(fault_time[j]/dt), i, 0])))))
+    #     print("absoulte mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data2["eulerd"][int(fault_time[j]/dt):, i, 0])))))
+    #     print("\n")
+    #     print("absoulte mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0])))))
+    #     print("absoulte mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data3["eulerd"][:int(fault_time[j]/dt), i, 0])))))
+    #     print("absoulte mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data3["eulerd"][int(fault_time[j]/dt):, i, 0])))))
+    #     print("\n")
 
     # 5f) comparison on p, q, r respectively (max, mean)
-    for i, _label in enumerate([r"$p$", r"$q$", r"$r$"]):
-        for j in range(np.size(fault_time)):
-            overshoot1 = max(abs(data1["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
-            index = np.where(abs(data1["x"]["omega"][:, i, 0]) == overshoot1)
-            overshoot2 = np.sign(data1["x"]["omega"][index, i, 0]) * overshoot1
-            print("overshoot of proposed after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot2)))
-            overshoot3 = max(abs(data2["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
-            index = np.where(abs(data2["x"]["omega"][:, i, 0]) == overshoot3)
-            overshoot4 = np.sign(data2["x"]["omega"][index, i, 0]) * overshoot3
-            print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
-            overshoot5 = max(abs(data3["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
-            index = np.where(abs(data3["x"]["omega"][:, i, 0]) == overshoot5)
-            overshoot6 = np.sign(data3["x"]["omega"][index, i, 0]) * overshoot5
-            print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot6)))
-            print("\n")
-        print("absolute mean error(overall) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][:, i, 0])-np.zeros((np.shape(data1["x"]["omega"][:, i, 0])))))))
-        print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
-        print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
-        print("\n")
-        print("absolute mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:, i, 0])-np.zeros((np.shape(data2["x"]["omega"][:, i, 0])))))))
-        print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
-        print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
-        print("\n")
-        print("absolute mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:, i, 0])-np.zeros((np.shape(data3["x"]["omega"][:, i, 0])))))))
-        print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
-        print("absolute mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data3["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
-        print("\n")
+    # for i, _label in enumerate([r"$p$", r"$q$", r"$r$"]):
+    #     for j in range(np.size(fault_time)):
+    #         overshoot1 = max(abs(data1["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
+    #         index = np.where(abs(data1["x"]["omega"][:, i, 0]) == overshoot1)
+    #         overshoot2 = np.sign(data1["x"]["omega"][index, i, 0]) * overshoot1
+    #         print("overshoot of proposed after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot2)))
+    #         overshoot3 = max(abs(data2["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
+    #         index = np.where(abs(data2["x"]["omega"][:, i, 0]) == overshoot3)
+    #         overshoot4 = np.sign(data2["x"]["omega"][index, i, 0]) * overshoot3
+    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
+    #         overshoot5 = max(abs(data3["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
+    #         index = np.where(abs(data3["x"]["omega"][:, i, 0]) == overshoot5)
+    #         overshoot6 = np.sign(data3["x"]["omega"][index, i, 0]) * overshoot5
+    #         print("overshoot of BS (diff) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot6)))
+    #         print("\n")
+    #     print("absolute mean error(overall) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][:, i, 0])-np.zeros((np.shape(data1["x"]["omega"][:, i, 0])))))))
+    #     print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
+    #     print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
+    #     print("\n")
+    #     print("absolute mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:, i, 0])-np.zeros((np.shape(data2["x"]["omega"][:, i, 0])))))))
+    #     print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
+    #     print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
+    #     print("\n")
+    #     print("absolute mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:, i, 0])-np.zeros((np.shape(data3["x"]["omega"][:, i, 0])))))))
+    #     print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
+    #     print("absolute mean error(after fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data3["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
+    #     print("\n")
 
     ''' 6. etc '''
     # 6a) rotor input comparison
-    plt.figure(figsize=(9, 7/3*4))
+    plt.figure(figsize=(9, 10*4/3))
 
     name = [r"$\Omega_1$", r"$\Omega_2$", r"$\Omega_3$", r"$\Omega_4$"]
     ax = plt.subplot(411)
@@ -299,12 +301,13 @@ def exp_plot(path1, path2, path3):
         plt.ylabel(name[i])
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.gcf().supxlabel("Time [sec]")
+        if i == 3:
+            plt.xlabel("Time [s]", labelpad=5)
     plt.tight_layout()
     plt.savefig("Case1_rotor.png", dpi=600)
 
     # 6b) generalized forces comparison
-    plt.figure(figsize=(9, 7/3*4))
+    plt.figure(figsize=(9, 10*4/3))
 
     ax = plt.subplot(411)
     for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
@@ -322,7 +325,7 @@ def exp_plot(path1, path2, path3):
             plt.ylabel(_label, labelpad=21)
         elif i == 3:
             plt.ylabel(_label, labelpad=2)
-    plt.gcf().supxlabel("Time, sec")
+            plt.xlabel("Time [s]", labelpad=5)
     plt.tight_layout()
     plt.savefig("Case1_force.png", dpi=600)
 
