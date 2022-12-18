@@ -138,7 +138,7 @@ default_settings = fym.parser.parse({
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "eps": np.array([40, 40, 40]),
-            "rho": np.array([0.5, 0.25]),
+            "rho": np.array([1.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
         },
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([110, 250, 80]),
+            "eps": np.array([110, 150, 80]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -156,7 +156,7 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         "Kxy": np.array([1, 0.5, 0.417]),
-        "Kang": np.array([13.5, 30, 0.054]),
+        "Kang": np.array([1.5, 10, 0.97]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
