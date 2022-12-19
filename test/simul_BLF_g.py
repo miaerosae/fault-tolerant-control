@@ -305,18 +305,18 @@ def main(args):
                 return {"cost": 1e5*tf-sumDistErr[0]}
 
         config = {
-            "k11": tune.uniform(0.5, 2),
-            "k12": tune.uniform(0.01, 1),
-            "k13": tune.uniform(0.1, 1),
-            "k21": tune.uniform(5, 20),
-            "k22": tune.uniform(50, 150),
-            "k23": tune.uniform(0.1, 1),
-            "eps11": tune.uniform(30, 60),
-            "eps12": tune.uniform(30, 60),
-            "eps13": tune.uniform(30, 60),
-            "eps21": tune.uniform(150, 200),
-            "eps22": tune.uniform(150, 200),
-            "eps23": tune.uniform(50, 100),
+            "k11": cfg.agents.BLF.Kxy[0],
+            "k12": cfg.agents.BLF.Kxy[1],
+            "k13": cfg.agents.BLF.Kxy[2],
+            "k21": cfg.agents.BLF.Kang[0],
+            "k22": cfg.agents.BLF.Kang[1],
+            "k23": cfg.agents.BLF.Kang[2],
+            "eps11": tune.uniform(10, 50),
+            "eps12": tune.uniform(10, 50),
+            "eps13": tune.uniform(10, 50),
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
         }
         current_best_params = [{
             "k11": cfg.agents.BLF.Kxy[0],
