@@ -201,7 +201,7 @@ def exp_plot(path1):
     plt.savefig("Case2_force_plus10.png", dpi=600)
 
     # disturbance
-    plt.figure(figsize=(9, 7/3*6))
+    plt.figure(figsize=(9, 10))
 
     real_dist = np.zeros((6, np.size(data1["t"])))
     for i in range(np.size(data1["t"])):
@@ -214,36 +214,18 @@ def exp_plot(path1):
         real_dist[i+3, :] = (real_dist[i+3, :]
                              + data1["dist_omega"][:, i, 0])
 
-    ax = plt.subplot(611)
-    for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
-                                r"$e_{3\phi}$", r"$e_{3\theta}$", r"$e_{3\psi}$"]):
+    ax = plt.subplot(311)
+    for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$"]):
         if i != 0:
-            plt.subplot(611+i, sharex=ax)
+            plt.subplot(311+i, sharex=ax)
         plt.plot(data1["t"], real_dist[i, :], "k-", label="Real Value")
         plt.plot(data1["t"], data1["dist"][:, i, 0], "b--", label="Estimated Value")
         # plt.plot(data1["t"], data2["dist"][:, i, 0], "g--", label="Estimated Value (without faults)")
-        if i < 2:
-            plt.ylabel(_label)
-        elif i == 2:
-            plt.ylabel(_label, labelpad=10)
-        elif i == 3:
-            plt.ylabel(_label, labelpad=5)
-        else:
-            plt.ylabel(_label)
+        plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-        if i == 5:
+            plt.legend(loc=[0, 1.03], ncol=2, mode="expand")
+        if i == 2:
             plt.xlabel("Time [s]", labelpad=5)
-        # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
     plt.tight_layout()
     plt.savefig("Case2_dist_plus10.png", dpi=600)
 
@@ -263,7 +245,7 @@ def exp_plot(path1):
     # plt.tight_layout()
 
     # BLF gain
-    plt.figure(figsize=(9, 9))
+    plt.figure(figsize=(9, 10/3*2))
 
     # calculate gain of Scenario 2
     kpos = np.array([2., 0.8, 0.5])
@@ -276,20 +258,28 @@ def exp_plot(path1):
     kD2 = kang[0] + kang[1] + 2*np.sqrt(0.1)
     kI2 = (kang[1] + np.sqrt(0.1))*kang[2]
 
-    ax = plt.subplot(331)
-    for i in range(9):
+    ax = plt.subplot(231)
+    for i in range(6):
         if i != 0:
-            plt.subplot(331+i, sharex=ax)
+            plt.subplot(231+i, sharex=ax)
         if i == 1:
             plt.plot(data1["t"], data1["gain"][:, i, 0], "r", label="Actual Gain")
-        else:
+        elif i < 3:
             plt.plot(data1["t"], data1["gain"][:, i, 0], "r")
-        if i % 3 == 0:
+        else:
+            plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r")
+        if i == 0:
             plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kP1, "b--", label="PID-like Gain")
-        elif i % 3 == 1:
+        elif i == 1:
             plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kD1, "b--")
-        elif i % 3 == 2:
+        elif i == 2:
             plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kI1, "b--", label="PID-like Gain")
+        if i == 3:
+            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kP2, "b--", label="PID-like Gain")
+        elif i == 4:
+            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kD2, "b--")
+        elif i == 5:
+            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kI2, "b--", label="PID-like Gain")
         if i == 0:
             plt.ylabel("x subsystem", labelpad=10)
             plt.title(r"$k_{P}$")
@@ -300,68 +290,11 @@ def exp_plot(path1):
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
             plt.title(r"$k_{I}$")
         elif i == 3:
-            plt.ylabel("y subsystem")
-        elif i == 6:
-            plt.ylabel("z subsystem", labelpad=8)
-        # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.tight_layout()
-    plt.savefig("Case2_gain1_plus10.png", dpi=600)
-
-    plt.figure(figsize=(9, 7))
-
-    ax = plt.subplot(331)
-    for i in range(9):
-        if i != 0:
-            plt.subplot(331+i, sharex=ax)
-        if i == 1:
-            plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r", label="Actual Gain")
-        else:
-            plt.plot(data1["t"], data1["gain"][:, i+9, 0], "r")
-        if i % 3 == 0:
-            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kP2, "b--", label="PID-like Gain")
-        elif i % 3 == 1:
-            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kD2, "b--")
-        elif i % 3 == 2:
-            plt.plot(data1["t"], np.ones(np.shape(data1["t"]))*kI2, "b--", label="PID-like Gain")
-        if i == 0:
-            plt.ylabel(r"$\phi$" + " subsystem", labelpad=10)
-            plt.title(r"$k_{P}$")
-        elif i == 1:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
-            plt.title(r"$k_{D}$")
-        elif i == 2:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.13], ncol=1, edgecolor="white")
-            plt.title(r"$k_{I}$")
-        elif i == 3:
-            plt.ylabel(r"$\theta$" + " subsystem", labelpad=9)
-        elif i == 6:
-            plt.ylabel(r"$\psi$" + " subsystem")
-        # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(14, 14.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvspan(15, 15.1, alpha=0.2, color="mediumslateblue")
-        # plt.axvline(5, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(7, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-        # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
-    plt.tight_layout()
-    plt.savefig("Case2_gain2_plus10.png", dpi=600)
+            plt.ylabel(r"$\phi$" + " subsystem")
+    plt.savefig("Case2_gain1_plus10.png", dpi=600, bbox_inches='tight')
 
     plt.show()
 
 
 if __name__ == "__main__":
-    # exp_plot("Scenario2_new_dang_bound_plus10uncert.h5")
     exp_plot("Scenario2_TAES_version_plus.h5")
