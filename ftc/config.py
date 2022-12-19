@@ -21,9 +21,9 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10, 12]),
-        "fault_index": np.array([0, 1, 2, 2]),
-        "LoE": np.array([0.5, 0.6, 0.8, 0.4]),
+        "fault_time": np.array([5, 7, 10]),
+        "fault_index": np.array([0, 1, 2]),
+        "LoE": np.array([0.5, 0.6, 0.5]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
         # "LoE": np.array([0.5]),
@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([50, 50, 50]),
+            "eps": np.array([31, 31, 46]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([110, 250, 80]),
+            "eps": np.array([153, 194, 55]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -155,8 +155,10 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        "Kxy": np.array([1, 0.5, 0.417]),
-        "Kang": np.array([10.5, 100, 0.97]),
+        # "Kxy": np.array([1.88, 0.78, 0.47]),
+        # "Kang": np.array([15.65, 53.7, 0.51]),
+        "Kxy": np.array([2., 0.8, 0.5]),
+        "Kang": np.array([15., 50., 0.5]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
@@ -203,7 +205,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 20,
+        "max_t": 30,
         "blade": False,
         "faultBias": False,  # not use
         "noise": True,  # Estimator real value noise
