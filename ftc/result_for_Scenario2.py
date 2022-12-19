@@ -25,7 +25,7 @@ def exp_plot(path1):
     rotor_max = info["rotor_max"]
 
     # FDI
-    plt.figure(figsize=(6, 4.5))
+    plt.figure(figsize=(9, 9))
 
     name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
     for i in range(data1["W"].shape[1]):
@@ -37,7 +37,7 @@ def exp_plot(path1):
     plt.savefig("Case2_lambda_plus10.png", dpi=600)
 
     # 4d) tracking error (subplots)
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(9, 10))
 
     rho = np.array([0.5, 0.25])
     rho_k = 0.5
@@ -53,6 +53,8 @@ def exp_plot(path1):
         plt.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -pos_bounds, "r:")
         plt.ylabel(_label + " [m]")
+        if i == 2:
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -65,12 +67,11 @@ def exp_plot(path1):
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_poserr_plus10.png", dpi=600)
 
     # 5a) Euler angle trajectories
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(9, 10))
     bound = 45
     plt.ylim([-bound-5, bound+5])
 
@@ -87,6 +88,8 @@ def exp_plot(path1):
         plt.ylabel(_label + " [deg]")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
+        if i == 2:
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -97,13 +100,12 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_ang_plus10.png", dpi=600)
 
     # 5b) Angular rate trajectories
-    plt.figure(figsize=(9, 7))
-    bound = 150+0.2
+    plt.figure(figsize=(9, 10))
+    bound = 150
     bound_psi = 180
 
     ax = plt.subplot(311)
@@ -124,6 +126,8 @@ def exp_plot(path1):
         plt.ylabel(_label + " [deg/sec]")
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
+        if i == 2:
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -134,12 +138,11 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_dang_plus10.png", dpi=600)
 
     # 6a) rotor input comparison
-    plt.figure(figsize=(9, 7/3*4))
+    plt.figure(figsize=(9, 10/3*4))
 
     name = [r"$\Omega_1$", r"$\Omega_2$", r"$\Omega_3$", r"$\Omega_4$"]
     ax = plt.subplot(411)
@@ -152,6 +155,8 @@ def exp_plot(path1):
         plt.ylabel(name[i])
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
+        if i == 2:
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -162,12 +167,11 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_rotor_plus10.png", dpi=600)
 
     # 6b) generalized forces comparison
-    plt.figure(figsize=(9, 7/3*4))
+    plt.figure(figsize=(9, 10/3*4))
 
     ax = plt.subplot(411)
     for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
@@ -182,6 +186,7 @@ def exp_plot(path1):
             plt.ylabel(_label, labelpad=8)
         elif i == 3:
             plt.ylabel(_label, labelpad=0)
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -192,7 +197,6 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_force_plus10.png", dpi=600)
 
@@ -228,6 +232,8 @@ def exp_plot(path1):
             plt.ylabel(_label)
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
+        if i == 5:
+            plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(7, 7.1, alpha=0.2, color="mediumslateblue")
         # plt.axvspan(10, 10.1, alpha=0.2, color="mediumslateblue")
@@ -238,7 +244,6 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_dist_plus10.png", dpi=600)
 
@@ -258,7 +263,7 @@ def exp_plot(path1):
     # plt.tight_layout()
 
     # BLF gain
-    plt.figure(figsize=(9, 7))
+    plt.figure(figsize=(9, 9))
 
     # calculate gain of Scenario 2
     kpos = np.array([2., 0.8, 0.5])
@@ -308,8 +313,6 @@ def exp_plot(path1):
         # plt.axvline(10, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(14, alpha=0.8, color="mediumslateblue", linewidth=0.5)
         # plt.axvline(15, alpha=0.8, color="mediumslateblue", linewidth=0.5)
-
-    plt.gcf().supxlabel("Time [sec]")
     plt.tight_layout()
     plt.savefig("Case2_gain1_plus10.png", dpi=600)
 
