@@ -26,20 +26,20 @@ def exp_plot(path1, path2, path3):
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
 
-    fault_time = np.array([5, 7])
-    dt = 0.01
+    # fault_time = np.array([5, 7])
+    # dt = 0.01
 
     # FDI
-    plt.figure(figsize=(6, 4.5))
+    # plt.figure(figsize=(6, 4.5))
 
-    name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
-    for i in range(data1["W"].shape[1]):
-        plt.ylim([0-0.1, 1+0.1])
-        plt.plot(data1["t"], data1["W"][:, i, i], "--", label=name[i])
-    plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
-    plt.xlabel("Time [s]")
-    plt.tight_layout()
-    plt.savefig("Case1_lambda.png", dpi=600)
+    # name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
+    # for i in range(data1["W"].shape[1]):
+    #     plt.ylim([0-0.1, 1+0.1])
+    #     plt.plot(data1["t"], data1["W"][:, i, i], "--", label=name[i])
+    # plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
+    # plt.xlabel("Time [s]")
+    # plt.tight_layout()
+    # plt.savefig("Case1_lambda.png", dpi=600)
 
     ''' comparing controllers '''
     # 4d) tracking error (subplots)
@@ -54,9 +54,9 @@ def exp_plot(path1, path2, path3):
 
     fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], axes)):
-        ax.plot(data1["t"], pos_err2[:, i, 0], "k-", label="BS (same)")
-        ax.plot(data1["t"], pos_err3[:, i, 0], "g--", label="BS (different)")
-        ax.plot(data1["t"], pos_err1[:, i, 0], "b--", label="Proposed")
+        ax.plot(data1["t"], pos_err2[:, i, 0], "k--", label="BS")
+        ax.plot(data1["t"], pos_err3[:, i, 0], "g-.", label="BS (tuned)")
+        ax.plot(data1["t"], pos_err1[:, i, 0], "b-", label="Proposed")
         ax.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         ax.plot(data1["t"], -pos_bounds, "r:")
         ax.set_ylabel(_label + " [m]")
@@ -67,9 +67,9 @@ def exp_plot(path1, path2, path3):
         if i == 0:
             axins = zoomed_inset_axes(ax, 2, loc="upper right",
                                       axes_kwargs={"facecolor": "lavender"})
-            axins.plot(data1["t"], pos_err2[:, i, 0], "k-")
-            axins.plot(data1["t"], pos_err3[:, i, 0], "g--")
-            axins.plot(data1["t"], pos_err1[:, i, 0], "b--")
+            axins.plot(data1["t"], pos_err2[:, i, 0], "k--")
+            axins.plot(data1["t"], pos_err3[:, i, 0], "g-.")
+            axins.plot(data1["t"], pos_err1[:, i, 0], "b-")
             axins.plot(data1["t"], pos_bounds, "r:")
             axins.plot(data1["t"], -pos_bounds, "r:")
             x1, x2, y1, y2 = 4, 8, -0.3, 0.3
@@ -83,7 +83,7 @@ def exp_plot(path1, path2, path3):
     # 4e) STD of tracking error
     # for i, _label in enumerate([r"$e_x$", r"$e_y$", r"$e_z$"]):
     #     print("STD of proposed controller: " + _label + str(statistics.stdev(data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0])))
-    #     print("STD of BS (same): " + _label + str(statistics.stdev(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0])))
+    #     print("STD of BS: " + _label + str(statistics.stdev(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0])))
     #     print("STD of BS (diff): " + _label + str(statistics.stdev(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0])))
     #     print("\n")
 
@@ -97,7 +97,7 @@ def exp_plot(path1, path2, path3):
     #         overshoot3 = max(abs(pos_err2[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
     #         index = np.where(abs(pos_err2[:, i, 0]) == overshoot3)
     #         overshoot4 = np.sign(pos_err2[index, i, 0]) * overshoot3
-    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(overshoot4))
+    #         print("overshoot of BS after " + str(j) + "-th fault: " + _label + str(overshoot4))
     #         overshoot5 = max(abs(pos_err3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
     #         index = np.where(abs(pos_err3[:, i, 0]) == overshoot5)
     #         overshoot6 = np.sign(pos_err3[index, i, 0]) * overshoot5
@@ -107,9 +107,9 @@ def exp_plot(path1, path2, path3):
     #     print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data1["ref"][:int(fault_time[j]/dt), i, 0]))))
     #     print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(data1["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data1["ref"][int(fault_time[j]/dt):, i, 0]))))
     #     print("\n")
-    #     print("absolute mean error of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0]))))
-    #     print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data2["ref"][:int(fault_time[j]/dt), i, 0]))))
-    #     print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(data2["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data2["ref"][int(fault_time[j]/dt):, i, 0]))))
+    #     print("absolute mean error of BS: " + _label + str(np.mean(abs(data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0]))))
+    #     print("absolute mean error(before fault) of BS: " + _label + str(np.mean(abs(data2["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data2["ref"][:int(fault_time[j]/dt), i, 0]))))
+    #     print("absolute mean error(after fault) of BS: " + _label + str(np.mean(abs(data2["x"]["pos"][int(fault_time[j]/dt):, i, 0]-data2["ref"][int(fault_time[j]/dt):, i, 0]))))
     #     print("\n")
     #     print("absolute mean error of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0]))))
     #     print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(data3["x"]["pos"][:int(fault_time[j]/dt), i, 0]-data3["ref"][:int(fault_time[j]/dt), i, 0]))))
@@ -129,9 +129,9 @@ def exp_plot(path1, path2, path3):
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "k-", label="BS (same)")
-        plt.plot(data2["t"], np.rad2deg(angles3[:, 2-i]), "g--", label="BS (different)")
-        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "b--", label="Proposed")
+        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "k--", label="BS")
+        plt.plot(data2["t"], np.rad2deg(angles3[:, 2-i]), "g-.", label="BS (tuned)")
+        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "b-", label="Proposed")
         plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
         plt.ylabel(_label + " [deg]")
@@ -148,9 +148,9 @@ def exp_plot(path1, path2, path3):
 
     fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
     for i, (_label, ax) in enumerate(zip(["p", "q", "r"], axes)):
-        ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
-        ax.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
-        ax.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--", label="Proposed")
+        ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k--", label="BS")
+        ax.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g-.", label="BS (tuned)")
+        ax.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b-", label="Proposed")
         if i == 2:
             ax.plot(data1["t"], np.ones((np.size(data1["t"])))*bound_psi, "r:",
                     label="Prescribed Bound")
@@ -170,7 +170,7 @@ def exp_plot(path1, path2, path3):
         if i == 1:
             axins = zoomed_inset_axes(ax, 6.5, loc="lower center",
                                       axes_kwargs={"facecolor": "lavender"})
-            axins.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
+            axins.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b-")
             axins.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
             x1, x2, y1, y2 = 0, 0.1, -155, -135
             axins.set_xlim(x1, x2)
@@ -181,9 +181,9 @@ def exp_plot(path1, path2, path3):
         # if i == 1:
         #     axins1 = zoomed_inset_axes(ax, 2.5, loc="lower center",
         #                                axes_kwargs={"facecolor": "lavender"})
-        #     axins1.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k-", label="BS (same)")
-        #     axins1.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g--", label="BS (different)")
-        #     axins1.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b--")
+        #     axins1.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "k--", label="BS")
+        #     axins1.plot(data2["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g-.", label="BS (tuned)")
+        #     axins1.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "b-")
         #     axins1.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
         #     x1, x2, y1, y2 = 4.5, 5.5, -170, -90
         #     axins1.set_xlim(x1, x2)
@@ -199,11 +199,11 @@ def exp_plot(path1, path2, path3):
     for i, _label in enumerate([r"$e_{1\phi}$", r"$e_{1\theta}$", r"$e_{1\psi}$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]), "k-",
-                 label="BS (same)")
-        plt.plot(data2["t"], np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]), "g--",
-                 label="BS (different)")
-        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]), "b--",
+        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]), "k--",
+                 label="BS")
+        plt.plot(data2["t"], np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]), "g-.",
+                 label="BS (tuned)")
+        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]), "b-",
                  label="Proposed")
         plt.ylabel(_label + " [deg]")
         if i == 0:
@@ -217,8 +217,8 @@ def exp_plot(path1, path2, path3):
     # 5d) STD of tracking error
     # for i, _label in enumerate([r"$e_{\phi}$", r"$e_{\theta}$", r"$e_{\psi}$"]):
     #     print("STD of proposed controller: " + _label + str(statistics.stdev(np.rad2deg(angles1[:, 2-i])-np.rad2deg(data1["eulerd"][:, i, 0]))))
-    #     print("STD of BS (same): " + _label + str(statistics.stdev(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]))))
-    #     print("STD of BS (different): " + _label + str(statistics.stdev(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]))))
+    #     print("STD of BS: " + _label + str(statistics.stdev(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0]))))
+    #     print("STD of BS (tuned): " + _label + str(statistics.stdev(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0]))))
     #     print("\n")
 
     # 5e) comparison on phi, theta, psi respectively (max, mean)
@@ -235,7 +235,7 @@ def exp_plot(path1, path2, path3):
     #             - data2["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
     #         index = np.where(abs(angles2[:, 2-i]-data2["eulerd"][:, i, 0]) == overshoot3)
     #         overshoot4 = np.sign(angles2[index, 2-i]-data2["eulerd"][index, i, 0]) * overshoot3
-    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
+    #         print("overshoot of BS after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
     #         overshoot5 = max(abs(
     #             angles3[int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), 2-i]
     #             - data3["eulerd"][int(fault_time[j]/dt):int(fault_time[j]/dt+1.5/dt), i, 0]))
@@ -247,9 +247,9 @@ def exp_plot(path1, path2, path3):
     #     print("absoulte mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data1["eulerd"][:int(fault_time[j]/dt), i, 0])))))
     #     print("absoulte mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(angles1[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data1["eulerd"][int(fault_time[j]/dt):, i, 0])))))
     #     print("\n")
-    #     print("absoulte mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0])))))
-    #     print("absoulte mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data2["eulerd"][:int(fault_time[j]/dt), i, 0])))))
-    #     print("absoulte mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(angles2[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data2["eulerd"][int(fault_time[j]/dt):, i, 0])))))
+    #     print("absoulte mean error(overall) of BS: " + _label + str(np.mean(abs(np.rad2deg(angles2[:, 2-i])-np.rad2deg(data2["eulerd"][:, i, 0])))))
+    #     print("absoulte mean error(before fault) of BS: " + _label + str(np.mean(abs(np.rad2deg(angles2[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data2["eulerd"][:int(fault_time[j]/dt), i, 0])))))
+    #     print("absoulte mean error(after fault) of BS: " + _label + str(np.mean(abs(np.rad2deg(angles2[int(fault_time[j]/dt):, 2-i])-np.rad2deg(data2["eulerd"][int(fault_time[j]/dt):, i, 0])))))
     #     print("\n")
     #     print("absoulte mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:, 2-i])-np.rad2deg(data3["eulerd"][:, i, 0])))))
     #     print("absoulte mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(angles3[:int(fault_time[j]/dt), 2-i])-np.rad2deg(data3["eulerd"][:int(fault_time[j]/dt), i, 0])))))
@@ -266,7 +266,7 @@ def exp_plot(path1, path2, path3):
     #         overshoot3 = max(abs(data2["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
     #         index = np.where(abs(data2["x"]["omega"][:, i, 0]) == overshoot3)
     #         overshoot4 = np.sign(data2["x"]["omega"][index, i, 0]) * overshoot3
-    #         print("overshoot of BS (same) after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
+    #         print("overshoot of BS after " + str(j) + "-th fault: " + _label + str(np.rad2deg(overshoot4)))
     #         overshoot5 = max(abs(data3["x"]["omega"][int(fault_time[j]/dt):int(fault_time[j]/dt+1/dt), i, 0]))
     #         index = np.where(abs(data3["x"]["omega"][:, i, 0]) == overshoot5)
     #         overshoot6 = np.sign(data3["x"]["omega"][index, i, 0]) * overshoot5
@@ -276,9 +276,9 @@ def exp_plot(path1, path2, path3):
     #     print("absolute mean error(before fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data1["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
     #     print("absolute mean error(after fault) of proposed: " + _label + str(np.mean(abs(np.rad2deg(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data1["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
     #     print("\n")
-    #     print("absolute mean error(overall) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:, i, 0])-np.zeros((np.shape(data2["x"]["omega"][:, i, 0])))))))
-    #     print("absolute mean error(before fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
-    #     print("absolute mean error(after fault) of BS (same): " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
+    #     print("absolute mean error(overall) of BS: " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:, i, 0])-np.zeros((np.shape(data2["x"]["omega"][:, i, 0])))))))
+    #     print("absolute mean error(before fault) of BS: " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data2["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
+    #     print("absolute mean error(after fault) of BS: " + _label + str(np.mean(abs(np.rad2deg(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])-np.zeros((np.shape(data2["x"]["omega"][int(fault_time[0]/dt):, i, 0])))))))
     #     print("\n")
     #     print("absolute mean error(overall) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:, i, 0])-np.zeros((np.shape(data3["x"]["omega"][:, i, 0])))))))
     #     print("absolute mean error(before fault) of BS (diff): " + _label + str(np.mean(abs(np.rad2deg(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])-np.zeros((np.shape(data3["x"]["omega"][:int(fault_time[0]/dt), i, 0])))))))
@@ -295,9 +295,9 @@ def exp_plot(path1, path2, path3):
         if i != 0:
             plt.subplot(411+i, sharex=ax)
         plt.ylim([rotor_min-5, np.sqrt(rotor_max)+5])
-        plt.plot(data2["t"], np.sqrt(data2["rotors"][:, i]), "k-", label="BS (same)")
-        plt.plot(data2["t"], np.sqrt(data3["rotors"][:, i]), "g--", label="BS (different)")
-        plt.plot(data1["t"], np.sqrt(data1["rotors"][:, i]), "b--", label="Proposed")
+        plt.plot(data2["t"], np.sqrt(data2["rotors"][:, i]), "k--", label="BS")
+        plt.plot(data2["t"], np.sqrt(data3["rotors"][:, i]), "g-.", label="BS (tuned)")
+        plt.plot(data1["t"], np.sqrt(data1["rotors"][:, i]), "b-", label="Proposed")
         plt.ylabel(name[i])
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
@@ -313,9 +313,9 @@ def exp_plot(path1, path2, path3):
     for i, _label in enumerate([r"$u_{1}$", r"$u_{2}$", r"$u_{3}$", r"$u_{4}$"]):
         if i != 0:
             plt.subplot(411+i, sharex=ax)
-        plt.plot(data2["t"], data2["virtual_u"][:, i], "k-", label="BS (same)")
-        plt.plot(data2["t"], data3["virtual_u"][:, i], "g--", label="BS (different)")
-        plt.plot(data1["t"], data1["virtual_u"][:, i], "b--", label="Proposed")
+        plt.plot(data2["t"], data2["virtual_u"][:, i], "k--", label="BS")
+        plt.plot(data2["t"], data3["virtual_u"][:, i], "g-.", label="BS (tuned)")
+        plt.plot(data1["t"], data1["virtual_u"][:, i], "b-", label="Proposed")
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
             plt.ylabel(_label, labelpad=20)

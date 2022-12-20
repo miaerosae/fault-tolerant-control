@@ -28,11 +28,13 @@ def exp_plot(path1):
     plt.figure(figsize=(9, 9))
 
     name = [r"$\lambda_1$", r"$\lambda_2$", r"$\lambda_3$", r"$\lambda_4$"]
-    for i in range(data1["W"].shape[1]):
-        plt.ylim([0-0.1, 1+0.1])
-        plt.plot(data1["t"], data1["W"][:, i, i], "--", label=name[i])
+    plt.ylim([0-0.1, 1+0.1])
+    plt.plot(data1["t"], data1["W"][:, 0, 0], '-', label=name[0])
+    plt.plot(data1["t"], data1["W"][:, 1, 1], '--', label=name[1])
+    plt.plot(data1["t"], data1["W"][:, 2, 2], '-.', label=name[2])
+    plt.plot(data1["t"], data1["W"][:, 3, 3], ':', label=name[3])
     plt.legend(loc=[0, 1.03], ncol=4, mode="expand")
-    plt.xlabel("Time [sec]")
+    plt.xlabel("Time [s]")
     plt.tight_layout()
     plt.savefig("Case2_lambda_plus10.png", dpi=600)
 
@@ -123,7 +125,7 @@ def exp_plot(path1):
                      label="Prescribed Bound")
             plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
             plt.ylim([-bound-15, bound+15])
-        plt.ylabel(_label + " [deg/sec]")
+        plt.ylabel(_label + " [deg/s]")
         if i == 0:
             plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
         if i == 2:

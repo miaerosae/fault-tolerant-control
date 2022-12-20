@@ -33,7 +33,7 @@ def gain_bound():
     plt.xlim([0, max(kP_1)])
     ax.plot(kP_1, k1_1, "r-", label=r"$k_{1i}$")
     ax.plot(kP_1, k2, "g--", label=r"$k_{2i}$")
-    ax.plot(kP_1, k3_1, "b-", label=r"$k_{3i}$")
+    ax.plot(kP_1, k3_1, "b-.", label=r"$k_{3i}$")
     k1_1[k1_1 == np.inf] = 0
     k3_1[k3_1 == np.inf] = 0
     kP_1[kP_1 == np.inf] = 0
@@ -55,7 +55,7 @@ def gain_bound():
     plt.xlim([0, max(kD_2)])
     ax.plot(kD_2, k1_2, "r-", label=r"$k_{1i}$")
     ax.plot(kD_2, k2, "g--", label=r"$k_{2i}$")
-    ax.plot(kD_2, k3_2, "b-", label=r"$k_{3i}$")
+    ax.plot(kD_2, k3_2, "b-.", label=r"$k_{3i}$")
     k1_2[k1_2 == np.inf] = 0
     k3_2[k3_2 == np.inf] = 0
     kD_2[kD_2 == np.inf] = 0
@@ -80,7 +80,7 @@ def gain_bound():
     plt.xlim([0, max(kP_3)])
     ax.plot(kP_3, k1_3, "r-", label=r"$k_{1i}$")
     ax.plot(kP_3, k2, "g--", label=r"$k_{1i}$")
-    ax.plot(kP_3, k3_3, "b-", label=r"$k_{3i}$")
+    ax.plot(kP_3, k3_3, "b-.", label=r"$k_{3i}$")
     # ax.fill_between(kP_3, 0, 1, where=k2 > 2*rho2/rho1,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform())
@@ -108,7 +108,7 @@ def gain_bound():
     plt.xlim([0, max(kD_4)])
     ax.plot(kD_4, k1_4, "r-", label=r"$k_{1i}$")
     ax.plot(kD_4, k2, "g--", label=r"$k_{2i}$")
-    ax.plot(kD_4, k3_4, "b-", label=r"$k_{3i}$")
+    ax.plot(kD_4, k3_4, "b-.", label=r"$k_{3i}$")
     # ax.fill_between(kD_4, 0, 1, where=k2 > 2*rho2/rho1,
     #                 interpolate=True, color="pink", alpha=0.2,
     #                 transform=ax.get_xaxis_transform())
