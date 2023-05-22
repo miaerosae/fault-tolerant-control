@@ -119,8 +119,8 @@ default_settings = fym.parser.parse({
             },
         },
         "model_uncert": {
-            "del_m": - 0.1,
-            "del_J": - np.diag([0.1, 0.1, 0.1]),
+            "del_m": 0.1,
+            "del_J": np.diag([0.1, 0.1, 0.1]),
             "del_c": -0.1,
             "del_b": 0.1,
         },
@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([30, 30, 40]),
+            "eps": np.array([31, 31, 46]),
             "rho": np.array([0.5, 0.25]),
             "rho_k": 0.6,
             "gamma": np.array([2, 2, 2]),
@@ -204,8 +204,8 @@ default_settings = fym.parser.parse({
     # :::::: SIMULATION CONDITION :::::: #
 
     "simul_condi": {
-        "dt": 0.01,
-        "max_t": 30,
+        "dt": 0.005,
+        "max_t": 10,
         "blade": False,
         "faultBias": False,  # not use
         "noise": True,  # Estimator real value noise
