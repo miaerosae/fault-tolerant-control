@@ -13,10 +13,10 @@ from fym.core import BaseEnv, BaseSystem
 import fym.logging
 from fym.utils.rot import angle2quat, quat2angle
 
-import ftc.config
+import ftc.config_noESO
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_noESO as BLF
-from ftc.agents.param import get_b0, get_faulty_input, get_PID_gain
+from ftc.agents.param import get_b0, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -30,7 +30,7 @@ plt.rc("axes", grid=True, labelsize=15, titlesize=12)
 plt.rc("grid", linestyle="--", alpha=0.8)
 plt.rc("legend", fontsize=15)
 
-cfg = ftc.config.load()
+cfg = ftc.config_noESO.load()
 
 
 class Env(BaseEnv):
@@ -99,9 +99,9 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        pos = self.plant.pos.state
-        ang = quat2angle(self.plant.quat.state)
-        dang = self.plant.omega.state
+        # pos = self.plant.pos.state
+        # ang = quat2angle(self.plant.quat.state)
+        # dang = self.plant.omega.state
         # for i in range(3):
         #     if abs(pos[i]) > 1:
         #         done = True
@@ -169,7 +169,7 @@ class Env(BaseEnv):
         rotors = np.clip(rotors_cmd, 0, self.plant.rotor_max)
 
         # Set actuator faults
-        rotors = get_faulty_input(W, rotors)
+        rotors = W.dot(rotors)
         self.prev_rotors = rotors
 
         # get model uncertainty disturbance value
@@ -211,11 +211,8 @@ def run(loggerpath, params):
             env.render()
             done, env_info = env.step()
             # env.logger.record(env=env_info)
-            env_info = {
-                # "detection_time": env.detection_time,
-                "rotor_min": env.plant.rotor_min,
-                "rotor_max": env.plant.rotor_max,
-            }
+            env_info["rotor_min"] = env.plant.rotor_min
+            env_info["rotor_max"] = env.plant.rotor_max
             env.logger.set_info(**env_info)
 
             if done:
@@ -317,7 +314,7 @@ def main(args):
         }
 
         run(loggerpath, params)
-        exp_plot(loggerpath, False)
+        # exp_plot(loggerpath, False)
 
 
 if __name__ == "__main__":
@@ -325,6 +322,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
+    main(args)
+    # comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
     # pfp.exp_plot("data.h5")

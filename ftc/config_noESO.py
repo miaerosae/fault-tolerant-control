@@ -138,8 +138,8 @@ default_settings = fym.parser.parse({
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "eps": np.array([31, 31, 46]),
-            "rho": np.array([0.5, 0.25]),
-            "rho_k": 0.6,
+            "rho": np.array([1.5, 0.2]),
+            "rho_k": 1,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
@@ -158,7 +158,7 @@ default_settings = fym.parser.parse({
         # "Kxy": np.array([1.88, 0.78, 0.47]),
         # "Kang": np.array([15.65, 53.7, 0.51]),
         "Kxy": np.array([0.1, 6, 0]),
-        "Kang": np.array([15., 50., 0.5]),
+        "Kang": np.array([8, 18.75, 0]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
         # "Kang": np.array([3, 2, 0]),
@@ -208,19 +208,19 @@ default_settings = fym.parser.parse({
         "max_t": 30,
         "blade": False,
         "faultBias": False,  # not use
-        "noise": True,  # Estimator real value noise
+        "noise": False,  # Estimator real value noise
         "groundEffect": False,
         "hub": False,  # not use
         "gyro": False,
         "drygen": False,  # not use
         # "BLF": False,
         "BLF": True,
-        "uncertainty": True,
-        "ext_unc": True,
-        "int_unc": True,
-        # "uncertainty": False,
-        # "ext_unc": False,
-        # "int_unc": False,
+        # "uncertainty": True,
+        # "ext_unc": True,
+        # "int_unc": True,
+        "uncertainty": False,
+        "ext_unc": False,
+        "int_unc": False,
     },
 
     "wind_dist": {
