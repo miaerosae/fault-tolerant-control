@@ -155,13 +155,9 @@ default_settings = fym.parser.parse({
             "gamma": np.array([2, 2, 2]),
         },
         # --- gain K --- #
-        # "Kxy": np.array([1.88, 0.78, 0.47]),
-        # "Kang": np.array([15.65, 53.7, 0.51]),
+        # BLF Gain
         "Kxy": np.array([2., 0.8, 0.5]),
         "Kang": np.array([15., 50., 0.5]),
-        # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
-        # "Kxy": np.array([3, 2, 0]),
-        # "Kang": np.array([3, 2, 0]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -214,13 +210,13 @@ default_settings = fym.parser.parse({
         "gyro": False,
         "drygen": False,  # not use
         # "BLF": False,
+        # "uncertainty": False,
+        # "ext_unc": False,
+        # "int_unc": False,
         "BLF": True,
         "uncertainty": True,
         "ext_unc": True,
         "int_unc": True,
-        # "uncertainty": False,
-        # "ext_unc": False,
-        # "int_unc": False,
     },
 
     "wind_dist": {

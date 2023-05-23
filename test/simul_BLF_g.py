@@ -16,7 +16,7 @@ from fym.utils.rot import angle2quat, quat2angle
 import ftc.config
 from ftc.models.multicopter import Multicopter
 import ftc.agents.BLF_g as BLF
-from ftc.agents.param import get_b0, get_sumOfDist
+from ftc.agents.param import get_b0, get_sumOfDist, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
@@ -66,6 +66,9 @@ class Env(BaseEnv):
         k22 = config["k22"]
         k23 = config["k23"]
         Kxy = np.array([k11, k12, k13])
+        Kang = np.array([k21, k22, k23])
+        # if cond.BLF is False:  # doesnt work
+        #     Kxy, Kang = get_PID_gain(params)
         self.pos_ref = np.vstack([-0, 0, 0])
         self.blf_x = BLF.outerLoop(params.oL.alp, config["eps11"], Kxy,
                                    params.oL.rho, params.oL.rho_k,
@@ -81,7 +84,6 @@ class Env(BaseEnv):
                                    cond.noise, -self.pos_ref[2][0], cond.BLF)
         J = np.diag(self.plant.J)
         b = np.array([1/J[0], 1/J[1], 1/J[2]])
-        Kang = np.array([k21, k22, k23])
         self.blf_phi = BLF.innerLoop(params.iL.alp, config["eps21"], Kang,
                                      params.iL.xi, params.iL.rho,
                                      params.iL.c, b[0], self.plant.g, params.theta,
@@ -399,10 +401,10 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-r", "--with-ray", action="store_true")
-    # parser.add_argument("-p", "--with-plot", action="store_true")
-    # args = parser.parse_args()
-    # main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--with-ray", action="store_true")
+    parser.add_argument("-p", "--with-plot", action="store_true")
+    args = parser.parse_args()
+    main(args)
     # comp.exp_plot("data.h5", "data1.h5")
-    pfp.exp_plot("data.h5")
+    # pfp.exp_plot("data.h5")
