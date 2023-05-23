@@ -246,7 +246,7 @@ class Env(BaseEnv):
                     virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=eulerd,
                     dist_vel=dist_vel, dist_omega=dist_omega,
-                    disterr=sum(abs(dist-real_dist)),
+                    disterr=sum(abs(dist-real_dist)), real_dist=real_dist,
                     gain=k)
 
 
@@ -399,10 +399,10 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--with-ray", action="store_true")
-    parser.add_argument("-p", "--with-plot", action="store_true")
-    args = parser.parse_args()
-    main(args)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-r", "--with-ray", action="store_true")
+    # parser.add_argument("-p", "--with-plot", action="store_true")
+    # args = parser.parse_args()
+    # main(args)
     # comp.exp_plot("data.h5", "data1.h5")
-    # pfp.exp_plot("Scenario2.h5")
+    pfp.exp_plot("data.h5")

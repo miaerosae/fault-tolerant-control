@@ -202,19 +202,19 @@ def exp_plot(loggerpath):
     # disturbance
     plt.figure(figsize=(9, 7))
 
-    real_dist = np.zeros((6, np.size(data["t"])))
-    ext_dist = True
-    for i in range(np.size(data["t"])):
-        t = data["t"][i]
-        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
-    for i in range(3):
-        real_dist[i, :] = (real_dist[i, :]
-                           + data["model_uncert_vel"][:, i, 0]
-                           + data["int_uncert_vel"][:, i, 0])
-    for i in range(3):
-        real_dist[i+3, :] = (real_dist[i+3, :]
-                             + data["f"][:, i, 0]
-                             + data["model_uncert_omega"][:, i, 0])
+    # real_dist = np.zeros((6, np.size(data["t"])))
+    # ext_dist = True
+    # for i in range(np.size(data["t"])):
+    #     t = data["t"][i]
+    #     real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    # for i in range(3):
+    #     real_dist[i, :] = (real_dist[i, :]
+    #                        + data["model_uncert_vel"][:, i, 0]
+    #                        + data["int_uncert_vel"][:, i, 0])
+    # for i in range(3):
+    #     real_dist[i+3, :] = (real_dist[i+3, :]
+    #                          + data["f"][:, i, 0]
+    #                          + data["model_uncert_omega"][:, i, 0])
 
     ax = plt.subplot(611)
     for i, _label in enumerate([r"$e_{3x}$", r"$e_{3y}$", r"$e_{3z}$",
@@ -222,7 +222,7 @@ def exp_plot(loggerpath):
         if i != 0:
             plt.subplot(611+i, sharex=ax)
         plt.plot(data["t"], data["dist"][:, i, 0], "k", label="Estimated value")
-        plt.plot(data["t"], real_dist[i, :], "r--", label="Real value")
+        plt.plot(data["t"], data["real_dist"][:, i, 0], "r--", label="Real value")
         if i == 0:
             plt.ylabel(_label, labelpad=15)
         elif i == 1:
@@ -245,8 +245,8 @@ def exp_plot(loggerpath):
     plt.figure()
 
     # calculate gain of Scenario 2
-    kpos = np.array([1, 0.5, 0.5/30/(0.2**2)])
-    kang = np.array([400/30, 30, 1/30/np.deg2rad(45)**2])
+    kpos = np.array([2, 0.8, 0.5])
+    kang = np.array([15, 50, 0.5])
     rhoinf = 0.25
     kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]

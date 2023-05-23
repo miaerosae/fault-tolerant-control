@@ -21,9 +21,9 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10]),
-        "fault_index": np.array([0, 1, 2]),
-        "LoE": np.array([0.5, 0.6, 0.5]),
+        "fault_time": np.array([5, 7]),
+        "fault_index": np.array([0, 1]),
+        "LoE": np.array([0.2, 0.5]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
         # "LoE": np.array([0.5]),
@@ -157,7 +157,7 @@ default_settings = fym.parser.parse({
         # --- gain K --- #
         # "Kxy": np.array([1.88, 0.78, 0.47]),
         # "Kang": np.array([15.65, 53.7, 0.51]),
-        "Kxy": np.array([2., 0.8, 0.5]),
+        "Kxy": np.array([0.1, 6, 0]),
         "Kang": np.array([15., 50., 0.5]),
         # "Kang": np.array([33.59647405167779, 182.67932574166815, 0]),
         # "Kxy": np.array([3, 2, 0]),
