@@ -325,6 +325,6 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    # main(args)
-    comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
+    main(args)
+    # comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
     # pfp.exp_plot("data.h5")
