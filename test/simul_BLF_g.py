@@ -119,20 +119,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        if abs(self.blf_x.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_y.e.state[0]) > 0.5:
-            done = True
-        if abs(self.blf_z.e.state[0]) > 0.5:
-            done = True
-        ang = quat2angle(self.plant.quat.state)
-        for i in range(3):
-            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
-                done = True
-        dang = self.plant.omega.state
-        for i in range(3):
-            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
-                done = True
+        # if abs(self.blf_x.e.state[0]) > 0.5:
+        #     done = True
+        # if abs(self.blf_y.e.state[0]) > 0.5:
+        #     done = True
+        # if abs(self.blf_z.e.state[0]) > 0.5:
+        #     done = True
+        # ang = quat2angle(self.plant.quat.state)
+        # for i in range(3):
+        #     if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+        #         done = True
+        # dang = self.plant.omega.state
+        # for i in range(3):
+        #     if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+        #         done = True
         return done, env_info
 
     def get_W(self, t):
