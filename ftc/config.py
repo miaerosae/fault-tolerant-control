@@ -21,12 +21,12 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7, 10]),
-        "fault_index": np.array([0, 1, 2]),
-        "LoE": np.array([0.5, 0.6, 0.5]),
+        "fault_time": np.array([5, 7]),
+        "fault_index": np.array([0, 1]),
+        "LoE": np.array([0.3, 0.5]),
         # "fault_time": np.array([5]),
         # "fault_index": np.array([0]),
-        # "LoE": np.array([0.5]),
+        # "LoE": np.array([1]),
     },
 
     # ====== ftc.plants ====== #
@@ -137,16 +137,16 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([21, 21, 26]),
-            "rho": np.array([0.5, 0.2]),
-            "rho_k": 0.6,
+            "eps": np.array([30, 30, 35]),
+            "rho": np.array([0.5, 0.20]),
+            "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([153, 194, 55]),
+            "eps": np.array([383, 428, 55]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -156,8 +156,8 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         # BLF Gain
-        "Kxy": np.array([2., 0.8, 0.5]),
-        "Kang": np.array([15., 50., 0.5]),
+        "Kxy": np.array([5.51, 0.34, 1.17]),
+        "Kang": np.array([15.46, 94.15, 0.55]),
         "theta": 0.7,
 
         # --- peaking-free --- #
