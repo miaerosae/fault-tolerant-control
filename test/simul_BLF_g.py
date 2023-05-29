@@ -119,20 +119,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        # if abs(self.blf_x.e.state[0]) > 0.5:
-        #     done = True
-        # if abs(self.blf_y.e.state[0]) > 0.5:
-        #     done = True
-        # if abs(self.blf_z.e.state[0]) > 0.5:
-        #     done = True
-        # ang = quat2angle(self.plant.quat.state)
-        # for i in range(3):
-        #     if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
-        #         done = True
-        # dang = self.plant.omega.state
-        # for i in range(3):
-        #     if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
-        #         done = True
+        if abs(self.blf_x.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_y.e.state[0]) > 0.5:
+            done = True
+        if abs(self.blf_z.e.state[0]) > 0.5:
+            done = True
+        ang = quat2angle(self.plant.quat.state)
+        for i in range(3):
+            if abs(ang[i]) > cfg.agents.BLF.iL.rho[0]:
+                done = True
+        dang = self.plant.omega.state
+        for i in range(3):
+            if abs(dang[i]) > cfg.agents.BLF.iL.rho[1]:
+                done = True
         return done, env_info
 
     def get_W(self, t):
@@ -304,20 +304,22 @@ def main(args):
             finally:
                 if np.isnan(sumDistErr):
                     sumDistErr = [1e6]
-                return {"cost": 1e5*tf-sumDistErr[0]}
+                return {"cost": tf}
 
         config = {
-            "k11": cfg.agents.BLF.Kxy[0],
-            "k12": cfg.agents.BLF.Kxy[1],
-            "k13": cfg.agents.BLF.Kxy[2],
-            "k21": cfg.agents.BLF.Kang[0],
-            "k22": cfg.agents.BLF.Kang[1],
-            "k23": cfg.agents.BLF.Kang[2],
-            "eps11": tune.uniform(10, 50),
-            "eps12": tune.uniform(10, 50),
-            "eps13": tune.uniform(10, 50),
-            "eps21": cfg.agents.BLF.iL.eps[0],
-            "eps22": cfg.agents.BLF.iL.eps[1],
+            "k11": tune.uniform(1., 10.),
+            "k12": tune.uniform(0.1, 10.),
+            "k13": tune.uniform(0.1, 2.),
+            "k21": tune.uniform(10., 20.),
+            "k22": tune.uniform(50., 200.),
+            "k23": tune.uniform(0.1, 2.),
+            "eps11": tune.uniform(20, 50),
+            "eps12": tune.uniform(20, 50),
+            # "eps11": cfg.agents.BLF.oL.eps[0],
+            # "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": tune.uniform(250, 500),
+            "eps22": tune.uniform(250, 500),
             "eps23": cfg.agents.BLF.iL.eps[2],
         }
         current_best_params = [{

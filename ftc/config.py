@@ -138,7 +138,7 @@ default_settings = fym.parser.parse({
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
             "eps": np.array([30, 30, 35]),
-            "rho": np.array([0.5, 0.20]),
+            "rho": np.array([0.5, 0.15]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
         },
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([383, 428, 55]),
+            "eps": np.array([250, 250, 55]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -156,8 +156,8 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         # BLF Gain
-        "Kxy": np.array([5.51, 0.34, 1.17]),
-        "Kang": np.array([15.46, 94.15, 0.55]),
+        "Kxy": np.array([2., 0.8, .5]),
+        "Kang": np.array([15, 70, 0.5]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -209,11 +209,11 @@ default_settings = fym.parser.parse({
         "hub": False,  # not use
         "gyro": False,
         "drygen": False,  # not use
-        # "BLF": False,
+        "BLF": False,
         # "uncertainty": False,
         # "ext_unc": False,
         # "int_unc": False,
-        "BLF": True,
+        # "BLF": True,
         "uncertainty": True,
         "ext_unc": True,
         "int_unc": True,
