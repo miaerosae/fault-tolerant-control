@@ -8,6 +8,12 @@ from ftc.agents.param import get_sumOfDist
 
 cfg = ftc.config.load()
 
+plt.rc("text", usetex=False)
+plt.rc("lines", linewidth=1.5)
+plt.rc("axes", grid=True, labelsize=15, titlesize=15)
+plt.rc("grid", linestyle="--", alpha=0.8)
+plt.rc("legend", fontsize=15)
+
 
 def exp_plot(loggerpath1, lp2, lp3):
     data1, info = fym.load(loggerpath1, with_info=True)  # base
@@ -25,16 +31,16 @@ def exp_plot(loggerpath1, lp2, lp3):
         pos_bounds1[i] = (rho1[0]-rho1[1]) * np.exp(-rho_k*data1["t"][i]) + rho1[1]
         pos_bounds3[i] = (rho3[0]-rho3[1]) * np.exp(-rho_k*data3["t"][i]) + rho3[1]
     ax = plt.subplot(311)
-    for i, (_label, _ls) in enumerate(zip([r"$e_{1x} [m]$", r"$e_{1y} [m]$", r"$e_{1z} [m]$"], ["-", "--", "-."])):
+    for i, (_label, _ls) in enumerate(zip([r"$e_{1x}$ [m]", r"$e_{1y}$ [m]", r"$e_{1z}$ [m]"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k--", label="BLF-1")
-        plt.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b-", label="BLF-2")
-        plt.plot(data3["t"], data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0], "g.-", label="BLF-3")
-        plt.plot(data1["t"], pos_bounds1, "b:")
-        plt.plot(data1["t"], -pos_bounds1, "b:")
-        plt.plot(data3["t"], pos_bounds3, "g:")
-        plt.plot(data3["t"], -pos_bounds3, "g:")
+        plt.plot(data1["t"], pos_bounds1, linestyle="-", color="lightblue")
+        plt.plot(data1["t"], -pos_bounds1, linestyle="-", color="lightblue")
+        plt.plot(data3["t"], pos_bounds3, linestyle="-", color="mediumaquamarine")
+        plt.plot(data3["t"], -pos_bounds3, linestyle="-", color="mediumaquamarine")
+        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "r-", label="BLF-1")
+        plt.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="BLF-2")
+        plt.plot(data3["t"], data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0], "g-.", label="BLF-3")
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time [s]")
     plt.tight_layout()
@@ -48,22 +54,22 @@ def exp_plot(loggerpath1, lp2, lp3):
     angles3 = np.vstack([quat2angle(data3["x"]["quat"][j, :, 0]) for j in range(len(data3["x"]["quat"][:, 0, 0]))])
 
     ax = plt.subplot(311)
-    for i, _label in enumerate([r"$\phi [deg]$", r"$\theta [deg]$", r"$\psi [deg]$"]):
+    for i, _label in enumerate([r"$\phi$ [deg]", r"$\theta$ [deg]", r"$\psi$ [deg]"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k--", label="BLF-1")
-        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b-", label="BLF-2")
-        plt.plot(data3["t"], np.rad2deg(angles3[:, 2-i]), "g.-", label="BLF-3")
         if i == 2:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[2], "g:")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[2], "g:")
-            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[2], "b:")
-            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[2], "b:")
+            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle="-", color="lightblue")
+            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle="-", color="lightblue")
+            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle="-", color="mediumaquamarine")
+            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle="-", color="mediumaquamarine")
         else:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[0], "g:")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[0], "g:")
-            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[0], "b:")
-            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[0], "b:")
+            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle="-", color="lightblue")
+            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle="-", color="lightblue")
+            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle="-", color="mediumaquamarine")
+            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle="-", color="mediumaquamarine")
+        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "r-", label="BLF-1")
+        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b--", label="BLF-2")
+        plt.plot(data3["t"], np.rad2deg(angles3[:, 2-i]), "g-.", label="BLF-3")
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time [s]")
     plt.tight_layout()
@@ -71,22 +77,22 @@ def exp_plot(loggerpath1, lp2, lp3):
     # Angular rate
     plt.figure()
     ax = plt.subplot(311)
-    for i, _label in enumerate([r"$p [deg/s]$", r"$q [deg/s]$", r"$r [deg/s]$"]):
+    for i, _label in enumerate([r"$p$ [deg/s]", r"$q$ [deg/s]", r"$r$ [deg/s]"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k--", label="BLF-1")
-        plt.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b-", label="BLF-2")
-        plt.plot(data3["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g.-", label="BLF-3")
         if i == 2:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[3], "g:")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[3], "g:")
-            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[3], "b:")
-            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[3], "b:")
+            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle="-", color="lightblue")
+            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle="-", color="lightblue")
+            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle="-", color="mediumaquamarine")
+            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle="-", color="mediumaquamarine")
         else:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[1], "g:")
-            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[1], "g:")
-            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[1], "b:")
-            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[1], "b:")
+            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle="-", color="lightblue")
+            plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle="-", color="lightblue")
+            plt.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle="-", color="mediumaquamarine")
+            plt.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle="-", color="mediumaquamarine")
+        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "r-", label="BLF-1")
+        plt.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b--", label="BLF-2")
+        plt.plot(data3["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g-.", label="BLF-3")
         plt.ylabel(_label)
     plt.gcf().supxlabel("Time [s]")
     plt.tight_layout()
