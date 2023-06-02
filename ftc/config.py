@@ -137,7 +137,7 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([30, 30, 35]),
+            "eps": np.array([20, 20, 35]),
             "rho": np.array([0.5, 0.15]),
             "rho_k": 0.5,
             "gamma": np.array([2, 2, 2]),
@@ -146,7 +146,7 @@ default_settings = fym.parser.parse({
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([250, 250, 55]),
+            "eps": np.array([298, 547, 55]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -156,8 +156,8 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         # BLF Gain
-        "Kxy": np.array([2., 0.8, .5]),
-        "Kang": np.array([15, 70, 0.5]),
+        "Kxy": np.array([9.47, 0.10, .60]),
+        "Kang": np.array([19.53, 105.61, 1.40]),
         "theta": 0.7,
 
         # --- peaking-free --- #
