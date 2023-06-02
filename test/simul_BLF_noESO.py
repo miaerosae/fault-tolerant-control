@@ -20,6 +20,7 @@ from ftc.agents.param import get_b0, get_faulty_input, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
+import ftc.plot_for_revision1_noESO as r1
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -325,6 +326,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    main(args)
+    # main(args)
     # comp.exp_plot("Scenario1_BLF.h5", "Scenario1_Bs.h5")
     # pfp.exp_plot("data.h5")
+    r1.exp_plot("noESO_base.h5", "noESO_wide_attitude.h5", "noESO_wide_position_err.h5")
