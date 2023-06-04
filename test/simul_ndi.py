@@ -49,6 +49,13 @@ class Env(BaseEnv):
         # Define actuator dynamics
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
+        Ko1 = np.diag((config["ko11"], config["ko12"]))
+        Ko2 = np.diag((config["ko21"], config["ko22"]))
+        Ki1 = np.diag((config["ki11"], config["ki12"],
+                       config["ki13"], config["ki14"]))
+        Ki2 = np.diag((config["ki21"], config["ki22"],
+                       config["ki23"], config["ki24"]))
+
         # Define faults
         self.fault = True
         self.delay = cfg.faults.manager.delay
@@ -59,7 +66,8 @@ class Env(BaseEnv):
         # controller
         self.ndi = ndi.NDIController(self.plant.mixer.B, self.plant.g,
                                      self.plant.m, self.plant.J,
-                                     np.linalg.inv(self.plant.J))
+                                     np.linalg.inv(self.plant.J),
+                                     Ko1, Ko2, Ki1, Ki2)
 
         params = cfg.agents.BLF
         self.eso_x = ESO.outerLoop(params.oL.alp, config["eps11"],
@@ -101,6 +109,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
+        if abs(self.eso_x.e.state[0]) > 5:
+            done = True
+        if abs(self.eso_y.e.state[0]) > 5:
+            done = True
+        if abs(self.eso_z.e.state[0]) > 5:
+            done = True
+        ang = quat2angle(self.plant.quat.state)
+        for i in range(3):
+            if abs(ang[i]) > 90:
+                done = True
+        dang = self.plant.omega.state
+        for i in range(3):
+            if abs(dang[i]) > 300:
+                done = True
         return done, env_info
 
     def get_W(self, t):
@@ -179,7 +201,7 @@ class Env(BaseEnv):
                     rotors=rotors, rotors_cmd=rotors_cmd, W=W, ref=ref,
                     virtual_u=forces, dist=dist, q=q,
                     obs_pos=obs_pos, obs_ang=obs_ang, eulerd=angd,
-                    err=sum(abs(pos-ref)+abs(euler-angd)))
+                    err=sum(1e2*abs(pos-ref))+sum(abs(np.vstack((euler))-angd)))
 
 
 def run(loggerpath, params):
@@ -189,23 +211,23 @@ def run(loggerpath, params):
 
     env.reset()
 
-    # sumDistErr = 0
+    sumDistErr = 0
     try:
         while True:
             env.render()
             done, env_info = env.step()
-            # sumDistErr = sumDistErr + env_info["disterr"]
+            sumDistErr = sumDistErr + env_info["err"]
             env_info["rotor_min"] = env.plant.rotor_min
             env_info["rotor_max"] = env.plant.rotor_max
             env.logger.set_info(**env_info)
 
             if done:
-                # tf = env_info["t"]
-                # print(str(tf))
-                # print(str(sumDistErr))
-                # if np.isnan(sumDistErr):
-                #     sumDistErr = [1e6]
-                # print(str(100*tf-sumDistErr[0]))
+                tf = env_info["t"]
+                print(str(tf))
+                print(str(sumDistErr))
+                if np.isnan(sumDistErr):
+                    sumDistErr = [1e6]
+                print(str(100*tf-sumDistErr[0]))
                 break
 
     finally:
@@ -234,7 +256,7 @@ def main(args):
             finally:
                 if np.isnan(sumErr):
                     sumErr = [1e6]
-                return {"cost": -1e+5*tf + sumErr}
+                return {"cost": -1e+5*tf + sumErr[0]}
 
         config = {
             "ko11": tune.uniform(3., 30.),
@@ -312,12 +334,18 @@ def main(args):
     else:
         loggerpath = "data.h5"
         params = {
-            "k11": cfg.agents.BLF.Kxy[0],
-            "k12": cfg.agents.BLF.Kxy[1],
-            "k13": cfg.agents.BLF.Kxy[2],
-            "k21": cfg.agents.BLF.Kang[0],
-            "k22": cfg.agents.BLF.Kang[1],
-            "k23": cfg.agents.BLF.Kang[2],
+            "ko11": 10,
+            "ko12": 3,
+            "ko21": 3,
+            "ko22": 2,
+            "ki11": 25,
+            "ki12": 50,
+            "ki13": 250,
+            "ki14": 50,
+            "ki21": 5,
+            "ki22": 10,
+            "ki23": 50,
+            "ki24": 10,
             "eps11": cfg.agents.BLF.oL.eps[0],
             "eps12": cfg.agents.BLF.oL.eps[1],
             "eps13": cfg.agents.BLF.oL.eps[2],
