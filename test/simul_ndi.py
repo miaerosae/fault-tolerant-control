@@ -271,6 +271,12 @@ def main(args):
             "ki22": tune.uniform(50, 1000.),
             "ki23": tune.uniform(250, 5000.),
             "ki24": tune.uniform(50, 1000.),
+            "eps11": cfg.agents.BLF.oL.eps[0],
+            "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
         }
         current_best_params = [{
             "ko11": 12,
@@ -285,6 +291,12 @@ def main(args):
             "ki22": 50,
             "ki23": 250,
             "ki24": 50,
+            "eps11": cfg.agents.BLF.oL.eps[0],
+            "eps12": cfg.agents.BLF.oL.eps[1],
+            "eps13": cfg.agents.BLF.oL.eps[2],
+            "eps21": cfg.agents.BLF.iL.eps[0],
+            "eps22": cfg.agents.BLF.iL.eps[1],
+            "eps23": cfg.agents.BLF.iL.eps[2],
         }]
         search = HyperOptSearch(
             metric="cost",
