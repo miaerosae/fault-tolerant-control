@@ -344,8 +344,8 @@ def main(args):
         tuner = tune.Tuner(
             tune.with_resources(
                 objective,
-                resources={"cpu": os.cpu_count()},
-                # resources={"cpu": 12},
+                # resources={"cpu": os.cpu_count()},
+                resources={"cpu": 12},
             ),
             param_space=config,
             tune_config=tune.TuneConfig(
