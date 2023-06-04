@@ -56,7 +56,8 @@ def exp_plot(loggerpath, pf):
     for i, (_label, _ls) in enumerate(zip(["x", "y", "z"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
+        # plt.plot(data["t"], data["obs_pos"][:, i, 0]+data["ref"][:, i, 0], "b-", label="Estimated")
+        plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0], "k-.", label="Real")
         plt.plot(data["t"], data["ref"][:, i, 0], "r--", label="Desired")
         plt.ylabel(_label)
@@ -105,7 +106,7 @@ def exp_plot(loggerpath, pf):
     for i, (_label, _ls) in enumerate(zip(["ex", "ey", "ez"], ["-", "--", "-."])):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
+        # plt.plot(data["t"], data["obs_pos"][:, i, 0], "b-", label="Estimated")
         plt.plot(data["t"], data["x"]["pos"][:, i, 0]-data["ref"][:, i, 0], "k-.", label="Real")
         plt.plot(data["t"], pos_bounds, "c")
         plt.plot(data["t"], -pos_bounds, "c")
@@ -218,33 +219,33 @@ def exp_plot(loggerpath, pf):
     # plt.savefig("lpeso_forces.png", dpi=300)
 
     # disturbance
-    plt.figure()
+    # plt.figure()
 
-    real_dist = np.zeros((6, np.size(data["t"])))
-    ext_dist = cfg.simul_condi.ext_unc
-    for i in range(np.size(data["t"])):
-        t = data["t"][i]
-        real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
-    for i in range(3):
-        real_dist[i, :] = (real_dist[i, :]
-                           + data["dist_vel"][:, i, 0])
-    for i in range(3):
-        real_dist[i+3, :] = (real_dist[i+3, :]
-                             + data["dist_omega"][:, i, 0])
+    # real_dist = np.zeros((6, np.size(data["t"])))
+    # ext_dist = cfg.simul_condi.ext_unc
+    # for i in range(np.size(data["t"])):
+    #     t = data["t"][i]
+    #     real_dist[:, i] = get_sumOfDist(t, ext_dist).ravel()
+    # for i in range(3):
+    #     real_dist[i, :] = (real_dist[i, :]
+    #                        + data["dist_vel"][:, i, 0])
+    # for i in range(3):
+    #     real_dist[i+3, :] = (real_dist[i+3, :]
+    #                          + data["dist_omega"][:, i, 0])
 
-    ax = plt.subplot(611)
-    for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
-                                r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
-        if i != 0:
-            plt.subplot(611+i, sharex=ax)
-        plt.plot(data["t"], real_dist[i, :], "r-", label="true")
-        plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
-        plt.ylabel(_label)
-        if i == 0:
-            plt.legend(loc='upper right')
-    plt.gcf().supylabel("dist")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
+    # ax = plt.subplot(611)
+    # for i, _label in enumerate([r"$d_x$", r"$d_y$", r"$d_z$",
+    #                             r"$d_\phi$", r"$d_\theta$", r"$d_\psi$"]):
+    #     if i != 0:
+    #         plt.subplot(611+i, sharex=ax)
+    #     plt.plot(data["t"], real_dist[i, :], "r-", label="true")
+    #     plt.plot(data["t"], data["dist"][:, i, 0], "k", label=" distarbance")
+    #     plt.ylabel(_label)
+    #     if i == 0:
+    #         plt.legend(loc='upper right')
+    # plt.gcf().supylabel("dist")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
 
     # Update parameter
     # plt.figure()
@@ -261,17 +262,17 @@ def exp_plot(loggerpath, pf):
     # plt.tight_layout()
 
     # q
-    plt.figure()
+    # plt.figure()
 
-    ax = plt.subplot(311)
-    for i, _label in enumerate([r"$q_x$", r"$q_y$", r"$q_z$"]):
-        if i != 0:
-            plt.subplot(311+i, sharex=ax)
-        plt.plot(data["t"], data["q"][:, i, 0], "k-")
-        plt.ylabel(_label)
-    plt.gcf().supylabel("observer control input")
-    plt.gcf().supxlabel("Time, sec")
-    plt.tight_layout()
+    # ax = plt.subplot(311)
+    # for i, _label in enumerate([r"$q_x$", r"$q_y$", r"$q_z$"]):
+    #     if i != 0:
+    #         plt.subplot(311+i, sharex=ax)
+    #     plt.plot(data["t"], data["q"][:, i, 0], "k-")
+    #     plt.ylabel(_label)
+    # plt.gcf().supylabel("observer control input")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.tight_layout()
     # plt.savefig("Figure_6.png")
 
     # BLF gain

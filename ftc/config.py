@@ -21,12 +21,12 @@ default_settings = fym.parser.parse({
     "faults.manager": {
         "delay": 0.2,
         "threshold": 0.,
-        "fault_time": np.array([5, 7]),
-        "fault_index": np.array([0, 1]),
-        "LoE": np.array([0.3, 0.5]),
-        # "fault_time": np.array([5]),
-        # "fault_index": np.array([0]),
-        # "LoE": np.array([1]),
+        # "fault_time": np.array([5, 7]),
+        # "fault_index": np.array([0, 1]),
+        # "LoE": np.array([0.3, 0.5]),
+        "fault_time": np.array([5]),
+        "fault_index": np.array([0]),
+        "LoE": np.array([1]),
     },
 
     # ====== ftc.plants ====== #
@@ -201,7 +201,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.01,
-        "max_t": 30,
+        "max_t": 5,
         "blade": False,
         "faultBias": False,  # not use
         "noise": True,  # Estimator real value noise
