@@ -338,7 +338,7 @@ def main(args):
         }]
         search = HyperOptSearch(
             metric="cost",
-            mode="max",
+            mode="min",
             points_to_evaluate=current_best_params,
         )
         tuner = tune.Tuner(
