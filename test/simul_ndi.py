@@ -49,12 +49,16 @@ class Env(BaseEnv):
         # Define actuator dynamics
         # self.act_dyn = ActuatorDynamcs(tau=0.01, shape=(n, 1))
 
-        Ko1 = np.diag((config["ko11"], config["ko12"]))
-        Ko2 = np.diag((config["ko21"], config["ko22"]))
-        Ki1 = np.diag((config["ki11"], config["ki12"],
-                       config["ki13"], config["ki14"]))
-        Ki2 = np.diag((config["ki21"], config["ki22"],
-                       config["ki23"], config["ki24"]))
+        # Ko1 = np.diag((config["ko11"], config["ko12"]))
+        # Ko2 = np.diag((config["ko21"], config["ko22"]))
+        # Ki1 = np.diag((config["ki11"], config["ki12"],
+        #                config["ki13"], config["ki14"]))
+        # Ki2 = np.diag((config["ki21"], config["ki22"],
+        #                config["ki23"], config["ki24"]))
+        Ko1 = 1 * np.diag((30, 30))
+        Ko2 = 1 * np.diag((2, 3))
+        Ki1 = 1 * np.diag((150, 300, 500, 100))
+        Ki2 = 1 * np.diag((10, 10, 10, 1))
 
         # Define faults
         self.fault = True
@@ -109,20 +113,20 @@ class Env(BaseEnv):
 
     def step(self):
         env_info, done = self.update()
-        if abs(self.eso_x.e.state[0]) > 5:
-            done = True
-        if abs(self.eso_y.e.state[0]) > 5:
-            done = True
-        if abs(self.eso_z.e.state[0]) > 5:
-            done = True
-        ang = quat2angle(self.plant.quat.state)
-        for i in range(3):
-            if abs(ang[i]) > 90:
-                done = True
-        dang = self.plant.omega.state
-        for i in range(3):
-            if abs(dang[i]) > 300:
-                done = True
+        # if abs(self.eso_x.e.state[0]) > 5:
+        #     done = True
+        # if abs(self.eso_y.e.state[0]) > 5:
+        #     done = True
+        # if abs(self.eso_z.e.state[0]) > 5:
+        #     done = True
+        # ang = quat2angle(self.plant.quat.state)
+        # for i in range(3):
+        #     if abs(ang[i]) > 90:
+        #         done = True
+        # dang = self.plant.omega.state
+        # for i in range(3):
+        #     if abs(dang[i]) > 300:
+        #         done = True
         return done, env_info
 
     def get_W(self, t):
@@ -222,12 +226,7 @@ def run(loggerpath, params):
             env.logger.set_info(**env_info)
 
             if done:
-                tf = env_info["t"]
-                print(str(tf))
                 print(str(sumDistErr))
-                if np.isnan(sumDistErr):
-                    sumDistErr = [1e6]
-                print(str(100*tf-sumDistErr[0]))
                 break
 
     finally:
@@ -346,18 +345,18 @@ def main(args):
     else:
         loggerpath = "data.h5"
         params = {
-            "ko11": 10,
-            "ko12": 3,
-            "ko21": 3,
-            "ko22": 2,
-            "ki11": 25,
-            "ki12": 50,
-            "ki13": 250,
-            "ki14": 50,
-            "ki21": 5,
-            "ki22": 10,
-            "ki23": 50,
-            "ki24": 10,
+            "ko11": 14,
+            "ko12": 13,
+            "ko21": 4,
+            "ko22": 17,
+            "ki11": 70,
+            "ki12": 150,
+            "ki13": 1012,
+            "ki14": 70,
+            "ki21": 44,
+            "ki22": 81,
+            "ki23": 51,
+            "ki24": 33,
             "eps11": cfg.agents.BLF.oL.eps[0],
             "eps12": cfg.agents.BLF.oL.eps[1],
             "eps13": cfg.agents.BLF.oL.eps[2],
