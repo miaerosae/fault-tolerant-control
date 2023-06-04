@@ -18,11 +18,20 @@ plt.rc("legend", fontsize=15)
 cfg = ftc.config.load()
 
 
-def exp_plot(path1):
+def exp_plot(path1, p2, p3):
     data1, info = fym.load(path1, with_info=True)
-    # data2 = fym.load(path2)
+    data2 = fym.load(p2)
+    data3 = fym.load(p3)
+
     rotor_min = info["rotor_min"]
     rotor_max = info["rotor_max"]
+
+    # for data size match
+    n3 = np.shape(data3["x"]["pos"][:, 0, 0])[0]
+    pos3 = data3["x"]["pos"][:, :, 0]
+    angles = np.vstack([quat2angle(data3["x"]["quat"][j, :, 0]) for j in range(len(data3["x"]["quat"][:, 0, 0]))])
+    ang3 = angles
+    dang3 = data3["x"]["omega"][:, :, 0]
 
     # FDI
     plt.figure(figsize=(9, 9))
@@ -41,17 +50,20 @@ def exp_plot(path1):
     # 4d) tracking error (subplots)
     plt.figure(figsize=(9, 10))
 
-    rho = np.array([0.5, 0.25])
-    rho_k = 0.5
+    rho = np.array([0.5, 0.2])
+    rho_k = 1
     pos_bounds = np.zeros((np.shape(data1["x"]["pos"][:, 0, 0])[0]))
     for i in range(np.shape(data1["x"]["pos"][:, 0, 0])[0]):
         pos_bounds[i] = (rho[0]-rho[1]) * np.exp(-rho_k*data1["t"][i]) + rho[1]
+
     ax = plt.subplot(311)
     for i, _label in enumerate([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k-", label="Real Value")
-        plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "b--", label="Estimated Value")
+        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k-", label="BLF+ESO")
+        plt.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="BS+ESO")
+        plt.plot(data3["t"], pos3[:, i]-data2["ref"][0:n3, i, 0], "g-.", label="NDI+ESO")
+        # plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "b--", label="Estimated Value")
         plt.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -pos_bounds, "r:")
         plt.ylabel(_label + " [m]")
@@ -77,13 +89,16 @@ def exp_plot(path1):
     bound = 45
     plt.ylim([-bound-5, bound+5])
 
-    angles = np.vstack([quat2angle(data1["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
+    angles1 = np.vstack([quat2angle(data1["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
+    angles2 = np.vstack([quat2angle(data2["x"]["quat"][j, :, 0]) for j in range(len(data1["x"]["quat"][:, 0, 0]))])
     ax = plt.subplot(311)
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(angles[:, 2-i]), "k-", label="Real Value")
-        plt.plot(data1["t"], np.rad2deg(data1["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
+        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k-", label="BLF+ESO")
+        plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b--", label="BS+ESO")
+        plt.plot(data3["t"], np.rad2deg(ang3[:, 2-i]), "g-.", label="NDI+ESO")
+        # plt.plot(data1["t"], np.rad2deg(data1["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
         plt.plot(data1["t"],
                  np.ones((np.size(data1["t"])))*bound, "r:", label="Prescribed Bound")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
@@ -114,7 +129,9 @@ def exp_plot(path1):
     for i, _label in enumerate(["p", "q", "r"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k-")
+        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k-", label="BLF+ESO")
+        plt.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b--", label="BS+ESO")
+        plt.plot(data3["t"], np.rad2deg(dang3[:, i]), "g-.", label="NDI+ESO")
         if i == 2:
             plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound_psi, "r:",
                      label="Prescribed Bound")
@@ -250,9 +267,9 @@ def exp_plot(path1):
     plt.figure(figsize=(9, 10/3*2))
 
     # calculate gain of Scenario 2
-    kpos = np.array([2., 0.8, 0.5])
+    kpos = np.array([5.51, 0.34, 1.17])
     kang = np.array([15., 50., 0.5])
-    rhoinf = 0.25
+    rhoinf = 0.2
     kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]
     kI1 = kpos[1]*kpos[2]*rhoinf**2
