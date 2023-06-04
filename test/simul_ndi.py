@@ -256,7 +256,7 @@ def main(args):
             finally:
                 if np.isnan(sumErr):
                     sumErr = [1e6]
-                return {"cost": -1e+5*tf + sumErr[0]}
+                return {"cost": 1e+5*tf - sumErr[0]}
 
         config = {
             "ko11": tune.uniform(3., 30.),
@@ -300,7 +300,7 @@ def main(args):
         }]
         search = HyperOptSearch(
             metric="cost",
-            mode="min",
+            mode="max",
             points_to_evaluate=current_best_params,
         )
         tuner = tune.Tuner(
