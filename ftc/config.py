@@ -200,7 +200,7 @@ default_settings = fym.parser.parse({
     # :::::: SIMULATION CONDITION :::::: #
 
     "simul_condi": {
-        "dt": 0.01,
+        "dt": 0.005,
         "max_t": 6.5,
         "blade": False,
         "faultBias": False,  # not use

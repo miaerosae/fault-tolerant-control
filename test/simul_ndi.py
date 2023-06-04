@@ -21,6 +21,7 @@ from ftc.agents.param import get_b0, get_sumOfDist, get_PID_gain
 from ftc.plotting import exp_plot
 import ftc.plotting_comp as comp
 import ftc.plotting_forpaper as pfp
+import ftc.result_for_Scenario2 as result2
 from copy import deepcopy
 from ftc.faults.actuator import LoE
 from ftc.faults.manager import LoEManager
@@ -374,6 +375,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--with-ray", action="store_true")
     parser.add_argument("-p", "--with-plot", action="store_true")
     args = parser.parse_args()
-    main(args)
+    # main(args)
     # comp.exp_plot("data.h5", "data1.h5")
     # pfp.exp_plot("data.h5")
+    result2.exp_plot("rho_inf=02.h5", "bs_rho_inf=02.h5", "ndi_rho_inf=02_65sec.h5")
