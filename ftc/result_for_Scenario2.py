@@ -267,8 +267,8 @@ def exp_plot(path1, p2, p3):
     plt.figure(figsize=(9, 10/3*2))
 
     # calculate gain of Scenario 2
-    kpos = np.array([5.51, 0.34, 1.17])
-    kang = np.array([15., 50., 0.5])
+    kpos = np.array([9.5, 0.1, 0.6])
+    kang = np.array([19.5, 105., 1.5])
     rhoinf = 0.2
     kP1 = kpos[0]*kpos[1] + kpos[2]*rhoinf**2 + 1/rhoinf**2
     kD1 = kpos[0] + kpos[1]
