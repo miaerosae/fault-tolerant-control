@@ -137,16 +137,16 @@ default_settings = fym.parser.parse({
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([8.406469764729502, 27.77393258460113, 20.06893194607595]),
             # "eps": np.array([1/5, 1/5, 1/5]),
-            "eps": np.array([20, 49, 35]),
+            "eps": np.array([20, 20, 35]),
             "rho": np.array([0.5, 0.20]),
-            "rho_k": 0.5,
+            "rho_k": 1.,
             "gamma": np.array([2, 2, 2]),
         },
         # --- innerLoop --- #
         "iL": {
             "alp": np.array([3, 3, 1]),
             # "eps": np.array([1/25, 1/25, 1/25]),
-            "eps": np.array([428, 463, 55]),
+            "eps": np.array([300, 550, 55]),
             "xi": np.array([-1, 1]) * 0.23 * 0.000313 * 1e6,
             "xi_psi": np.array([-1, 1]) * 2 * 0.75,
             "rho": np.deg2rad(np.array([45, 150])),
@@ -156,8 +156,8 @@ default_settings = fym.parser.parse({
         },
         # --- gain K --- #
         # BLF Gain
-        "Kxy": np.array([9.39, 0.29, 1.00]),
-        "Kang": np.array([18.97, 155.86, 0.91]),
+        "Kxy": np.array([9.5, 0.1, .60]),
+        "Kang": np.array([19.5, 105., 1.5]),
         "theta": 0.7,
 
         # --- peaking-free --- #
@@ -201,7 +201,7 @@ default_settings = fym.parser.parse({
 
     "simul_condi": {
         "dt": 0.005,
-        "max_t": 6.5,
+        "max_t": 30,
         "blade": False,
         "faultBias": False,  # not use
         "noise": True,  # Estimator real value noise
