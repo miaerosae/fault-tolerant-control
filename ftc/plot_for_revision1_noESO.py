@@ -36,10 +36,10 @@ def exp_plot(loggerpath1, lp2, lp3):
         pos_bounds1[i] = (rho1[0]-rho1[1]) * np.exp(-rho_k*data1["t"][i]) + rho1[1]
         pos_bounds3[i] = (rho3[0]-rho3[1]) * np.exp(-rho_k*data3["t"][i]) + rho3[1]
     for i, (_label, ax) in enumerate(zip([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"], axes)):
-        ax.plot(data1["t"], pos_bounds1, linestyle=":", color="red", linewidth=1)
-        ax.plot(data1["t"], -pos_bounds1, linestyle=":", color="red", linewidth=1)
-        ax.plot(data3["t"], pos_bounds3, linestyle=":", color="green", linewidth=1)
-        ax.plot(data3["t"], -pos_bounds3, linestyle=":", color="green", linewidth=1)
+        ax.plot(data1["t"], pos_bounds1, linestyle=":", color="red", linewidth=1.3)
+        ax.plot(data1["t"], -pos_bounds1, linestyle=":", color="red", linewidth=1.3)
+        ax.plot(data3["t"], pos_bounds3, linestyle=":", color="green", linewidth=1.3)
+        ax.plot(data3["t"], -pos_bounds3, linestyle=":", color="green", linewidth=1.3)
         ax.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "r-", label="BLF-1")
         ax.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="BLF-2")
         ax.plot(data3["t"], data3["x"]["pos"][:, i, 0]-data3["ref"][:, i, 0], "g-.", label="BLF-3")
@@ -71,15 +71,15 @@ def exp_plot(loggerpath1, lp2, lp3):
 
     for i, (_label, ax) in enumerate(zip([r"$\phi$", r"$\theta$", r"$\psi$"], axes)):
         if i == 2:
-            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle=":", color="red", linewidth=1)
-            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle=":", color="red", linewidth=1)
-            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle=":", color="blue", linewidth=1)
-            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle=":", color="blue", linewidth=1)
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[2], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle=":", color="blue", linewidth=1.3)
+            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[2], linestyle=":", color="blue", linewidth=1.3)
         else:
-            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle=":", color="red", linewidth=1)
-            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle=":", color="red", linewidth=1)
-            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle=":", color="blue", linewidth=1)
-            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle=":", color="blue", linewidth=1)
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[0], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle=":", color="blue", linewidth=1.3)
+            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[0], linestyle=":", color="blue", linewidth=1.3)
         ax.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "r-", label="BLF-1")
         ax.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b--", label="BLF-2")
         ax.plot(data3["t"], np.rad2deg(angles3[:, 2-i]), "g-.", label="BLF-3")
@@ -103,15 +103,15 @@ def exp_plot(loggerpath1, lp2, lp3):
     fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
     for i, (_label, ax) in enumerate(zip([r"$p$ [deg/s]", r"$q$ [deg/s]", r"$r$ [deg/s]"], axes)):
         if i == 2:
-            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1)
-            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1)
-            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle=":", color="blue", linewidth=1)
-            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle=":", color="blue", linewidth=1)
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle=":", color="blue", linewidth=1.3)
+            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[3], linestyle=":", color="blue", linewidth=1.3)
         else:
-            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle=":", color="red", linewidth=1)
-            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle=":", color="red", linewidth=1)
-            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle=":", color="blue", linewidth=1)
-            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle=":", color="blue", linewidth=1)
+            ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[1], linestyle=":", color="red", linewidth=1.3)
+            ax.plot(data2["t"], np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle=":", color="blue", linewidth=1.3)
+            ax.plot(data2["t"], -np.ones((np.size(data1["t"])))*ang_bound2[1], linestyle=":", color="blue", linewidth=1.3)
         ax.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "r-", label="BLF-1")
         ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b--", label="BLF-2")
         ax.plot(data3["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g-.", label="BLF-3")
