@@ -64,7 +64,7 @@ def exp_plot(path1, p2, p3):
         plt.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="BS+ESO")
         plt.plot(data3["t"], pos3[:, i]-data2["ref"][0:n3, i, 0], "g-.", label="NDI+ESO")
         # plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "b--", label="Estimated Value")
-        plt.plot(data1["t"], pos_bounds, "r:", label="Prescribed Bound")
+        plt.plot(data1["t"], pos_bounds, "r:")
         plt.plot(data1["t"], -pos_bounds, "r:")
         plt.ylabel(_label + " [m]")
         if i == 2:
@@ -100,9 +100,10 @@ def exp_plot(path1, p2, p3):
         plt.plot(data3["t"], np.rad2deg(ang3[:, 2-i]), "g-.", label="NDI+ESO")
         # plt.plot(data1["t"], np.rad2deg(data1["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
         plt.plot(data1["t"],
-                 np.ones((np.size(data1["t"])))*bound, "r:", label="Prescribed Bound")
+                 np.ones((np.size(data1["t"])))*bound, "r:")
         plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
         plt.ylabel(_label + " [deg]")
+        plt.ylim([-49, 49])
         if i == 0:
             plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         if i == 2:
@@ -138,13 +139,12 @@ def exp_plot(path1, p2, p3):
             plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound_psi, "r:")
             plt.ylim([-bound_psi-15, bound_psi+15])
         else:
-            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:",
-                     label="Prescribed Bound")
+            plt.plot(data1["t"], np.ones((np.size(data1["t"])))*bound, "r:")
             plt.plot(data1["t"], -np.ones((np.size(data1["t"])))*bound, "r:")
             plt.ylim([-bound-15, bound+15])
         plt.ylabel(_label + " [deg/s]")
         if i == 0:
-            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=1)
+            plt.legend(loc=[0, 1.03], ncol=3, mode="expand")
         if i == 2:
             plt.xlabel("Time [s]", labelpad=5)
         # plt.axvspan(5, 5.1, alpha=0.2, color="mediumslateblue")
@@ -242,7 +242,7 @@ def exp_plot(path1, p2, p3):
         # plt.plot(data1["t"], data2["dist"][:, i, 0], "g--", label="Estimated Value (without faults)")
         plt.ylabel(_label)
         if i == 0:
-            plt.legend(loc=[0, 1.03], ncol=2, mode="expand")
+            plt.legend(loc="lower right", bbox_to_anchor=[1, 1.03], ncol=2)
         if i == 2:
             plt.xlabel("Time [s]", labelpad=5)
     plt.tight_layout()
