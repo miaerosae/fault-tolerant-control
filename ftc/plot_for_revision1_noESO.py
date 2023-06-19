@@ -98,6 +98,7 @@ def exp_plot(loggerpath1, lp2, lp3):
             ax.add_patch(a2)
             ax.text(3.2, 68, "BLF-1, BLF-3 constraint")
             ax.legend(loc=[0, 1.03], ncol=3, mode="expand")
+    plt.savefig("Case1_ang.png", dpi=600, bbox_inches='tight')
 
     # Angular rate
     fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
@@ -130,5 +131,6 @@ def exp_plot(loggerpath1, lp2, lp3):
             ax.add_patch(a2)
             ax.text(3.2, 190, "BLF-1, BLF-3 constraint")
             ax.legend(loc=[0, 1.03], ncol=3, mode="expand")
+    plt.savefig("Case1_dang.png", dpi=600, bbox_inches='tight')
 
     plt.show()
