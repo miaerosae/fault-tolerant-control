@@ -60,7 +60,7 @@ def exp_plot(path1, p2, p3):
     for i, _label in enumerate([r"$e_{1x}$", r"$e_{1y}$", r"$e_{1z}$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k-", label="BLF+ESO")
+        plt.plot(data1["t"], data1["x"]["pos"][:, i, 0]-data1["ref"][:, i, 0], "k-", label="BLF+ESO (proposed)")
         plt.plot(data2["t"], data2["x"]["pos"][:, i, 0]-data2["ref"][:, i, 0], "b--", label="BS+ESO")
         plt.plot(data3["t"], pos3[:, i]-data2["ref"][0:n3, i, 0], "g-.", label="NDI+ESO")
         # plt.plot(data1["t"], data1["obs_pos"][:, i, 0], "b--", label="Estimated Value")
@@ -95,7 +95,7 @@ def exp_plot(path1, p2, p3):
     for i, _label in enumerate([r"$\phi$", r"$\theta$", r"$\psi$"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k-", label="BLF+ESO")
+        plt.plot(data1["t"], np.rad2deg(angles1[:, 2-i]), "k-", label="BLF+ESO (proposed)")
         plt.plot(data2["t"], np.rad2deg(angles2[:, 2-i]), "b--", label="BS+ESO")
         plt.plot(data3["t"], np.rad2deg(ang3[:, 2-i]), "g-.", label="NDI+ESO")
         # plt.plot(data1["t"], np.rad2deg(data1["obs_ang"][:, i, 0]), "b--", label="Estimated Value")
@@ -130,7 +130,7 @@ def exp_plot(path1, p2, p3):
     for i, _label in enumerate(["p", "q", "r"]):
         if i != 0:
             plt.subplot(311+i, sharex=ax)
-        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k-", label="BLF+ESO")
+        plt.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "k-", label="BLF+ESO (proposed)")
         plt.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b--", label="BS+ESO")
         plt.plot(data3["t"], np.rad2deg(dang3[:, i]), "g-.", label="NDI+ESO")
         if i == 2:
