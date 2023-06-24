@@ -102,7 +102,7 @@ def exp_plot(loggerpath1, lp2, lp3):
 
     # Angular rate
     fig, axes = plt.subplots(nrows=3, figsize=(9, 10), sharex=True)
-    for i, (_label, ax) in enumerate(zip([r"$p$ [deg/s]", r"$q$ [deg/s]", r"$r$ [deg/s]"], axes)):
+    for i, (_label, ax) in enumerate(zip([r"$p$", r"$q$", r"$r$"], axes)):
         if i == 2:
             ax.plot(data1["t"], np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1.3)
             ax.plot(data1["t"], -np.ones((np.size(data1["t"])))*ang_bound1[3], linestyle=":", color="red", linewidth=1.3)
@@ -116,7 +116,7 @@ def exp_plot(loggerpath1, lp2, lp3):
         ax.plot(data1["t"], np.rad2deg(data1["x"]["omega"][:, i, 0]), "r-", label="BLF-1")
         ax.plot(data2["t"], np.rad2deg(data2["x"]["omega"][:, i, 0]), "b--", label="BLF-2")
         ax.plot(data3["t"], np.rad2deg(data3["x"]["omega"][:, i, 0]), "g-.", label="BLF-3")
-        ax.set_ylabel(_label + "[deg/s]")
+        ax.set_ylabel(_label + " [deg/s]")
         ax.set_ylim([-340, 340])
         ax.set_xlim([-0.5, 20.5])
         if i == 2:
